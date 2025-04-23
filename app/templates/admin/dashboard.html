@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Control Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+
+</head>
+
+<body>
+    <div class="dashboard">
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <span>Admin Panel</span>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="/admin-dashboard/" class="nav-item active">
+                    <i class="fas fa-chart-line"></i>
+                    Dashboard
+                </a>
+                <a href="/admin-dashboard/clients/" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    Users
+                </a>
+                <a href="/login/" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
+            </nav>
+        </aside>
+
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <main class="main-content">
+            <div class="header">
+                <h1 class="page-title">
+                    <i class="fas fa-chart-line"></i>
+                    Admin Dashboard
+                </h1>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card stat-card-primary">
+                    <i class="fas fa-users stat-icon"></i>
+                    <div class="stat-value" id="totalUsers">0</div>
+                    <div class="stat-label">Total Users</div>
+                    <i class="fas fa-users floating-icon"></i>
+                </div>
+
+                <div class="stat-card stat-card-success">
+                    <i class="fas fa-network-wired stat-icon"></i>
+                    <div class="stat-value" id="availableData">0</div>
+                    <div class="stat-label">Remaining Traffic (GB)</div>
+                    <i class="fas fa-network-wired floating-icon"></i>
+                </div>
+
+                <div class="stat-card stat-card-warning">
+                    <i class="fas fa-calendar-alt stat-icon"></i>
+                    <div class="stat-value" id="daysRemaining">0</div>
+                    <div class="stat-label">Days Remaining</div>
+                    <i class="fas fa-calendar-alt floating-icon"></i>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Mobile menu functionality
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        // Toggle sidebar on mobile
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        });
+
+        // Close sidebar when clicking overlay
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+
+        // Close sidebar when window is resized to desktop size
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 1024) {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            }
+        });
+
+        // Fetch dashboard data
+        async function fetchDashboardData() {
+            try {
+                // فقط یک fetch به dashboard-data
+                const dashboardResponse = await fetch('/admin-dashboard/dashboard-data', {
+                    credentials: 'include'
+                });
+
+                if (!dashboardResponse.ok) {
+                    if (dashboardResponse.status === 401) {
+                        window.location.href = '/login';
+                        return;
+                    }
+                    throw new Error('Failed to fetch dashboard data');
+                }
+
+                const dashboardData = await dashboardResponse.json();
+
+                // Update stats
+                document.getElementById('totalUsers').textContent = dashboardData.totalClients || 0;
+                document.getElementById('availableData').textContent = dashboardData.availableDataGB || 0;
+                document.getElementById('daysRemaining').textContent = dashboardData.daysRemaining || 0;
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load dashboard data');
+            }
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', fetchDashboardData);
+    </script>
+</body>
+
+</html>

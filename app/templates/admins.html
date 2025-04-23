@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admins Management | Control Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <span>Control Panel</span>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="/dashboard/" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    Dashboard
+                </a>
+                <a href="/dashboard/panels/" class="nav-item">
+                    <i class="fas fa-server"></i>
+                    Panels
+                </a>
+                <a href="/dashboard/admins/" class="nav-item active">
+                    <i class="fas fa-users-cog"></i>
+                    Admins
+                </a>
+                <a href="/login/" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <h1 class="page-title">
+                    <i class="fas fa-users-cog"></i>
+                    Admins Management
+                </h1>
+                <button class="btn btn-primary" id="addAdminBtn">
+                    <i class="fas fa-plus"></i>
+                    Add Admin
+                </button>
+            </div>
+
+            <div class="admins-grid_">
+                {% if admins %}
+                {% for admin in admins %}
+                <div class="admin-card_">
+                    <!-- Status Indicator -->
+                    <div
+                        class="status-indicator {% if admin.is_active %}status-active{% else %}status-inactive{% endif %}">
+                    </div>
+
+                    <div class="admin-header_">
+                        <div class="admin-avatar_">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="admin-info_">
+                            <div class="admin-name_">: {{ admin.username }}</div>
+                        </div>
+                    </div>
+
+                    {% if admin.panel %}
+                    <div class="panel-info">
+                        <p><strong>Panel:</strong> <span>{{ admin.panel.name }}</span></p>
+                        <p><strong>Inbound id:</strong> <span>{{ admin.inbound_id }}</span></p>
+                        <p><strong>Remaining Traffic:</strong> <span>{{ admin.traffic }} GB</span></p>
+                        <p><strong>Remaining Days:</strong> <span>{{ admin.days_remaining }}</span></p>
+                        <p><strong>Status:</strong>
+                            <span class="{% if admin.is_active %}text-success{% else %}text-danger{% endif %}">
+                                {% if admin.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <div class="admin-actions">
+                        <button class="btn btn-outline edit-admin-btn" data-admin='{
+                            "id": "{{ admin.id }}",
+                            "panel_id": "{{ admin.panel_id }}",
+                            "inbound_id": "{{ admin.inbound_id }}",
+                            "traffic": "{{ admin.traffic }}",
+                            "days_remaining": "{{ admin.days_remaining }}",
+                            "is_active": "{{ admin.is_active }}"
+                        }'>
+                            <i class="fas fa-edit"></i>
+                            Edit
+                        </button>
+                        <button class="btn btn-danger delete-admin-btn" data-admin-id="{{ admin.id }}">
+                            <i class="fas fa-trash"></i>
+                            Delete
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-users-cog"></i>
+                    <h3>No Admins Found</h3>
+                    <p>Get started by adding your first admin user</p>
+                </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Admin Modal -->
+    <div class="modal" id="addAdminModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-user-plus"></i>
+                    Add Admin
+                </h2>
+                <button class="close-modal" onclick="hideModal('addAdminModal')">&times;</button>
+            </div>
+
+            <form id="addAdminForm">
+                <div id="addFormMessage" class="message" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="addAdminUsername" class="form-label">Username*</label>
+                    <input type="text" id="addAdminUsername" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="addAdminPassword" class="form-label">Password*</label>
+                    <input type="password" id="addAdminPassword" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="addAdminPanel" class="form-label">Panel*</label>
+                    <select id="addAdminPanel" class="form-control" required>
+                        <option value="">Loading panels...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="addAdminInbound" class="form-label">Inbound ID*</label>
+                    <input type="number" id="addAdminInbound" class="form-control" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="addAdminTraffic" class="form-label">Initial Traffic (GB)*</label>
+                    <input type="number" id="addAdminTraffic" class="form-control" min="0" value="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="addAdminDays" class="form-label">Days Remaining*</label>
+                    <input type="number" id="addAdminDays" class="form-control" min="0" value="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="addAdminActive" class="form-label">Status*</label>
+                    <select id="addAdminActive" class="form-control" required>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="hideModal('addAdminModal')">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Save Admin
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Admin Modal -->
+    <div class="modal" id="editAdminModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-user-edit"></i>
+                    Edit Admin
+                </h2>
+                <button class="close-modal" onclick="hideModal('editAdminModal')">&times;</button>
+            </div>
+
+            <form id="editAdminForm">
+                <input type="hidden" id="editAdminId">
+                <div id="editFormMessage" class="message" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="editAdminPanel" class="form-label">Panel*</label>
+                    <select id="editAdminPanel" class="form-control" required>
+                        <option value="">Loading panels...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editAdminInbound" class="form-label">Inbound ID*</label>
+                    <input type="number" id="editAdminInbound" class="form-control" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editAdminTraffic" class="form-label">Traffic (GB)*</label>
+                    <input type="number" id="editAdminTraffic" class="form-control" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editAdminDays" class="form-label">Days Remaining*</label>
+                    <input type="number" id="editAdminDays" class="form-control" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editAdminActive" class="form-label">Status*</label>
+                    <select id="editAdminActive" class="form-control" required>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="hideModal('editAdminModal')">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Global Variables
+        let allPanels = [];
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function () {
+            setupEventListeners();
+            loadPanelsForAdd();
+        });
+
+        // Setup all event listeners
+        function setupEventListeners() {
+            // Mobile menu toggle
+            document.getElementById('mobileMenuToggle').addEventListener('click', function () {
+                document.getElementById('sidebar').classList.toggle('active');
+                document.getElementById('sidebarOverlay').classList.toggle('active');
+            });
+
+            // Sidebar overlay
+            document.getElementById('sidebarOverlay').addEventListener('click', function () {
+                document.getElementById('sidebar').classList.remove('active');
+                document.getElementById('sidebarOverlay').classList.remove('active');
+            });
+
+            // Add Admin Button
+            document.getElementById('addAdminBtn').addEventListener('click', function () {
+                showModal('addAdminModal');
+            });
+
+            // Empty state add admin button
+            const emptyAddBtn = document.getElementById('emptyAddAdminBtn');
+            if (emptyAddBtn) {
+                emptyAddBtn.addEventListener('click', function () {
+                    showModal('addAdminModal');
+                });
+            }
+
+            // Edit Admin Buttons
+            document.addEventListener('click', function (e) {
+                if (e.target.closest('.edit-admin-btn')) {
+                    const adminData = JSON.parse(e.target.closest('.edit-admin-btn').dataset.admin);
+                    openEditAdminModal(adminData);
+                }
+
+                if (e.target.closest('.delete-admin-btn')) {
+                    const adminId = e.target.closest('.delete-admin-btn').dataset.adminId;
+                    confirmDeleteAdmin(adminId);
+                }
+            });
+
+            // Add Admin Form
+            document.getElementById('addAdminForm').addEventListener('submit', handleAddAdmin);
+
+            // Edit Admin Form
+            document.getElementById('editAdminForm').addEventListener('submit', handleEditAdmin);
+        }
+
+        // Modal Functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = '';
+            document.getElementById(modalId === 'addAdminModal' ? 'addAdminForm' : 'editAdminForm').reset();
+            const messageEl = document.getElementById(modalId === 'addAdminModal' ? 'addFormMessage' : 'editFormMessage');
+            messageEl.style.display = 'none';
+            messageEl.textContent = '';
+        }
+
+        // Load panels for add form
+        async function loadPanelsForAdd() {
+            try {
+                const response = await fetch('/panel/all');
+                if (!response.ok) throw new Error('Failed to load panels');
+
+                const data = await response.json();
+                allPanels = data.panels || [];
+
+                const panelSelect = document.getElementById('addAdminPanel');
+                panelSelect.innerHTML = '<option value="">Select Panel</option>';
+
+                allPanels.forEach(panel => {
+                    const option = document.createElement('option');
+                    option.value = panel.id;
+                    option.textContent = panel.name;
+                    panelSelect.appendChild(option);
+                });
+
+                return true;
+            } catch (error) {
+                console.error('Error loading panels:', error);
+                showMessage('addFormMessage', 'Failed to load panels: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        // Load panels for edit form
+        async function loadPanelsForEdit() {
+            try {
+                const response = await fetch('/panel/all');
+                if (!response.ok) throw new Error('Failed to load panels');
+
+                const data = await response.json();
+                allPanels = data.panels || [];
+
+                const panelSelect = document.getElementById('editAdminPanel');
+                panelSelect.innerHTML = '<option value="">Select Panel</option>';
+
+                allPanels.forEach(panel => {
+                    const option = document.createElement('option');
+                    option.value = panel.id;
+                    option.textContent = panel.name;
+                    panelSelect.appendChild(option);
+                });
+
+                return true;
+            } catch (error) {
+                console.error('Error loading panels:', error);
+                showMessage('editFormMessage', 'Failed to load panels: ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        // Edit Admin Functions
+        async function openEditAdminModal(adminData) {
+            try {
+                // Load panels first
+                await loadPanelsForEdit();
+
+                // Set form values
+                document.getElementById('editAdminId').value = adminData.id;
+                document.getElementById('editAdminTraffic').value = adminData.traffic;
+                document.getElementById('editAdminDays').value = adminData.days_remaining;
+                document.getElementById('editAdminInbound').value = adminData.inbound_id;
+
+                // Set panel value
+                if (adminData.panel_id) {
+                    document.getElementById('editAdminPanel').value = adminData.panel_id;
+                }
+
+                // Set default status to Active
+                document.getElementById('editAdminActive').value = "true";
+
+                showModal('editAdminModal');
+            } catch (error) {
+                console.error('Error opening edit modal:', error);
+                showMessage('editFormMessage', 'Failed to load edit form: ' + error.message, 'error');
+            }
+        }
+
+        // Form Handlers
+        async function handleAddAdmin(e) {
+            e.preventDefault();
+
+            const formData = {
+                username: document.getElementById('addAdminUsername').value.trim(),
+                password: document.getElementById('addAdminPassword').value.trim(),
+                panel_id: parseInt(document.getElementById('addAdminPanel').value),
+                inbound_id: parseInt(document.getElementById('addAdminInbound').value),
+                traffic: parseInt(document.getElementById('addAdminTraffic').value),
+                days_remaining: parseInt(document.getElementById('addAdminDays').value),
+                is_active: document.getElementById('addAdminActive').value === "true",
+                is_banned: false
+            };
+
+            // Validate form data
+            if (!formData.username || !formData.password) {
+                return showMessage('addFormMessage', 'Username and password are required', 'error');
+            }
+            if (!formData.panel_id) {
+                return showMessage('addFormMessage', 'Please select a panel', 'error');
+            }
+            if (!formData.inbound_id) {
+                return showMessage('addFormMessage', 'Please enter a valid inbound ID', 'error');
+            }
+
+            try {
+                const response = await fetch('/admin/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to create admin');
+                }
+
+                showMessage('addFormMessage', 'Admin created successfully!', 'success');
+                setTimeout(() => {
+                    hideModal('addAdminModal');
+                    window.location.reload();
+                }, 1500);
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('addFormMessage', error.message, 'error');
+            }
+        }
+
+        async function handleEditAdmin(e) {
+            e.preventDefault();
+
+            const formData = {
+                id: document.getElementById('editAdminId').value,
+                panel_id: parseInt(document.getElementById('editAdminPanel').value),
+                inbound_id: parseInt(document.getElementById('editAdminInbound').value),
+                traffic: parseInt(document.getElementById('editAdminTraffic').value),
+                days_remaining: parseInt(document.getElementById('editAdminDays').value),
+                is_active: document.getElementById('editAdminActive').value === "true",
+                is_banned: false
+            };
+
+            // Validate form data
+            if (!formData.panel_id) {
+                return showMessage('editFormMessage', 'Please select a panel', 'error');
+            }
+            if (!formData.inbound_id) {
+                return showMessage('editFormMessage', 'Please enter a valid inbound ID', 'error');
+            }
+
+            try {
+                const response = await fetch('/admin/edit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to update admin');
+                }
+
+                showMessage('editFormMessage', 'Admin updated successfully!', 'success');
+                setTimeout(() => {
+                    hideModal('editAdminModal');
+                    window.location.reload();
+                }, 1500);
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('editFormMessage', error.message, 'error');
+            }
+        }
+
+        // Delete Admin
+        async function confirmDeleteAdmin(adminId) {
+            if (confirm('Are you sure you want to delete this admin? This action cannot be undone.')) {
+                try {
+                    const response = await fetch(`/admin/delete?id=${adminId}`, {
+                        method: 'GET'
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.detail || 'Failed to delete admin');
+                    }
+
+                    window.location.reload();
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error: ' + error.message);
+                }
+            }
+        }
+
+        // Helper Functions
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.className = `message message-${type}`;
+                element.style.display = 'block';
+            } else {
+                console.error(`Element with ID ${elementId} not found`);
+            }
+        }
+    </script>
+</body>
+
+</html>
