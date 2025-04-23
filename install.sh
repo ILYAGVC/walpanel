@@ -98,7 +98,7 @@ EOF
         exit 1
     }
 
-    echo -e "${GREEN}[✔] Walpanel installed successfully! Access it at: https://$SUBDOMAIN${PORT:+:$PORT}$/login/${NC}"
+    echo -e "${GREEN}[✔] Walpanel installed successfully! Access it at: https://$SUBDOMAIN${PORT:+:$PORT}/login/${NC}"
 }
 
 uninstall() {

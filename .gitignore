@@ -2,11 +2,9 @@
 .env
 .venv
 .vscode
-install_test.sh
 __pycache__/
 *.pyc
 *.log
 *.db
 *.jpg
 *.jpeg
-*.png
