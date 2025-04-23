@@ -1,7 +1,7 @@
 #!/bin/bash
 
 REPO_URL="https://github.com/primeZdev/walpanel.git"
-INSTALL_DIR="/opt/"
+INSTALL_DIR="/opt/walpanel"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
