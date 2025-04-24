@@ -10,7 +10,7 @@ def main_menu():
     reply_keyboard = ReplyKeyboardMarkup(
         resize_keyboard=True, one_time_keyboard=False, row_width=2
     )
-    reply_keyboard.add("👤 Admins", "⚙️ Settings")
+    reply_keyboard.add("👤 Admins", "🌐 Panels", "⚙️ Settings")
     return reply_keyboard
 
 
@@ -20,12 +20,11 @@ def settings_menu():
         resize_keyboard=True, one_time_keyboard=False, row_width=2
     )
     reply_keyboard.add(
-        "💵 Prices",
-        "💻 Panels",
-        "🔔 Notifications",
+        "🔒 Prices",
+        "🔒 Notifications",
+        "🔒 Help text",
+        "🔒 Registration text",
         "🗂 Backup",
-        "📘 Help text",
-        "📘 Registration text",
         "🔙 Back",
     )
     return reply_keyboard
