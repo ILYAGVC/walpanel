@@ -24,7 +24,7 @@ class Task:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def reduce_admin_traffic(self, db, username, _traffic):
+    def check_admin_traffic(self, db, username, _traffic):
         try:
             admin = admin_operations.get_admin_data(db, username)
             traffic_gb = _traffic / (1024**3)
@@ -32,10 +32,16 @@ class Task:
             if admin.traffic < traffic_gb:
                 return False
 
-            admin_operations.reduce_traffic(db, username, traffic_gb)
             return True
         except Exception as e:
-            print("Error reducing traffic:", e)
+            return False
+
+    def reduce_admin_traffic(self, db, username, _traffic):
+        try:
+            traffic_gb = _traffic / (1024**3)
+
+            admin_operations.reduce_traffic(db, username, traffic_gb)
+        except Exception as e:
             return False
 
     def get_users(self, db, username):
@@ -77,7 +83,7 @@ class Task:
             return {"clients": [], "error": "Failed to fetch user list"}
 
     def create_user(self, db, username: str, request: CreateUserInput):
-        if not self.reduce_admin_traffic(db, username, request.totalGB):
+        if not self.check_admin_traffic(db, username, request.totalGB):
             return JSONResponse(
                 content={"error": "Traffic limit reached"},
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -101,6 +107,9 @@ class Task:
                 request.totalGB,
                 request.expiryTime,
             )
+
+            if result["success"] is True:
+                self.reduce_admin_traffic(db, username, request.totalGB)
 
             return JSONResponse(
                 content={"result": result}, status_code=status.HTTP_201_CREATED
@@ -164,6 +173,9 @@ class Task:
                 updated_client,
             )
 
+            if result["success"] is True:
+                self.reduce_admin_traffic(db, username, request.totalGB)
+
             return JSONResponse(content=result.json(), status_code=status.HTTP_200_OK)
         except Exception as e:
             return JSONResponse(
@@ -189,6 +201,9 @@ class Task:
                 admin.inbound_id,
                 email,
             )
+
+            if result["success"] is True:
+                self.reduce_admin_traffic(db, username, client["obj"]["total"])
 
             return JSONResponse(content=result.json(), status_code=status.HTTP_200_OK)
         except Exception as e:

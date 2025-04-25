@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
-from db.engine import Base
+from app.db.engine import Base
 
 
 class Panel(Base):
