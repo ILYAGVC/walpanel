@@ -1,6 +1,7 @@
 import os
 import time
 
+
 DB_PATH = "data/walpanel.db"
 TEMP_DB_PATH = "data/new.db"
 

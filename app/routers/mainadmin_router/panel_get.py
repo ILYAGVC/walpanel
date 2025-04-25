@@ -16,7 +16,7 @@ def get_all_panels(
     return {"panels": panels}
 
 
-@router.get("/delete{id}")
+@router.get("/delete/{id}")
 def delete_panel(
     id: int, db: Session = Depends(get_db), username: str = Depends(mainadmin_required)
 ):
