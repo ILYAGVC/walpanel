@@ -112,9 +112,17 @@ uninstall() {
 
 update() {
     echo -e "${BLUE}[+] Updating Walpanel...${NC}"
-    cd "$INSTALL_DIR" || exit
+    cd "$INSTALL_DIR" || exit 1
+
+    echo -e "${YELLOW}[~] Pulling latest source code from GitHub...${NC}"
     git pull
+
+    echo -e "${YELLOW}[~] Stopping old containers...${NC}"
+    docker-compose down
+
+    echo -e "${YELLOW}[~] Rebuilding and starting updated containers...${NC}"
     docker-compose up -d --build
+
     echo -e "${GREEN}[✔] Update complete.${NC}"
 }
 
