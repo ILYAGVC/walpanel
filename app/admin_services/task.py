@@ -39,6 +39,7 @@ class Task:
     def reduce_admin_traffic(self, db, username, _traffic):
         try:
             traffic_gb = _traffic / (1024**3)
+            print(traffic_gb)
 
             admin_operations.reduce_traffic(db, username, traffic_gb)
         except Exception as e:
@@ -91,7 +92,7 @@ class Task:
 
         try:
             data = admin_operations.get_admin_data(db, username)
-            panel = panel_operations.panel_data(db, data.id)
+            panel = panel_operations.panel_data(db, data.panel_id)
 
             _uuid = str(uuid4())
             subid = generate_secure_random_text(16)
@@ -123,7 +124,7 @@ class Task:
     def delete_client(self, db, username: str, user_id: str):
         try:
             admin = admin_operations.get_admin_data(db, username)
-            panel = panel_operations.panel_data(db, admin.id)
+            panel = panel_operations.panel_data(db, admin.panel_id)
 
             result = panels_api.delete_client(
                 panel.url,
@@ -141,14 +142,14 @@ class Task:
             )
 
     def update_client(self, db, username: str, user_id: str, request: UpdateUserInput):
-        if not self.reduce_admin_traffic(db, username, request.totalGB):
+        if not self.check_admin_traffic(db, username, request.totalGB):
             return JSONResponse(
                 content={"error": "Traffic limit reached"},
                 status_code=status.HTTP_403_FORBIDDEN,
             )
         try:
             admin = admin_operations.get_admin_data(db, username)
-            panel = panel_operations.panel_data(db, admin.id)
+            panel = panel_operations.panel_data(db, admin.panel_id)
 
             updated_client = {
                 "id": user_id,
@@ -173,7 +174,7 @@ class Task:
                 updated_client,
             )
 
-            if result["success"] is True:
+            if result.status_code == 200:
                 self.reduce_admin_traffic(db, username, request.totalGB)
 
             return JSONResponse(content=result.json(), status_code=status.HTTP_200_OK)
@@ -183,12 +184,12 @@ class Task:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def reset_ient_traffic(self, db, username: str, email: str):
+    def reset_client_traffic(self, db, username: str, email: str):
         admin = admin_operations.get_admin_data(db, username)
-        panel = panel_operations.panel_data(db, admin.id)
+        panel = panel_operations.panel_data(db, admin.panel_id)
         client = panels_api.user_obj(panel.url, email)
 
-        if not self.reduce_admin_traffic(db, username, client["obj"]["total"]):
+        if not self.check_admin_traffic(db, username, client["obj"]["total"]):
             return JSONResponse(
                 content={"error": "Traffic limit reached"},
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -202,7 +203,7 @@ class Task:
                 email,
             )
 
-            if result["success"] is True:
+            if result.status_code == 200:
                 self.reduce_admin_traffic(db, username, client["obj"]["total"])
 
             return JSONResponse(content=result.json(), status_code=status.HTTP_200_OK)
