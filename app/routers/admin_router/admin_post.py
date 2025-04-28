@@ -47,4 +47,4 @@ async def reset_traffic(
     username: dict = Depends(get_current_user),
 ):
     if admin_operations.pre_opration_check(db, username["username"]):
-        return admin_task.reset_ient_traffic(db, username["username"], email)
+        return admin_task.reset_client_traffic(db, username["username"], email)

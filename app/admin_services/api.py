@@ -75,6 +75,7 @@ class PanelAPI:
                 {
                     "id": _uuid,
                     "enable": True,
+                    "security": "auto",
                     "flow": "",
                     "email": email,
                     "imitIp": 0,
