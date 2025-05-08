@@ -180,6 +180,13 @@ class Task:
 
             if result.status_code == 200:
                 self.reduce_admin_traffic(db, username, request.totalGB)
+                panels_api.reset_traffic(
+                    panel.url,
+                    panel.username,
+                    panel.password,
+                    admin.inbound_id,
+                    request.email,
+                )
 
             return JSONResponse(content=result.json(), status_code=status.HTTP_200_OK)
         except Exception as e:
