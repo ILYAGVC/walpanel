@@ -14,5 +14,5 @@ async def get_bckup_from_bot(bot, message):
         await bot.send_document(
             message.chat.id,
             db_file,
-            caption=f"🐋 WALPANEL (free edition!)\n\n{time.strftime('%Y-%m-%d  --  %H:%M', time.localtime())}",
+            caption=f"WALPANEL (free edition!)\n\n{time.strftime('%Y-%m-%d', time.localtime())}",
         )
