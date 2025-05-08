@@ -9,7 +9,7 @@ class PanelAPI:
     def __init__(self):
         self.session = requests.Session()
         self.headers = {"Accept": "application/json"}
-        self._current_panel = None
+        self.logged_in_panels = set()
 
     def login(self, address, username, password):
         try:
@@ -21,7 +21,7 @@ class PanelAPI:
             )
 
             if response.status_code == 200:
-                self._current_panel = (address, username, password)
+                self.logged_in_panels = f"{address}|{username}"
                 return True
             else:
                 logger.error(f"Login failed with status code: {response.status_code}")
@@ -31,23 +31,52 @@ class PanelAPI:
             logger.error(f"Error during login: {e}")
             return False
 
+    def login_with_out_savekey(self, address, username, password):
+        try:
+            url = f"https://{address}/login"
+            data = {"username": username, "password": password}
+
+            response = self.session.post(
+                url, data=data, headers=self.headers, timeout=30
+            )
+            if response.status_code == 200:
+                return True
+            else:
+                logger.error(
+                    f"Login failed without save key status code: {response.status_code}"
+                )
+                return False
+        except Exception as e:
+            logger.error(f"Error during login without save key: {e}")
+            return False
+
     def _make_request(self, method, url, **kwargs):
         address = kwargs.pop("address", "")
         username = kwargs.pop("username", "")
         password = kwargs.pop("password", "")
         json_response = kwargs.pop("json_response", False)
+        key = f"{address}|{username}"
 
         kwargs.setdefault("timeout", 30)
 
         try:
-            if not self.login(address, username, password):
-                logger.error(f"Login failed for {address}")
-                return None
+            if key not in self.logged_in_panels:
+                if not self.login(address, username, password):
+                    return None
 
             response = method(url, **kwargs)
-            if response.ok and json_response:
-                return response.json()
-            return response
+            if response.status_code == 401:
+
+                logger.warning(f"Session expired for {address}, re-logging in...")
+                self._logged_in_panels.discard(key)
+                if self.login(address, username, password):
+                    response = method(url, **kwargs)
+
+            if response.ok:
+                return response.json() if json_response else response
+            else:
+                logger.warning(f"Request failed with status: {response.status_code}")
+                return None
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Request error: {e}")
@@ -114,6 +143,11 @@ class PanelAPI:
                 "error": "Failed to fetch users",
                 "status_code": response.status_code if response else "no response",
             }
+
+    def user_status(self, panel):
+        url = f"https://{panel}/panel/inbound/onlines"
+        response = self.session.post(url)
+        return response.json()
 
     def user_obj(self, panel, email):
         url = f"https://{panel}/panel/api/inbounds/getClientTraffics/{email}"

@@ -39,7 +39,6 @@ class Task:
     def reduce_admin_traffic(self, db, username, _traffic):
         try:
             traffic_gb = _traffic / (1024**3)
-            print(traffic_gb)
 
             admin_operations.reduce_traffic(db, username, traffic_gb)
         except Exception as e:
@@ -53,6 +52,8 @@ class Task:
             result = panels_api.show_users(
                 panel.url, panel.username, panel.password, admin.inbound_id
             )
+            clients_status = panels_api.user_status(panel.url)
+            online_emails = clients_status.get("obj", [])
 
             settings_json = json.loads(result["obj"]["settings"])
             clients = settings_json.get("clients", [])
@@ -60,6 +61,7 @@ class Task:
 
             for c in clients:
                 client_obj = panels_api.user_obj(panel.url, c["email"])
+
                 upload = client_obj["obj"]["up"]
                 download = client_obj["obj"]["down"]
                 total_usage = (upload + download) / (1024**3)
@@ -67,6 +69,7 @@ class Task:
                 client_list.append(
                     {
                         "email": c["email"],
+                        "online": c["email"] in online_emails,
                         "id": c["id"],
                         "totalGB": c["totalGB"] / (1024**3),
                         "totalUsage": total_usage,
@@ -81,7 +84,8 @@ class Task:
             return {"clients": client_list}
         except Exception as e:
             logger.error(f"Error fetching user list: {e}")
-            return {"clients": [], "error": "Failed to fetch user list"}
+            panels_api.login_with_out_savekey(panel.url, panel.username, panel.password)
+            return {"clients": [], "error": "Failed to fetch user list, try again."}
 
     def create_user(self, db, username: str, request: CreateUserInput):
         if not self.check_admin_traffic(db, username, request.totalGB):
