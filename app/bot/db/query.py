@@ -1,6 +1,7 @@
 from app.db.models import Panel, Admin
 from app.db.engine import SessionLocal
 from app.log.logger_config import logger
+from datetime import date
 
 
 class AdminQuery:
@@ -16,7 +17,7 @@ class AdminQuery:
                 {
                     "username": admin.username,
                     "traffic": admin.traffic,
-                    "days_remaining": admin.days_remaining,
+                    "days_remaining": (admin.expiry_time - date.today()).days,
                     "is_active": admin.is_active,
                 }
                 for admin in admins

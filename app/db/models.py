@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Date
 from sqlalchemy.orm import relationship
 from app.db.engine import Base
 
@@ -25,7 +25,7 @@ class Admin(Base):
     panel_id = Column(Integer, ForeignKey("panels.id"), nullable=False)
     inbound_id = Column(Integer, default=1)
     traffic = Column(Integer, default=0)
-    days_remaining = Column(Integer, default=30)
+    expiry_time = Column(Date, nullable=True)
     is_active = Column(Boolean, default=True)
     is_banned = Column(Boolean, default=False)
 

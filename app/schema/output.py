@@ -32,12 +32,12 @@ class AdminDisplay(BaseModel):
 
 
 class AdminOutput(BaseModel):
-    email: str
+    username: str
     password: str
     panel_id: int
     inbound_id: int
     traffic: int
-    debting_days: int
+    days_remaining: int
     is_active: bool
     is_banned: bool
 
