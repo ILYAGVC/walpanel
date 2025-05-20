@@ -8,20 +8,23 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
 NC='\033[0m'
 
 print_banner() {
     clear
-    echo -e "${BLUE}====================================${NC}"
-    echo -e "        WALPANEL INSTALLATION SCRIPT"
-    echo -e "${BLUE}====================================${NC}"
-    echo -e "${YELLOW}1) Install Walpanel"
-    echo -e "2) Update Walpanel"
-    echo -e "3) Uninstall Walpanel"
-    echo -e "4) Check Status"
-    echo -e "5) Donate (TRON TRC20)"
-    echo -e "0) Exit${NC}"
-    echo -e "${BLUE}====================================${NC}"
+    echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║${NC}${BOLD}                    WALPANEL INSTALLER                    ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}╠══════════════════════════════════════════════════════════╣${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [1] Install Walpanel${NC}${BLUE}                                    ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [2] Update Walpanel${NC}${BLUE}                                     ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [3] Check Status${NC}${BLUE}                                        ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [4] Donate${NC}${BLUE}                                             ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [5] Uninstall Walpanel${NC}${BLUE}                                 ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [0] Exit${NC}${BLUE}                                              ║${NC}"
+    echo -e "${BLUE}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo
 }
 
 check_dependencies() {
@@ -142,12 +145,19 @@ status() {
 }
 
 donate() {
-    echo -e "${GREEN}Thank you for considering a donation <3${NC}"
-    echo -e "Your support helps keep this project alive and improving."
-    echo -e ""
-    echo -e "${BLUE}TRON network(TRC20):${NC}"
-    echo -e "${YELLOW}$DONATION_ADDRESS${NC}"
-    echo -e ""
+    clear
+    echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║${NC}${BOLD}                      SUPPORT WALPANEL                     ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}╠══════════════════════════════════════════════════════════╣${NC}"
+    echo -e "${BLUE}║${NC} Your support helps us continue developing and improving${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}║${NC} Walpanel. Every contribution makes a difference!     ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}║${NC}                                                    ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}║${NC}${YELLOW} Donate (TRON - TRC20):${NC}${BLUE}                              ║${NC}"
+    echo -e "${BLUE}║${NC}${GREEN} $DONATION_ADDRESS${NC}${BLUE}                    ║${NC}"
+    echo -e "${BLUE}║${NC}                                                    ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}║${NC} Thank you for your support!                         ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo
 }
 
 # Main menu
@@ -157,9 +167,9 @@ while true; do
     case $opt in
         1) check_dependencies && install ;;
         2) update ;;
-        3) uninstall ;;
-        4) status ;;
-        5) donate ;;
+        3) status ;;
+        4) donate ;;
+        5) uninstall ;;
         0) echo -e "${GREEN}Exiting...${NC}"; exit 0 ;;
         *) echo -e "${RED}Invalid selection${NC}" ;;
     esac
