@@ -1,11 +1,11 @@
 services:
   app:
     build: .
+    restart: always
     ports:
       - "8000:8000"
     volumes:
       - .:/walpanel
-      # - ./backup:/walpanel/app/data
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONPATH=/walpanel:/walpanel/app

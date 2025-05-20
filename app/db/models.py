@@ -30,3 +30,10 @@ class Admin(Base):
     is_banned = Column(Boolean, default=False)
 
     panel = relationship("Panel", back_populates="admins")
+
+
+class Setting(Base):
+    __tablename__ = "settings"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    language = Column(String, default="en")

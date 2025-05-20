@@ -23,7 +23,16 @@ def upgrade() -> None:
     """Upgrade schema."""
     op.add_column("admins", sa.Column("expiry_time", sa.Date(), nullable=True))
 
+    op.create_table(
+        "settings",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("language", sa.String(), server_default="en"),
+        sa.PrimaryKeyConstraint("id"),
+    )
+
 
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_column("admins", "expiry_time")
+
+    op.drop_table("settings")
