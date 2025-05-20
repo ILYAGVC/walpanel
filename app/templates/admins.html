@@ -76,12 +76,12 @@
                         </div>
                     </div>
 
-                    {% if admin.panel %}
+                    {% if admin.panel and admin.panel.name %}
                     <div class="panel-info">
                         <p><strong>Panel:</strong> <span>{{ admin.panel.name }}</span></p>
                         <p><strong>Inbound id:</strong> <span>{{ admin.inbound_id }}</span></p>
                         <p><strong>Remaining Traffic:</strong> <span>{{ admin.traffic }} GB</span></p>
-                        <p><strong>Remaining Days:</strong> <span>{{ admin.days_remaining }}</span></p>
+                        <p><strong>Remaining Days:</strong> <span>{{ admin.expiry_time }} D</span></p>
                         <p><strong>Status:</strong>
                             <span class="{% if admin.is_active %}text-success{% else %}text-danger{% endif %}">
                                 {% if admin.is_active %}Active{% else %}Inactive{% endif %}

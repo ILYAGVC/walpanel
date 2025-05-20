@@ -53,7 +53,7 @@ class Task:
                 panel.url, panel.username, panel.password, admin.inbound_id
             )
             clients_status = panels_api.user_status(panel.url)
-            online_emails = clients_status.get("obj", [])
+            online_emails = clients_status.get("obj") or []
 
             settings_json = json.loads(result["obj"]["settings"])
             clients = settings_json.get("clients", [])

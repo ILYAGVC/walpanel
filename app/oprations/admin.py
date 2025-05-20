@@ -2,10 +2,13 @@ from app.schema._input import CreateAdminInput, UpdateAdminInput
 from app.db.models import Admin
 from app.db.engine import get_db
 from app.log.logger_config import logger
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from fastapi.exceptions import HTTPException
 from fastapi import status
+from datetime import datetime, timedelta, date
 import asyncio
+import time
+import datetime
 
 
 class AdminOperations:
@@ -28,13 +31,14 @@ class AdminOperations:
                 detail="two admins are allowed in the free version.",
             )
         try:
+            expiry_datetime = date.today() + timedelta(days=request.days_remaining)
             admin = Admin(
                 username=request.username,
                 password=request.password,
                 panel_id=request.panel_id,
                 inbound_id=request.inbound_id,
                 traffic=request.traffic,
-                days_remaining=request.days_remaining,
+                expiry_time=expiry_datetime,
                 is_active=request.is_active,
                 is_banned=request.is_banned,
             )
@@ -59,21 +63,45 @@ class AdminOperations:
         return {"message": "successful"}
 
     def get_all_admins(self, db: Session):
-        admins = db.query(Admin).all()
-        return admins
+        admins = db.query(Admin).options(joinedload(Admin.panel)).all()
+        result = []
+
+        for admin in admins:
+            admin_data = {
+                "id": admin.id,
+                "username": admin.username,
+                "panel": {
+                    "id": admin.panel_id,
+                    "name": admin.panel.name if admin.panel else None,
+                },
+                "inbound_id": admin.inbound_id,
+                "traffic": admin.traffic,
+                "expiry_time": (
+                    max((admin.expiry_time - date.today()).days, 0)
+                    if admin.expiry_time
+                    else 0
+                ),
+                "is_active": admin.is_active,
+                "is_banned": admin.is_banned,
+            }
+            result.append(admin_data)
+
+        return result
 
     def edit_admin(self, db: Session, request: UpdateAdminInput):
         admin = db.query(Admin).filter(Admin.id == request.id).first()
         if not admin:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Admin with this email not exist",
+                detail="Admin not exist",
             )
         try:
+            expiry_datetime = date.today() + timedelta(days=request.days_remaining)
+
             admin.panel_id = request.panel_id
             admin.inbound_id = request.inbound_id
             admin.traffic = request.traffic
-            admin.days_remaining = request.days_remaining
+            admin.expiry_time = expiry_datetime
             admin.is_active = request.is_active
             admin.is_banned = request.is_banned
             db.commit()
@@ -88,12 +116,14 @@ class AdminOperations:
         admin = db.query(Admin).filter(Admin.username == username).first()
         if not admin:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Email not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="username or password is incorrect",
             )
         admin_password = admin.password
         if admin_password != password:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="username or password is incorrect",
             )
         if not admin.is_active:
             raise HTTPException(
@@ -129,10 +159,10 @@ class AdminOperations:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Admin with this username not exist",
             )
-        elif admin.days_remaining == 0:
+        elif (admin.expiry_time - date.today()).days <= 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Your days left is over",
+                detail="Your subscription has expired",
             )
         elif admin.traffic == 0:
             raise HTTPException(
@@ -143,21 +173,4 @@ class AdminOperations:
         return True
 
 
-class DailyOperation:
-
-    async def decrease_days_remaining(self):
-        db = next(get_db())
-        admins = db.query(Admin).all()
-        try:
-            for admin in admins:
-                if admin.days_remaining > 0:
-                    admin.days_remaining -= 1
-            db.commit()
-        finally:
-            db.close()
-        await asyncio.sleep(86400)
-        await self.decrease_days_remaining()
-
-
 admin_operations = AdminOperations()
-daily_operations = DailyOperation()

@@ -2,55 +2,65 @@
 
 REPO_URL="https://github.com/primeZdev/walpanel.git"
 INSTALL_DIR="/opt/walpanel"
+DONATION_ADDRESS="TWHESbRLWB9ZNoL9vcphY2r56qHeJLwtmZ"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
 NC='\033[0m'
 
 print_banner() {
-    echo -e "${BLUE}==== Walpanel Installer ====${NC}"
-    echo -e "${YELLOW}1) Install"
-    echo -e "2) Uninstall"
-    echo -e "3) Update"
-    echo -e "4) Status"
-    echo -e "0) Exit${NC}"
-    echo -e "${BLUE}=============================${NC}"
+    clear
+    echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║${NC}${BOLD}                    WALPANEL INSTALLER                    ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}╠══════════════════════════════════════════════════════════╣${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [1] Install Walpanel${NC}${BLUE}                                    ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [2] Update Walpanel${NC}${BLUE}                                     ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [3] Check Status${NC}${BLUE}                                        ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [4] Donate${NC}${BLUE}                                             ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [5] Uninstall Walpanel${NC}${BLUE}                                 ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [0] Exit${NC}${BLUE}                                              ║${NC}"
+    echo -e "${BLUE}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo
 }
 
 check_dependencies() {
-    echo -e "${BLUE}[+] Checking dependencies...${NC}"
-    apt update
-    apt install -y docker.io docker-compose certbot nginx git || {
-        echo -e "${RED}[-] Failed to install dependencies.${NC}"
+    echo -e "${BLUE}[*] Checking system dependencies...${NC}"
+    apt update >/dev/null 2>&1
+    apt install -y docker.io docker-compose certbot nginx git >/dev/null 2>&1 || {
+        echo -e "${RED}[-] Error: Failed to install required packages${NC}"
         exit 1
     }
-    systemctl enable docker && systemctl start docker
+    systemctl enable docker >/dev/null 2>&1 && systemctl start docker >/dev/null 2>&1
+    echo -e "${GREEN}[+] Dependencies installed successfully${NC}"
 }
 
 install() {
-    echo -e "${BLUE}[+] Installing Walpanel...${NC}"
+    echo -e "${BLUE}[*] Starting Walpanel installation${NC}"
+    
     if [ -d "$INSTALL_DIR" ]; then
-        echo -e "${YELLOW}[!] $INSTALL_DIR already exists. Skipping clone...${NC}"
-    else
-        git clone "$REPO_URL" "$INSTALL_DIR" || {
-            echo -e "${RED}[-] Git clone failed.${NC}"
-            exit 1
-        }
+        echo -e "${YELLOW}[!] Installation directory already exists${NC}"
+        return
     fi
 
-    cd "$INSTALL_DIR" || exit 1
+    git clone "$REPO_URL" "$INSTALL_DIR" || {
+        echo -e "${RED}[-] Error: Failed to clone repository${NC}"
+        exit 1
+    }
 
+    cd "$INSTALL_DIR" || exit 1
     [ ! -f .env ] && cp .env.example .env
 
-    echo -e "${BLUE}[+] Configuring environment...${NC}"
-    read -p "Enter USERNAME: " USERNAME
-    read -p "Enter PASSWORD: " PASSWORD
-    read -p "Enter ADMIN_CHAT_ID: " ADMIN_CHAT_ID
-    read -p "Enter BOT_TOKEN: " BOT_TOKEN
-    read -p "Enter your subdomain (e.g. panel.example.com): " SUBDOMAIN
-    read -p "Enter the port to expose (default 443): " PORT
+    echo -e "${BLUE}[*] Configuration setup${NC}"
+    read -p "Enter admin username: " USERNAME
+    read -p "Enter admin password: " PASSWORD
+    read -p "Enter Telegram admin chat ID: " ADMIN_CHAT_ID
+    read -p "Enter Telegram bot token: " BOT_TOKEN
+    read -p "Enter domain/subdomain (e.g. panel.example.com): " SUBDOMAIN
+    read -p "Enter port to expose (default 443): " PORT
     PORT=${PORT:-443}
 
     sed -i "s|USERNAME=.*|USERNAME=$USERNAME|g" .env
@@ -58,22 +68,17 @@ install() {
     sed -i "s|ADMIN_CHAT_ID=.*|ADMIN_CHAT_ID=$ADMIN_CHAT_ID|g" .env
     sed -i "s|BOT_TOKEN=.*|BOT_TOKEN=$BOT_TOKEN|g" .env
 
-    echo -e "${BLUE}[+] Stopping Nginx temporarily to free port 80...${NC}"
-    systemctl stop nginx
-
-    echo -e "${BLUE}[+] Obtaining SSL certificate for $SUBDOMAIN...${NC}"
+    echo -e "${BLUE}[*] Configuring SSL certificate${NC}"
+    systemctl stop nginx >/dev/null 2>&1
     certbot certonly --standalone -d "$SUBDOMAIN" --non-interactive --agree-tos -m admin@$SUBDOMAIN || {
-        echo -e "${RED}[-] SSL failed. Make sure port 80 is free.${NC}"
-        systemctl start nginx
+        echo -e "${RED}[-] Error: SSL certificate generation failed${NC}"
+        systemctl start nginx >/dev/null 2>&1
         exit 1
     }
+    systemctl start nginx >/dev/null 2>&1
 
-    echo -e "${GREEN}[✔] SSL Certificate obtained.${NC}"
-    echo -e "${BLUE}[+] Starting Nginx again...${NC}"
-    systemctl start nginx
-
-    echo -e "${BLUE}[+] Setting up Nginx reverse proxy...${NC}"
-    cat <<EOF > /etc/nginx/sites-available/walpanel
+    echo -e "${BLUE}[*] Setting up Nginx reverse proxy${NC}"
+    cat > /etc/nginx/sites-available/walpanel <<EOF
 server {
     listen $PORT ssl;
     server_name $SUBDOMAIN;
@@ -89,57 +94,84 @@ server {
 }
 EOF
 
-    ln -sf /etc/nginx/sites-available/walpanel /etc/nginx/sites-enabled/walpanel
-    nginx -t && systemctl restart nginx
+    ln -sf /etc/nginx/sites-available/walpanel /etc/nginx/sites-enabled/
+    nginx -t >/dev/null 2>&1 && systemctl restart nginx >/dev/null 2>&1
 
-    echo -e "${BLUE}[+] Launching application with Docker...${NC}"
-    docker-compose up -d --build || {
-        echo -e "${RED}[-] Docker-compose failed.${NC}"
+    echo -e "${BLUE}[*] Starting Walpanel services${NC}"
+    docker-compose up -d --build >/dev/null 2>&1 || {
+        echo -e "${RED}[-] Error: Failed to start containers${NC}"
         exit 1
     }
 
-    echo -e "${GREEN}[✔] Walpanel installed successfully! Access it at: https://$SUBDOMAIN${PORT:+:$PORT}/login/${NC}"
-}
-
-uninstall() {
-    echo -e "${YELLOW}[!] Uninstalling Walpanel...${NC}"
-    cd "$INSTALL_DIR" || exit
-    docker-compose down
-    rm -f /etc/nginx/sites-enabled/walpanel /etc/nginx/sites-available/walpanel
-    systemctl restart nginx
-    echo -e "${GREEN}[✔] Uninstalled successfully.${NC}"
+    echo -e "${GREEN}[+] Installation completed successfully${NC}"
+    echo -e "${GREEN}[+] Access your panel at: https://$SUBDOMAIN${PORT:+:$PORT}/login/${NC}"
 }
 
 update() {
-    echo -e "${BLUE}[+] Updating Walpanel...${NC}"
+    echo -e "${BLUE}[*] Updating Walpanel${NC}"
+    
+    if [ ! -d "$INSTALL_DIR" ]; then
+        echo -e "${RED}[-] Error: Walpanel not installed${NC}"
+        return
+    fi
+
     cd "$INSTALL_DIR" || exit 1
+    git pull >/dev/null 2>&1
+    docker-compose down >/dev/null 2>&1
+    docker-compose up -d --build >/dev/null 2>&1
+    
+    echo -e "${GREEN}[+] Update completed successfully${NC}"
+}
 
-    echo -e "${YELLOW}[~] Pulling latest source code from GitHub...${NC}"
-    git pull
+uninstall() {
+    echo -e "${YELLOW}[!] Uninstalling Walpanel${NC}"
+    
+    if [ ! -d "$INSTALL_DIR" ]; then
+        echo -e "${RED}[-] Error: Walpanel not installed${NC}"
+        return
+    fi
 
-    echo -e "${YELLOW}[~] Stopping old containers...${NC}"
-    docker-compose down
-
-    echo -e "${YELLOW}[~] Rebuilding and starting updated containers...${NC}"
-    docker-compose up -d --build
-
-    echo -e "${GREEN}[✔] Update complete.${NC}"
+    cd "$INSTALL_DIR" || exit 1
+    docker-compose down >/dev/null 2>&1
+    rm -f /etc/nginx/sites-available/walpanel /etc/nginx/sites-enabled/walpanel /opt/walpanel
+    systemctl restart nginx >/dev/null 2>&1
+    
+    echo -e "${GREEN}[+] Uninstallation completed${NC}"
 }
 
 status() {
-    docker ps --filter name=walpanel
+    echo -e "${BLUE}[*] Current Walpanel status${NC}"
+    docker ps --filter name=walpanel --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"
 }
 
-# Menu loop
+donate() {
+    clear
+    echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BLUE}║${NC}${BOLD}                      SUPPORT WALPANEL                     ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}╠══════════════════════════════════════════════════════════╣${NC}"
+    echo -e "${BLUE}║${NC} Your support helps us continue developing and improving${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}║${NC} Walpanel. Every contribution makes a difference!     ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}║${NC}                                                    ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}║${NC}${YELLOW} Donate (TRON - TRC20):${NC}${BLUE}                              ║${NC}"
+    echo -e "${BLUE}║${NC}${GREEN} $DONATION_ADDRESS${NC}${BLUE}                    ║${NC}"
+    echo -e "${BLUE}║${NC}                                                    ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}║${NC} Thank you for your support!                         ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}╚══════════════════════════════════════════════════════════╝${NC}"
+    echo
+}
+
+# Main menu
 while true; do
     print_banner
-    read -p "$(echo -e ${BLUE}Select an option:${NC} ) " opt
+    read -p "Select an option [0-5]: " opt
     case $opt in
         1) check_dependencies && install ;;
-        2) uninstall ;;
-        3) update ;;
-        4) status ;;
-        0) echo -e "${GREEN}Bye!${NC}"; exit 0 ;;
-        *) echo -e "${RED}Invalid option.${NC}" ;;
+        2) update ;;
+        3) status ;;
+        4) donate ;;
+        5) uninstall ;;
+        0) echo -e "${GREEN}Exiting...${NC}"; exit 0 ;;
+        *) echo -e "${RED}Invalid selection${NC}" ;;
     esac
+    read -p "Press [Enter] to continue..."
 done

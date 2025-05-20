@@ -5,6 +5,7 @@ from app.db.engine import get_db
 from app.oprations.admin import admin_operations
 from sqlalchemy.orm import Session
 from app.admin_services.task import admin_task
+from datetime import date
 
 
 templates = Jinja2Templates(directory="templates")
@@ -39,7 +40,7 @@ def get_dashboard_data(
     return {
         "totalClients": total_clients,
         "availableDataGB": admin.traffic,
-        "daysRemaining": admin.days_remaining,
+        "daysRemaining": (admin.expiry_time - date.today()).days,
     }
 
 

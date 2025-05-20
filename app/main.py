@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from app.oprations.admin import daily_operations
 from app.auth.auth_controller import router as login
 from app.routers.mainadmin_router.main_admin_dash import router as main_admin_dash
 from app.routers.admin_router.admin_dash import router as admin_dash
@@ -27,13 +26,6 @@ app.include_router(admin_dash)
 app.include_router(panel_get)
 app.include_router(panel_post)
 app.include_router(admin_post)
-
-
-async def start_service():
-    await daily_operations.decrease_days_remaining()
-
-
-asyncio.create_task(start_service())
 
 
 # if __name__ == "__main__":

@@ -15,7 +15,6 @@ def create_admin(
     db: Session = Depends(get_db),
     username: str = Depends(mainadmin_required),
 ):
-    print(username)
     return admin_operations.create_admin(db, request)
 
 
@@ -25,5 +24,4 @@ def edit_admin(
     db: Session = Depends(get_db),
     username: str = Depends(mainadmin_required),
 ):
-    print(username)
     return admin_operations.edit_admin(db, request)

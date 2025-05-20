@@ -7,7 +7,7 @@ logging.basicConfig(
     format="{asctime} - {levelname} - {message}",
     style="{",
     datefmt="%Y-%m-%d %H:%M",
-    level=logging.INFO,
+    level=logging.WARNING,
 )
 
 logger = logging.getLogger("AppLogger")
