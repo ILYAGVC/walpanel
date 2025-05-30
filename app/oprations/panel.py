@@ -11,18 +11,11 @@ class PanelOperations:
 
     def create_panel(self, db: Session, request: CreatePanelInput):
         panel_exception = db.query(Panel).filter(Panel.url == request.url).first()
-        panels = db.query(Panel).count()
 
         if panel_exception:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Panel with this URL already exists.",
-            )
-
-        if panels >= 1:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="One panel is allowed in the free version.",
             )
 
         if not panels_api.login(request.url, request.username, request.password):

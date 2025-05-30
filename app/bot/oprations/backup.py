@@ -23,7 +23,7 @@ async def get_backup_from_bot(message: Message, bot_language: str):
         input_file = FSInputFile(DB_PATH)
         await message.answer_document(
             document=input_file,
-            caption=f"WALPANEL (free edition!)\n\n{time.strftime('%Y-%m-%d', time.localtime())}",
+            caption=f"WALPANEL\n\n{time.strftime('%Y-%m-%d', time.localtime())}",
         )
     except Exception as e:
         await message.answer(f"Error creating backup: {str(e)}")

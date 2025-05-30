@@ -17,7 +17,6 @@ class AdminOperations:
         existing_admin = (
             db.query(Admin).filter(Admin.username == request.username).first()
         )
-        admins = db.query(Admin).count()
 
         if existing_admin:
             raise HTTPException(
@@ -25,11 +24,6 @@ class AdminOperations:
                 detail="Admin with this username already exists.",
             )
 
-        if admins >= 2:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="two admins are allowed in the free version.",
-            )
         try:
             expiry_datetime = date.today() + timedelta(days=request.days_remaining)
             admin = Admin(
