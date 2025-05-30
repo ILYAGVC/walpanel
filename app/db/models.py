@@ -20,6 +20,7 @@ class Admin(Base):
     __tablename__ = "admins"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    chat_id = Column(Integer, nullable=True)
     username = Column(String, unique=True)
     password = Column(String, nullable=False)
     panel_id = Column(Integer, ForeignKey("panels.id"), nullable=False)
@@ -32,8 +33,55 @@ class Admin(Base):
     panel = relationship("Panel", back_populates="admins")
 
 
+class Plans(Base):
+    __tablename__ = "plans"
+
+    id = Column("id", Integer, primary_key=True, autoincrement=True)
+    traffic = Column("traffic", Integer)
+    price = Column("price", Integer)
+    days = Column("days", Integer)
+
+
 class Setting(Base):
     __tablename__ = "settings"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     language = Column(String, default="en")
+    card_payment_enabled = Column(Boolean, default=True)
+
+
+class News(Base):
+    __tablename__ = "News"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    message = Column(String, nullable=False)
+
+
+class CardNumber(Base):
+    __tablename__ = "card_number"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    number = Column(String, nullable=False)
+
+
+class HelpMessage(Base):
+    __tablename__ = "help_message"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    message = Column(String, nullable=False)
+
+
+class RegisteringMessage(Base):
+    __tablename__ = "registering_message"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    message = Column(String, nullable=False)
+
+
+class BotSettings(Base):
+    __tablename__ = "bot_settings"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    start_notif = Column("start_notif", Boolean, default=True)
+    create_notif = Column("create_notif", Boolean, default=True)
+    delete_notif = Column("delete_notif", Boolean, default=True)

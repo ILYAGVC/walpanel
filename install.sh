@@ -63,10 +63,14 @@ install() {
     read -p "Enter port to expose (default 443): " PORT
     PORT=${PORT:-443}
 
+    PANEL_ADDRESS="https://${SUBDOMAIN}${PORT:+:$PORT}"
+
     sed -i "s|USERNAME=.*|USERNAME=$USERNAME|g" .env
     sed -i "s|PASSWORD=.*|PASSWORD=$PASSWORD|g" .env
     sed -i "s|ADMIN_CHAT_ID=.*|ADMIN_CHAT_ID=$ADMIN_CHAT_ID|g" .env
     sed -i "s|BOT_TOKEN=.*|BOT_TOKEN=$BOT_TOKEN|g" .env
+    sed -i "s|PANEL_ADDRESS=.*|PANEL_ADDRESS=$PANEL_ADDRESS|g" .env
+
 
     echo -e "${BLUE}[*] Configuring SSL certificate${NC}"
     systemctl stop nginx >/dev/null 2>&1

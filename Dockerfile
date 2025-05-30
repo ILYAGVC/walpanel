@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.9
 
 WORKDIR /walpanel
 
@@ -12,8 +12,3 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["bash", "-c", "\
-    cd /walpanel/app && \
-    alembic upgrade head && \
-    (uvicorn main:app --host 0.0.0.0 --port 8000 --reload &) && \
-    python bot/main.py"]
