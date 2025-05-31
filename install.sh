@@ -29,33 +29,45 @@ print_banner() {
 
 check_dependencies() {
     echo -e "${BLUE}[*] Checking dependencies...${NC}"
-    apt update -y >/dev/null 2>&1
-    apt install -y docker.io git curl >/dev/null 2>&1 || {
-        echo -e "${RED}[-] Error: Failed to install required packages${NC}"
+    
+    # Check if running as root
+    if [ "$EUID" -ne 0 ]; then 
+        echo -e "${RED}Please run as root (use sudo)${NC}"
+        exit 1
+    fi
+
+    # Install Docker using official method
+    echo -e "${BLUE}[*] Installing Docker...${NC}"
+    curl -fsSL https://get.docker.com | sh || {
+        echo -e "${RED}[-] Failed to install Docker${NC}"
         exit 1
     }
 
-    if ! command -v docker compose >/dev/null 2>&1; then
-        echo -e "${BLUE}[*] Installing Docker Compose plugin...${NC}"
-        apt install -y docker-compose-plugin >/dev/null 2>&1 || {
-            echo -e "${RED}[-] Failed to install Docker Compose plugin${NC}"
-            exit 1
-        }
-    fi
+    # Install other dependencies
+    echo -e "${BLUE}[*] Installing other dependencies...${NC}"
+    apt update
+    apt install -y git curl gnupg2 || {
+        echo -e "${RED}[-] Failed to install required packages${NC}"
+        exit 1
+    }
 
-    if ! command -v caddy >/dev/null 2>&1; then
-        echo -e "${BLUE}[*] Installing Caddy web server...${NC}"
-        apt install -y debian-keyring debian-archive-keyring curl gnupg2
-        curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-        curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
-        apt update && apt install -y caddy || {
-            echo -e "${RED}[-] Error installing Caddy${NC}"
-            exit 1
-        }
-    fi
+    # Install Caddy
+    echo -e "${BLUE}[*] Installing Caddy web server...${NC}"
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+    apt update
+    apt install -y caddy || {
+        echo -e "${RED}[-] Failed to install Caddy${NC}"
+        exit 1
+    }
 
-    systemctl enable docker >/dev/null 2>&1 && systemctl start docker >/dev/null 2>&1
-    systemctl enable caddy >/dev/null 2>&1 && systemctl start caddy >/dev/null 2>&1
+    # Start and enable services
+    echo -e "${BLUE}[*] Starting services...${NC}"
+    systemctl enable docker
+    systemctl start docker
+    systemctl enable caddy
+    systemctl start caddy
+    
     echo -e "${GREEN}[+] Dependencies installed successfully${NC}"
 }
 
