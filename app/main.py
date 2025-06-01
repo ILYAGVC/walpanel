@@ -8,12 +8,14 @@ from app.routers.mainadmin_router.panel_post import router as panel_post
 from app.routers.mainadmin_router.panel_get import router as panel_get
 from app.routers.mainadmin_router.admin_post import router as mainadmin_post
 from app.routers.mainadmin_router.admin_get import router as mainadmin_get
+from app.routers.mainadmin_router.news_post import router as news_post
+from app.routers.mainadmin_router.news_get import router as news_get
 from app.middleware import RedirectUnauthorizedMiddleware
 import uvicorn
 import asyncio
 
 
-app = FastAPI(docs_url=None)
+app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(RedirectUnauthorizedMiddleware)
@@ -23,9 +25,11 @@ app.include_router(main_admin_dash)
 app.include_router(mainadmin_get)
 app.include_router(mainadmin_post)
 app.include_router(admin_dash)
+app.include_router(admin_post)
 app.include_router(panel_get)
 app.include_router(panel_post)
-app.include_router(admin_post)
+app.include_router(news_post)
+app.include_router(news_get)
 
 
 # if __name__ == "__main__":

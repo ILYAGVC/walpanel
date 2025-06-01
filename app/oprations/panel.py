@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from app.schema._input import CreatePanelInput
-from app.db.models import Panel
+from app.schema._input import CreatePanelInput, CreateNews
+from app.db.models import Panel, News
 from fastapi.exceptions import HTTPException
 from fastapi import status
 from app.admin_services.api import panels_api
@@ -94,6 +94,37 @@ class PanelOperations:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Panel with this name"
             )
         return panel
+
+    async def create_news(self, db: Session, request: CreateNews):
+        try:
+            new_news = News(message=request.message)
+            db.add(new_news)
+            db.commit()
+            db.refresh(new_news)
+            return new_news
+        except Exception as e:
+            logger.exception(f"Error while creating a new news => {e}")
+
+    async def get_news(self, db: Session):
+        try:
+            news = db.query(News).all()
+            return news
+        except Exception as e:
+            logger.exception(f"Error while get news => {e}")
+
+    async def delete_news(self, db: Session, id: int):
+        try:
+            news = db.query(News).filter(News.id == id).first()
+            if not news:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="News with this name not exist",
+                )
+            db.query(News).filter(News.id == id).delete()
+            db.commit()
+            return {"messsage": "successful"}
+        except Exception as e:
+            logger.exception(f"Error while deleting a news => {e}")
 
 
 panel_operations = PanelOperations()
