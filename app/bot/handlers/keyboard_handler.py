@@ -8,6 +8,7 @@ from app.bot.keyboards.main_admin_keyboards import (
     language_menu,
     cancel_keyboard,
     card_method_settings_keyboard,
+    database_menu,
 )
 from app.bot.keyboards.keyboards import (
     sign_up_menu,
@@ -27,7 +28,7 @@ from app.bot.services.query import (
 from app.admin_services.api import panels_api
 from app.bot.messages.messages import BOT_MESSAGE
 from app.bot.middlewares.middleware import set_new_language
-from app.bot.oprations.backup import get_backup_from_bot
+from app.bot.oprations.backup_restore import get_backup_from_bot
 from app.bot.oprations.notif_settings import show_notif_settings
 from app.bot.oprations.plan_setting import show_plans
 from app.bot.states.states import (
@@ -37,6 +38,7 @@ from app.bot.states.states import (
     EditPlanStates,
     DeletePlanStates,
     LoginUserStates,
+    DatabaseRestoreState,
 )
 from app.bot.oprations.auth import check_loged_in, logout_admin
 from datetime import date
@@ -201,12 +203,34 @@ async def handle_logs_button(message: types.Message, user_role: str, bot_languag
             await message.answer(f"Error reading log file: {str(e)}")
 
 
-@router.message(F.text == "📦 Backup")
+@router.message(F.text == "📦 Database")
+async def handle_database_button(
+    message: types.Message, user_role: str, bot_language: str
+):
+    if user_role == "main_admin":
+        await message.answer(
+            BOT_MESSAGE.DATABASE_MENU[bot_language], reply_markup=database_menu()
+        )
+
+
+@router.message(F.text == "📥 Backup")
 async def handle_backup_button(
     message: types.Message, user_role: str, bot_language: str
 ):
     if user_role == "main_admin":
         await get_backup_from_bot(message, bot_language)
+
+
+@router.message(F.text == "📤 Restore")
+async def handle_restore_button(
+    message: types.Message, user_role: str, bot_language: str, state: FSMContext
+):
+    if user_role == "main_admin":
+        await message.answer(
+            BOT_MESSAGE.WAITING_FOR_BACKUP_FILE[bot_language],
+            reply_markup=cancel_keyboard(),
+        )
+        await state.set_state(DatabaseRestoreState.waiting_for_backup_file)
 
 
 @router.message(F.text == "📄 Help text")

@@ -46,3 +46,7 @@ class PaymentState(StatesGroup):
 
 class SettingsState(StatesGroup):
     waiting_for_card_number = State()
+
+
+class DatabaseRestoreState(StatesGroup):
+    waiting_for_backup_file = State()

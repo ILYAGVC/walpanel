@@ -463,5 +463,32 @@ class _MessageSetings(BaseSettings):
         "fa": "✅ شماره کارت با موفقیت بروزرسانی شد!",
     }
 
+    DATABASE_MENU: dict = {"en": "Database menu...", "fa": "منوی دیتابیس..."}
+
+    WAITING_FOR_BACKUP_FILE: dict = {
+        "en": "Please send your database backup file to restore the database.",
+        "fa": "لطفا فایل پشتیبان دیتابیس خود را برای بازگردانی بفرستید.",
+    }
+
+    NO_FILE: dict = {
+        "en": "⚠️ No file was sent. Please send a database backup file.",
+        "fa": "⚠️ هیچ فایلی ارسال نشد. لطفا یک فایل پشتیبان دیتابیس ارسال کنید.",
+    }
+
+    INVALID_FILE: dict = {
+        "en": "⚠️ Invalid file format. Please send a .db file.",
+        "fa": "⚠️ فرمت فایل نامعتبر است. لطفا یک فایل .db ارسال کنید.",
+    }
+
+    RESTORING: dict = {
+        "en": "🔄 Restoring database from backup...",
+        "fa": "🔄 در حال بازگرداندن دیتابیس از پشتیبان...",
+    }
+
+    RESTORE_SUCCESS: dict = {
+        "en": "✅ Database has been successfully restored from backup!",
+        "fa": "✅ دیتابیس با موفقیت از پشتیبان بازگردانده شد!",
+    }
+
 
 BOT_MESSAGE = _MessageSetings()

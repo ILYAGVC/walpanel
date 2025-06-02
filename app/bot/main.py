@@ -14,6 +14,7 @@ from app.bot.oprations.change_messages import router as change_messages_router
 from app.bot.oprations.plan_setting import router as plan_setting_router
 from app.bot.oprations.auth import router as auth_router
 from app.bot.handlers.payment.card_payment import router as payment_router
+from app.bot.oprations.backup_restore import router as backup_restore_router
 import asyncio
 
 bot = Bot(TOKEN)
@@ -32,6 +33,7 @@ async def run():
         dp.include_router(plan_setting_router)
         dp.include_router(auth_router)
         dp.include_router(payment_router)
+        dp.include_router(backup_restore_router)
         dp.message.middleware(Middleware())
         await dp.start_polling(bot)
     finally:

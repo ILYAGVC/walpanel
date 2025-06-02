@@ -32,8 +32,20 @@ def settings_menu():
                 KeyboardButton(text="📄 Help text"),
                 KeyboardButton(text="⚪ Registration text"),
             ],
-            [KeyboardButton(text="📦 Backup"), KeyboardButton(text="🌎 Language")],
+            [KeyboardButton(text="📦 Database"), KeyboardButton(text="🌎 Language")],
             [KeyboardButton(text="🔙 Back")],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+    return keyboard
+
+
+def database_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📥 Backup"), KeyboardButton(text="📤 Restore")],
+            [KeyboardButton(text="🔙 Back to settings")],
         ],
         resize_keyboard=True,
         one_time_keyboard=True,
