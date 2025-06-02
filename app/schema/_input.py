@@ -46,3 +46,7 @@ class UpdateUserInput(BaseModel):
     expiryTime: int
     subid: str
     totalGB: int
+
+
+class CreateNews(BaseModel):
+    message: str

@@ -3,6 +3,7 @@ from fastapi.templating import Jinja2Templates
 from app.auth.auth_controller import get_current_user
 from app.db.engine import get_db
 from app.oprations.admin import admin_operations
+from app.oprations.panel import panel_operations
 from sqlalchemy.orm import Session
 from app.admin_services.task import admin_task
 from datetime import date
@@ -42,6 +43,15 @@ def get_dashboard_data(
         "availableDataGB": admin.traffic,
         "daysRemaining": (admin.expiry_time - date.today()).days,
     }
+
+
+@router.get("/news")
+async def get_news(
+    db: Session = Depends(get_db),
+    username: str = Depends(get_current_user),
+):
+    news = await panel_operations.get_news(db)
+    return news
 
 
 @router.get("/clients/")
