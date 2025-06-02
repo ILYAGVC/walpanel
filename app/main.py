@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+
+import uvicorn
+
 from app.auth.auth_controller import router as login
 from app.routers.mainadmin_router.main_admin_dash import router as main_admin_dash
 from app.routers.admin_router.admin_dash import router as admin_dash
@@ -11,11 +14,9 @@ from app.routers.mainadmin_router.admin_get import router as mainadmin_get
 from app.routers.mainadmin_router.news_post import router as news_post
 from app.routers.mainadmin_router.news_get import router as news_get
 from app.middleware import RedirectUnauthorizedMiddleware
-import uvicorn
-import asyncio
 
 
-app = FastAPI()
+app = FastAPI(docs_url=None)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(RedirectUnauthorizedMiddleware)
