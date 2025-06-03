@@ -49,17 +49,27 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 router = Router()
 
 
-@router.message(F.text == "👤 Admins")
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_ADMINS["en"], BOT_MESSAGE.BUTTON_ADMINS["fa"]])
+)
 async def handle_admins_button(
     message: types.Message, bot_language: str, user_role: str
 ):
     if user_role == "main_admin":
         admins = await admins_query.get_all_admins()
         if not admins:
-            await message.answer("No admins found!")
+            await message.answer(
+                BOT_MESSAGE.ERROR[bot_language].format(e="No admins found!")
+            )
             return
 
-        message_text = "📊 Dealers/Admins Status\n\n"
+        message_text = BOT_MESSAGE.DEALERS_STATUS[bot_language].format(
+            title=(
+                "📊 Dealers/Admins Status\n\n"
+                if bot_language == "en"
+                else "📊 وضعیت نمایندگان/ادمین‌ها\n\n"
+            )
+        )
         try:
             for admin in admins:
                 admin_status = "active" if admin["is_active"] else "disabled"
@@ -71,23 +81,35 @@ async def handle_admins_button(
                     status=admin_status,
                 )
             await message.answer(
-                message_text, parse_mode="HTML", reply_markup=main_admin_menu()
+                message_text,
+                parse_mode="HTML",
+                reply_markup=main_admin_menu(bot_language),
             )
         except Exception as e:
             await message.answer(BOT_MESSAGE.ERROR[bot_language].format(e=e))
 
 
-@router.message(F.text == "🌐 Panels")
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_PANELS["en"], BOT_MESSAGE.BUTTON_PANELS["fa"]])
+)
 async def handle_panels_button(
     message: types.Message, bot_language: str, user_role: str
 ):
     if user_role == "main_admin":
         panels = await panels_query.get_all_panels()
         if not panels:
-            await message.answer("No panels found!")
+            await message.answer(
+                BOT_MESSAGE.ERROR[bot_language].format(e="No panels found!")
+            )
             return
 
-        message_text = "📊 Panel Status Report\n\n"
+        message_text = BOT_MESSAGE.PANELS_STATUS[bot_language].format(
+            title=(
+                "📊 Panel Status Report\n\n"
+                if bot_language == "en"
+                else "📊 گزارش وضعیت پنل‌ها\n\n"
+            )
+        )
         try:
             for panel in panels:
                 panel_status = await panels_api.server_status(
@@ -95,7 +117,13 @@ async def handle_panels_button(
                 )
                 if not panel_status:
                     await message.answer(
-                        "Your panels are not running. Please check them on walpanel (web)."
+                        BOT_MESSAGE.ERROR[bot_language].format(
+                            e=(
+                                "Your panels are not running. Please check them on walpanel (web)."
+                                if bot_language == "en"
+                                else "پنل‌های شما در حال اجرا نیستند. لطفا آن‌ها را در walpanel (وب) بررسی کنید."
+                            )
+                        )
                     )
                     return
 
@@ -116,66 +144,98 @@ async def handle_panels_button(
                 )
 
             await message.answer(
-                message_text, parse_mode="HTML", reply_markup=main_admin_menu()
+                message_text,
+                parse_mode="HTML",
+                reply_markup=main_admin_menu(bot_language),
             )
         except Exception as e:
             await message.answer(BOT_MESSAGE.ERROR[bot_language].format(e=e))
 
 
-@router.message(F.text == "🌎 Language")
-async def handle_lang_button(message: types.Message, user_role: str):
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_LANGUAGE["en"], BOT_MESSAGE.BUTTON_LANGUAGE["fa"]])
+)
+async def handle_lang_button(message: types.Message, user_role: str, bot_language: str):
     if user_role == "main_admin":
-        await message.answer("🤖 Bot Language", reply_markup=language_menu())
+        await message.answer(
+            BOT_MESSAGE.BUTTON_LANGUAGE[bot_language],
+            reply_markup=language_menu(bot_language),
+        )
 
 
-@router.message(F.text == "🇺🇸 English")
-async def handle_en_button(message: types.Message, user_role: str):
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_ENGLISH["en"], BOT_MESSAGE.BUTTON_ENGLISH["fa"]])
+)
+async def handle_en_button(message: types.Message, user_role: str, bot_language: str):
     if user_role == "main_admin":
         new_language = "en"
         await settings_query.change_language(new_language)
         await message.answer(
-            BOT_MESSAGE.START_MAIN_ADMIN[new_language], reply_markup=main_admin_menu()
+            BOT_MESSAGE.START_MAIN_ADMIN[new_language],
+            reply_markup=main_admin_menu(new_language),
         )
         await set_new_language()
 
 
-@router.message(F.text == "🇮🇷 Persian")
-async def handle_fa_button(message: types.Message, user_role: str):
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_PERSIAN["en"], BOT_MESSAGE.BUTTON_PERSIAN["fa"]])
+)
+async def handle_fa_button(message: types.Message, user_role: str, bot_language: str):
     if user_role == "main_admin":
         new_language = "fa"
         await settings_query.change_language(new_language)
         await message.answer(
-            BOT_MESSAGE.START_MAIN_ADMIN[new_language], reply_markup=main_admin_menu()
+            BOT_MESSAGE.START_MAIN_ADMIN[new_language],
+            reply_markup=main_admin_menu(new_language),
         )
         await set_new_language()
 
 
-@router.message(F.text == "🇺🇸 English")
-async def handle_en_button(message: types.Message, user_role: str):
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_SETTINGS["en"], BOT_MESSAGE.BUTTON_SETTINGS["fa"]])
+)
+async def handle_settings_button(
+    message: types.Message, user_role: str, bot_language: str
+):
     if user_role == "main_admin":
+        await message.answer(
+            BOT_MESSAGE.BUTTON_SETTINGS[bot_language],
+            reply_markup=settings_menu(bot_language),
+        )
 
-        await message.answer("🇺🇸 English", reply_markup=settings_menu())
 
-
-@router.message(F.text == "⚙️ Settings")
-async def handle_settings_button(message: types.Message, user_role: str):
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_BACK["en"], BOT_MESSAGE.BUTTON_BACK["fa"]])
+)
+async def handle_back_button(message: types.Message, user_role: str, bot_language: str):
     if user_role == "main_admin":
-        await message.answer("⚙️ Settings Menu", reply_markup=settings_menu())
+        await message.answer(
+            BOT_MESSAGE.BUTTON_BACK[bot_language],
+            reply_markup=main_admin_menu(bot_language),
+        )
 
 
-@router.message(F.text == "🔙 Back")
-async def handle_back_button(message: types.Message, user_role: str):
+@router.message(
+    F.text.in_(
+        [
+            BOT_MESSAGE.BUTTON_BACK_TO_SETTINGS["en"],
+            BOT_MESSAGE.BUTTON_BACK_TO_SETTINGS["fa"],
+        ]
+    )
+)
+async def handle_back_to_settings_button(
+    message: types.Message, user_role: str, bot_language: str
+):
     if user_role == "main_admin":
-        await message.answer("📱 Main menu", reply_markup=main_admin_menu())
+        await message.answer(
+            BOT_MESSAGE.BUTTON_SETTINGS[bot_language],
+            reply_markup=settings_menu(bot_language),
+        )
 
 
-@router.message(F.text == "🔙 Back to settings")
-async def handle_back_button(message: types.Message, user_role: str):
-    if user_role == "main_admin":
-        await message.answer("⚙️ Settings Menu", reply_markup=settings_menu())
-
-
-@router.message(F.text == "📝 Logs")
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_LOGS["en"], BOT_MESSAGE.BUTTON_LOGS["fa"]])
+)
 async def handle_logs_button(message: types.Message, user_role: str, bot_language: str):
     if user_role == "main_admin":
         current_dir = os.path.dirname(
@@ -185,35 +245,46 @@ async def handle_logs_button(message: types.Message, user_role: str, bot_languag
 
         try:
             if not os.path.exists(log_file_path):
-                await message.answer(f"Log file not found at: {log_file_path}")
+                await message.answer(
+                    BOT_MESSAGE.ERROR[bot_language].format(
+                        e=(
+                            "Log file not found"
+                            if bot_language == "en"
+                            else "فایل لاگ یافت نشد"
+                        )
+                    )
+                )
                 return
 
             with open(log_file_path, "r", encoding="utf-8") as file:
-                # Read all lines and get the last 10
                 lines = file.readlines()
                 last_10_lines = lines[-10:] if len(lines) >= 10 else lines
-
                 log_content = "".join(last_10_lines)
                 await message.answer(
                     f"{BOT_MESSAGE.LOG_MESSAGE[bot_language]}<pre>{log_content}</pre>",
                     parse_mode="HTML",
-                    reply_markup=main_admin_menu(),
+                    reply_markup=main_admin_menu(bot_language),
                 )
         except Exception as e:
-            await message.answer(f"Error reading log file: {str(e)}")
+            await message.answer(BOT_MESSAGE.ERROR[bot_language].format(e=e))
 
 
-@router.message(F.text == "📦 Database")
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_DATABASE["en"], BOT_MESSAGE.BUTTON_DATABASE["fa"]])
+)
 async def handle_database_button(
     message: types.Message, user_role: str, bot_language: str
 ):
     if user_role == "main_admin":
         await message.answer(
-            BOT_MESSAGE.DATABASE_MENU[bot_language], reply_markup=database_menu()
+            BOT_MESSAGE.DATABASE_MENU[bot_language],
+            reply_markup=database_menu(bot_language),
         )
 
 
-@router.message(F.text == "📥 Backup")
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_BACKUP["en"], BOT_MESSAGE.BUTTON_BACKUP["fa"]])
+)
 async def handle_backup_button(
     message: types.Message, user_role: str, bot_language: str
 ):
@@ -221,19 +292,23 @@ async def handle_backup_button(
         await get_backup_from_bot(message, bot_language)
 
 
-@router.message(F.text == "📤 Restore")
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_RESTORE["en"], BOT_MESSAGE.BUTTON_RESTORE["fa"]])
+)
 async def handle_restore_button(
     message: types.Message, user_role: str, bot_language: str, state: FSMContext
 ):
     if user_role == "main_admin":
         await message.answer(
             BOT_MESSAGE.WAITING_FOR_BACKUP_FILE[bot_language],
-            reply_markup=cancel_keyboard(),
+            reply_markup=cancel_keyboard(bot_language),
         )
         await state.set_state(DatabaseRestoreState.waiting_for_backup_file)
 
 
-@router.message(F.text == "📄 Help text")
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_HELP_TEXT["en"], BOT_MESSAGE.BUTTON_HELP_TEXT["fa"]])
+)
 async def handle_help_text_button(
     message: types.Message, user_role: str, bot_language: str, state: FSMContext
 ):
@@ -241,12 +316,19 @@ async def handle_help_text_button(
         help_text = help_message_query.get_help_message()
         show_text = BOT_MESSAGE.HELP_TEXT[bot_language].format(help_text=help_text)
         await message.answer(
-            show_text, parse_mode="HTML", reply_markup=cancel_keyboard()
+            show_text, parse_mode="HTML", reply_markup=cancel_keyboard(bot_language)
         )
         await state.set_state(HelpTextStates.waiting_for_new_help_text)
 
 
-@router.message(F.text == "⚪ Registration text")
+@router.message(
+    F.text.in_(
+        [
+            BOT_MESSAGE.BUTTON_REGISTRATION_TEXT["en"],
+            BOT_MESSAGE.BUTTON_REGISTRATION_TEXT["fa"],
+        ]
+    )
+)
 async def handle_registration_text_button(
     message: types.Message, user_role: str, bot_language: str, state: FSMContext
 ):
@@ -256,12 +338,16 @@ async def handle_registration_text_button(
             registration_text=registration_text
         )
         await message.answer(
-            show_text, parse_mode="HTML", reply_markup=cancel_keyboard()
+            show_text, parse_mode="HTML", reply_markup=cancel_keyboard(bot_language)
         )
         await state.set_state(RegistrationTextStates.waiting_for_new_registration_text)
 
 
-@router.message(F.text == "🔔 Notifications")
+@router.message(
+    F.text.in_(
+        [BOT_MESSAGE.BUTTON_NOTIFICATIONS["en"], BOT_MESSAGE.BUTTON_NOTIFICATIONS["fa"]]
+    )
+)
 async def handle_notifications_button(
     message: types.Message, user_role: str, bot_language: str, state: FSMContext
 ):
@@ -269,7 +355,11 @@ async def handle_notifications_button(
         await show_notif_settings(message, bot_language, user_role)
 
 
-@router.message(F.text == "🛍️ Sales Plan")
+@router.message(
+    F.text.in_(
+        [BOT_MESSAGE.BUTTON_SALES_PLAN["en"], BOT_MESSAGE.BUTTON_SALES_PLAN["fa"]]
+    )
+)
 async def handle_sales_plan_button(
     message: types.Message, user_role: str, bot_language: str
 ):
@@ -277,43 +367,55 @@ async def handle_sales_plan_button(
         await show_plans(message, bot_language)
 
 
-@router.message(F.text == "➕ Add a plan")
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_ADD_PLAN["en"], BOT_MESSAGE.BUTTON_ADD_PLAN["fa"]])
+)
 async def handle_add_plan_button(
     message: types.Message, user_role: str, bot_language: str, state: FSMContext
 ):
     if user_role == "main_admin":
         await message.answer(
             BOT_MESSAGE.WAITING_FOR_PLAN_TRAFFIC[bot_language],
-            reply_markup=cancel_keyboard(),
+            reply_markup=cancel_keyboard(bot_language),
         )
         await state.set_state(AddPlanStates.waiting_for_traffic)
 
 
-@router.message(F.text == "⚙️ Edit a plan")
-async def handle_settings_button(
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_EDIT_PLAN["en"], BOT_MESSAGE.BUTTON_EDIT_PLAN["fa"]])
+)
+async def handle_edit_plan_button(
     message: types.Message, user_role: str, bot_language: str, state: FSMContext
 ):
     if user_role == "main_admin":
         await message.answer(
             BOT_MESSAGE.WAITING_FOR_PLAN_ID[bot_language],
-            reply_markup=cancel_keyboard(),
+            reply_markup=cancel_keyboard(bot_language),
         )
         await state.set_state(EditPlanStates.waiting_for_id)
 
 
-@router.message(F.text == "❌ Delete a plan")
+@router.message(
+    F.text.in_(
+        [BOT_MESSAGE.BUTTON_DELETE_PLAN["en"], BOT_MESSAGE.BUTTON_DELETE_PLAN["fa"]]
+    )
+)
 async def handle_delete_plan_button(
     message: types.Message, user_role: str, bot_language: str, state: FSMContext
 ):
     if user_role == "main_admin":
         await message.answer(
             BOT_MESSAGE.WAITING_FOR_PLAN_ID[bot_language],
-            reply_markup=cancel_keyboard(),
+            reply_markup=cancel_keyboard(bot_language),
         )
         await state.set_state(DeletePlanStates.waiting_for_id)
 
 
-@router.message(F.text == "💳 Card method setting")
+@router.message(
+    F.text.in_(
+        [BOT_MESSAGE.BUTTON_CARD_METHOD["en"], BOT_MESSAGE.BUTTON_CARD_METHOD["fa"]]
+    )
+)
 async def handle_card_method_button(
     message: types.Message, user_role: str, bot_language: str
 ):
@@ -331,10 +433,10 @@ async def handle_card_method_button(
         )
 
 
-# users and admins buttons
-
-
-@router.message(F.text == "💎 sign up")
+# User and admin buttons
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_SIGN_UP["en"], BOT_MESSAGE.BUTTON_SIGN_UP["fa"]])
+)
 async def handle_sign_up_button(message: types.Message, bot_language: str):
     try:
         rules = registering_message_query.get_registering_message()
@@ -353,23 +455,29 @@ async def handle_sign_up_button(message: types.Message, bot_language: str):
         )
 
 
-@router.message(F.text == "🛡️ Login")
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_LOGIN["en"], BOT_MESSAGE.BUTTON_LOGIN["fa"]])
+)
 async def handle_login_button(
     message: types.Message, bot_language: str, state: FSMContext
 ):
     try:
         await message.answer(
-            BOT_MESSAGE.LOGIN_STEP1[bot_language], reply_markup=dealer_cancel_keyboard()
+            BOT_MESSAGE.LOGIN_STEP1[bot_language],
+            reply_markup=dealer_cancel_keyboard(bot_language),
         )
         await state.set_state(LoginUserStates.enter_username)
-
     except Exception as e:
         await message.answer(
             BOT_MESSAGE.ERROR[bot_language].format(e=e),
         )
 
 
-@router.message(F.text == "💎 My account")
+@router.message(
+    F.text.in_(
+        [BOT_MESSAGE.BUTTON_MY_ACCOUNT["en"], BOT_MESSAGE.BUTTON_MY_ACCOUNT["fa"]]
+    )
+)
 async def handle_myaccount_button(message: types.Message, bot_language: str):
     try:
         if await check_loged_in(message.chat.id):
@@ -381,12 +489,14 @@ async def handle_myaccount_button(message: types.Message, bot_language: str):
                 traffic=data["traffic"],
                 expiry_time=expiry_time,
             )
-            await message.reply(message_text, reply_markup=admin_panel())
+            await message.reply(message_text, reply_markup=admin_panel(bot_language))
     except Exception as e:
         await message.answer(BOT_MESSAGE.ERROR[bot_language].format(e=e))
 
 
-@router.message(F.text == "🛍️ Store")
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_STORE["en"], BOT_MESSAGE.BUTTON_STORE["fa"]])
+)
 async def handle_store_button(message: types.Message, bot_language: str):
     try:
         if await check_loged_in(message.chat.id):
@@ -395,7 +505,6 @@ async def handle_store_button(message: types.Message, bot_language: str):
                 await message.answer(BOT_MESSAGE.PLAN_NOT_EXIST[bot_language])
                 return
 
-            # Create keyboard with plans
             keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[
                     [
@@ -415,7 +524,9 @@ async def handle_store_button(message: types.Message, bot_language: str):
         await message.answer(BOT_MESSAGE.ERROR[bot_language].format(e=e))
 
 
-@router.message(F.text == "ℹ️ Help")
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_HELP["en"], BOT_MESSAGE.BUTTON_HELP["fa"]])
+)
 async def handle_help_button(message: types.Message, bot_language: str):
     try:
         help_text = help_message_query.get_help_message()
@@ -424,13 +535,15 @@ async def handle_help_button(message: types.Message, bot_language: str):
         await message.answer(BOT_MESSAGE.ERROR[bot_language].format(e=e))
 
 
-@router.message(F.text == "❌ Logout")
+@router.message(
+    F.text.in_([BOT_MESSAGE.BUTTON_LOGOUT["en"], BOT_MESSAGE.BUTTON_LOGOUT["fa"]])
+)
 async def handle_Logout_button(message: types.Message, bot_language: str):
     try:
         if await check_loged_in(message.chat.id):
             await logout_admin(message.chat.id)
             await message.answer(
-                BOT_MESSAGE.LOGOUT[bot_language], reply_markup=start_menu()
+                BOT_MESSAGE.LOGOUT[bot_language], reply_markup=start_menu(bot_language)
             )
     except Exception as e:
         await message.answer(BOT_MESSAGE.ERROR[bot_language].format(e=e))

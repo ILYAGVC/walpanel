@@ -39,11 +39,14 @@ async def get_backup_from_bot(message: Message, bot_language: str):
 @router.message(DatabaseRestoreState.waiting_for_backup_file)
 async def restore_database(message: Message, bot_language: str, state: FSMContext):
     try:
-        if message.text == "❌ Cancel":
+        if message.text in [
+            BOT_MESSAGE.BUTTON_CANCEL["en"],
+            BOT_MESSAGE.BUTTON_CANCEL["fa"],
+        ]:
             await state.clear()
             await message.answer(
                 BOT_MESSAGE.CANCEL_OPERATION[bot_language],
-                reply_markup=main_admin_menu(),
+                reply_markup=main_admin_menu(bot_language),
             )
             return
 
@@ -72,7 +75,7 @@ async def restore_database(message: Message, bot_language: str, state: FSMContex
             # Restart container manually :D
             await message.answer(
                 BOT_MESSAGE.RESTORE_SUCCESS[bot_language],
-                reply_markup=main_admin_menu(),
+                reply_markup=main_admin_menu(bot_language),
             )
             os._exit(1)
 
@@ -84,7 +87,7 @@ async def restore_database(message: Message, bot_language: str, state: FSMContex
     except Exception as e:
         await message.answer(
             BOT_MESSAGE.ERROR[bot_language].format(e=str(e)),
-            reply_markup=main_admin_menu(),
+            reply_markup=main_admin_menu(bot_language),
         )
         if os.path.exists(TEMP_DB_PATH):
             os.remove(TEMP_DB_PATH)

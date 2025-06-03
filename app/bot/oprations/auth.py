@@ -24,10 +24,13 @@ logged_in_admins = []
 @router.message(RegisterUserStates.enter_username)
 async def enter_username(message: types.Message, bot_language: str, state: FSMContext):
     try:
-        if message.text == "❌ Cancel":
+        if message.text in [
+            BOT_MESSAGE.BUTTON_CANCEL["en"],
+            BOT_MESSAGE.BUTTON_CANCEL["fa"],
+        ]:
             await message.answer(
                 BOT_MESSAGE.CANCEL_OPERATION[bot_language],
-                reply_markup=main_admin_menu(),
+                reply_markup=main_admin_menu(bot_language),
             )
             await state.clear()
             return
@@ -37,20 +40,26 @@ async def enter_username(message: types.Message, bot_language: str, state: FSMCo
         await state.update_data(username=username)
         await message.answer(
             BOT_MESSAGE.CHOOSE_A_PASSWORD_FOR_THE_REQUESTER[bot_language],
-            reply_markup=cancel_keyboard(),
+            reply_markup=cancel_keyboard(bot_language),
         )
         await state.set_state(RegisterUserStates.enter_password)
     except Exception as e:
-        await message.answer(BOT_MESSAGE.ERROR[bot_language].format(e=e))
+        await message.answer(
+            BOT_MESSAGE.ERROR[bot_language].format(e=e),
+            reply_markup=main_admin_menu(bot_language),
+        )
 
 
 @router.message(RegisterUserStates.enter_password)
 async def enter_password(message: types.Message, bot_language: str, state: FSMContext):
     try:
-        if message.text == "❌ Cancel":
+        if message.text in [
+            BOT_MESSAGE.BUTTON_CANCEL["en"],
+            BOT_MESSAGE.BUTTON_CANCEL["fa"],
+        ]:
             await message.answer(
                 BOT_MESSAGE.CANCEL_OPERATION[bot_language],
-                reply_markup=main_admin_menu(),
+                reply_markup=main_admin_menu(bot_language),
             )
             await state.clear()
             return
@@ -66,24 +75,30 @@ async def enter_password(message: types.Message, bot_language: str, state: FSMCo
                 show_panels += f"<b>🆔: {panel['id']}  Name: {panel['name']}</b>\n➖➖➖➖➖➖➖➖➖➖\n"
 
         await message.answer(
-            show_panels, parse_mode="HTML", reply_markup=cancel_keyboard()
+            show_panels, parse_mode="HTML", reply_markup=cancel_keyboard(bot_language)
         )
         await message.answer(
             BOT_MESSAGE.CHOOSE_A_PANEL_FOR_THE_REQUESTER[bot_language],
-            reply_markup=cancel_keyboard(),
+            reply_markup=cancel_keyboard(bot_language),
         )
         await state.set_state(RegisterUserStates.enter_panel_id)
     except Exception as e:
-        await message.answer(BOT_MESSAGE.ERROR[bot_language].format(e=e))
+        await message.answer(
+            BOT_MESSAGE.ERROR[bot_language].format(e=e),
+            reply_markup=main_admin_menu(bot_language),
+        )
 
 
 @router.message(RegisterUserStates.enter_panel_id)
 async def enter_panel_id(message: types.Message, bot_language: str, state: FSMContext):
     try:
-        if message.text == "❌ Cancel":
+        if message.text in [
+            BOT_MESSAGE.BUTTON_CANCEL["en"],
+            BOT_MESSAGE.BUTTON_CANCEL["fa"],
+        ]:
             await message.answer(
                 BOT_MESSAGE.CANCEL_OPERATION[bot_language],
-                reply_markup=main_admin_menu(),
+                reply_markup=main_admin_menu(bot_language),
             )
             await state.clear()
             return
@@ -96,13 +111,14 @@ async def enter_panel_id(message: types.Message, bot_language: str, state: FSMCo
         await state.update_data(panel_id=panel_id)
         await message.answer(
             BOT_MESSAGE.CHOOSE_A_INBOUND_FOR_THE_REQUESTER[bot_language],
-            reply_markup=cancel_keyboard(),
+            reply_markup=cancel_keyboard(bot_language),
         )
         await state.set_state(RegisterUserStates.enter_inbound_id)
 
     except ValueError:
         await message.answer(
-            BOT_MESSAGE.PANEL_NOT_EXIST[bot_language], reply_markup=cancel_keyboard()
+            BOT_MESSAGE.PANEL_NOT_EXIST[bot_language],
+            reply_markup=cancel_keyboard(bot_language),
         )
 
 
@@ -111,10 +127,13 @@ async def enter_inbound_id(
     message: types.Message, bot_language: str, state: FSMContext
 ):
     try:
-        if message.text == "❌ Cancel":
+        if message.text in [
+            BOT_MESSAGE.BUTTON_CANCEL["en"],
+            BOT_MESSAGE.BUTTON_CANCEL["fa"],
+        ]:
             await message.answer(
                 BOT_MESSAGE.CANCEL_OPERATION[bot_language],
-                reply_markup=main_admin_menu(),
+                reply_markup=main_admin_menu(bot_language),
             )
             await state.clear()
             return
@@ -144,7 +163,7 @@ async def enter_inbound_id(
             await message.answer(
                 BOT_MESSAGE.REGISTERITION_REQUEST_APPROVED[bot_language],
                 parse_mode="HTML",
-                reply_markup=main_admin_menu(),
+                reply_markup=main_admin_menu(bot_language),
             )
 
             notif_for_admin = BOT_MESSAGE.YOUR_REGISTERITION_REQUEST_HAS_BEEN_CONFIRMED[
@@ -156,14 +175,16 @@ async def enter_inbound_id(
             )
         else:
             await message.answer(
-                BOT_MESSAGE.ERROR[bot_language], reply_markup=main_admin_menu()
+                BOT_MESSAGE.ERROR[bot_language],
+                reply_markup=main_admin_menu(bot_language),
             )
 
         await state.clear()
 
     except Exception as e:
         await message.answer(
-            BOT_MESSAGE.ERROR[bot_language].format(e=e), reply_markup=main_admin_menu()
+            BOT_MESSAGE.ERROR[bot_language].format(e=e),
+            reply_markup=main_admin_menu(bot_language),
         )
         await state.clear()
 
@@ -172,10 +193,13 @@ async def enter_inbound_id(
 @router.message(LoginUserStates.enter_username)
 async def enter_username(message: types.Message, bot_language: str, state: FSMContext):
     try:
-        if message.text == "❌ Cancel":
+        if message.text in [
+            BOT_MESSAGE.BUTTON_CANCEL["en"],
+            BOT_MESSAGE.BUTTON_CANCEL["fa"],
+        ]:
             await message.answer(
                 BOT_MESSAGE.CANCEL_OPERATION[bot_language],
-                reply_markup=start_menu(),
+                reply_markup=start_menu(bot_language),
             )
             await state.clear()
             return
@@ -187,7 +211,8 @@ async def enter_username(message: types.Message, bot_language: str, state: FSMCo
 
     except Exception as e:
         await message.answer(
-            BOT_MESSAGE.ERROR[bot_language].format(e=e), reply_markup=start_menu()
+            BOT_MESSAGE.ERROR[bot_language].format(e=e),
+            reply_markup=start_menu(bot_language),
         )
         await state.clear()
 
@@ -195,10 +220,13 @@ async def enter_username(message: types.Message, bot_language: str, state: FSMCo
 @router.message(LoginUserStates.enter_password)
 async def enter_password(message: types.Message, bot_language: str, state: FSMContext):
     try:
-        if message.text == "❌ Cancel":
+        if message.text in [
+            BOT_MESSAGE.BUTTON_CANCEL["en"],
+            BOT_MESSAGE.BUTTON_CANCEL["fa"],
+        ]:
             await message.answer(
                 BOT_MESSAGE.CANCEL_OPERATION[bot_language],
-                reply_markup=start_menu(),
+                reply_markup=start_menu(bot_language),
             )
             await state.clear()
             return
@@ -211,13 +239,14 @@ async def enter_password(message: types.Message, bot_language: str, state: FSMCo
         await state.update_data(captcha_answer=answer)
         await message.answer(
             BOT_MESSAGE.LOGIN_STEP3[bot_language].format(question=question),
-            reply_markup=dealer_cancel_keyboard(),
+            reply_markup=dealer_cancel_keyboard(bot_language),
         )
         await state.set_state(LoginUserStates.enter_captcha)
 
     except Exception as e:
         await message.answer(
-            BOT_MESSAGE.ERROR[bot_language].format(e=e), reply_markup=start_menu()
+            BOT_MESSAGE.ERROR[bot_language].format(e=e),
+            reply_markup=start_menu(bot_language),
         )
         await state.clear()
 
@@ -225,10 +254,13 @@ async def enter_password(message: types.Message, bot_language: str, state: FSMCo
 @router.message(LoginUserStates.enter_captcha)
 async def enter_captcha(message: types.Message, bot_language: str, state: FSMContext):
     try:
-        if message.text == "❌ Cancel":
+        if message.text in [
+            BOT_MESSAGE.BUTTON_CANCEL["en"],
+            BOT_MESSAGE.BUTTON_CANCEL["fa"],
+        ]:
             await message.answer(
                 BOT_MESSAGE.CANCEL_OPERATION[bot_language],
-                reply_markup=start_menu(),
+                reply_markup=start_menu(bot_language),
             )
             await state.clear()
             return
@@ -245,7 +277,7 @@ async def enter_captcha(message: types.Message, bot_language: str, state: FSMCon
             await state.update_data(captcha_answer=answer)
             await message.answer(
                 BOT_MESSAGE.CAPTCHA_WRONG[bot_language],
-                reply_markup=dealer_cancel_keyboard(),
+                reply_markup=dealer_cancel_keyboard(bot_language),
             )
             await message.answer(
                 BOT_MESSAGE.LOGIN_STEP3[bot_language].format(question=question)
@@ -254,19 +286,22 @@ async def enter_captcha(message: types.Message, bot_language: str, state: FSMCon
 
         if admins_query.login_admin(username, password, message.chat.id):
             await message.answer(
-                BOT_MESSAGE.LOGIN_SUCCESS[bot_language], reply_markup=admin_menu()
+                BOT_MESSAGE.LOGIN_SUCCESS[bot_language],
+                reply_markup=admin_menu(bot_language),
             )
             await state.clear()
         else:
             await message.answer(
-                BOT_MESSAGE.LOGIN_FAILED[bot_language], reply_markup=start_menu()
+                BOT_MESSAGE.LOGIN_FAILED[bot_language],
+                reply_markup=start_menu(bot_language),
             )
             await state.clear()
             return
 
     except Exception as e:
         await message.answer(
-            BOT_MESSAGE.ERROR[bot_language].format(e=e), reply_markup=start_menu()
+            BOT_MESSAGE.ERROR[bot_language].format(e=e),
+            reply_markup=start_menu(bot_language),
         )
         await state.clear()
 

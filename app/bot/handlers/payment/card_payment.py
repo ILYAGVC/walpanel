@@ -19,7 +19,9 @@ async def handle_confirm_payment(callback: types.CallbackQuery, state: FSMContex
         plan = plans_query.get_a_plan_by_id(plan_id)
         card_num = card_query.get_card()
         await state.set_state(PaymentState.waiting_for_card_payment)
-        await state.update_data(plan_id=plan_id, chat_id=chat_id)
+        await state.update_data(
+            plan_id=plan_id, chat_id=chat_id, bot_language=bot_language
+        )
 
         await callback.message.answer(
             BOT_MESSAGE.SEND_CARD_PAYMENT_PHOTO[bot_language].format(
@@ -34,16 +36,35 @@ async def handle_confirm_payment(callback: types.CallbackQuery, state: FSMContex
         )
 
 
-@router.message(PaymentState.waiting_for_card_payment, F.photo)
-async def handle_card_payment_photo(message: types.Message, state: FSMContext):
+@router.message(PaymentState.waiting_for_card_payment)
+async def handle_card_payment_message(message: types.Message, state: FSMContext):
     try:
         data = await state.get_data()
+        bot_language = data.get("bot_language")
+
+        if message.text in [
+            BOT_MESSAGE.BUTTON_CANCEL["en"],
+            BOT_MESSAGE.BUTTON_CANCEL["fa"],
+        ]:
+            await message.answer(
+                BOT_MESSAGE.PAYMENT_CANCELLED[bot_language], parse_mode="HTML"
+            )
+            await state.clear()
+            return
+
+        if not message.photo:
+            await message.answer(
+                BOT_MESSAGE.ERROR[bot_language].format(
+                    e="Please send a photo of your payment receipt"
+                ),
+                parse_mode="HTML",
+                reply_markup=cancel_payment_keyboard(bot_language),
+            )
+            return
+
         plan_id = data.get("plan_id")
         chat_id = data.get("chat_id")
-        bot_language = await settings_query.get_language()
-
         plan = plans_query.get_a_plan_by_id(plan_id)
-
         admin = admins_query.get_admin_by_chat_id(chat_id)
 
         # Forward payment photo to main admin for confirmation
@@ -65,7 +86,7 @@ async def handle_card_payment_photo(message: types.Message, state: FSMContext):
         payment_info = BOT_MESSAGE.PAYMENT_CONFIRMATION_REQUEST[bot_language].format(
             username=admin["username"],
             traffic=plan["traffic"],
-            days=plan["days"],
+            days=plan["deadline"],
             price=plan["price"],
         )
 
@@ -84,7 +105,9 @@ async def handle_card_payment_photo(message: types.Message, state: FSMContext):
 
     except Exception as e:
         await message.answer(
-            BOT_MESSAGE.ERROR[bot_language].format(e=e), parse_mode="HTML"
+            BOT_MESSAGE.ERROR[bot_language].format(e=e),
+            parse_mode="HTML",
+            reply_markup=cancel_payment_keyboard(bot_language),
         )
 
 
