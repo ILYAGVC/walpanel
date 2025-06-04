@@ -17,7 +17,8 @@ async def command_start_handler(
 ):
     if user_role == "main_admin":
         await message.answer(
-            BOT_MESSAGE.START_MAIN_ADMIN[bot_language], reply_markup=main_admin_menu()
+            BOT_MESSAGE.START_MAIN_ADMIN[bot_language],
+            reply_markup=main_admin_menu(bot_language),
         )
     else:
         if bot_settings_query.get_start_notif():
@@ -29,9 +30,11 @@ async def command_start_handler(
             await message.bot.send_message(MAIN_ADMIN, notif, parse_mode="HTML")
         if not admins_query.check_loged_in(message.chat.id):
             await message.answer(
-                BOT_MESSAGE.START_MESSAGE[bot_language], reply_markup=start_menu()
+                BOT_MESSAGE.START_MESSAGE[bot_language],
+                reply_markup=start_menu(bot_language),
             )
         else:
             await message.answer(
-                BOT_MESSAGE.START_DEALER[bot_language], reply_markup=admin_menu()
+                BOT_MESSAGE.START_DEALER[bot_language],
+                reply_markup=admin_menu(bot_language),
             )

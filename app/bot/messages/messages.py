@@ -463,5 +463,74 @@ class _MessageSetings(BaseSettings):
         "fa": "✅ شماره کارت با موفقیت بروزرسانی شد!",
     }
 
+    DATABASE_MENU: dict = {"en": "Database menu...", "fa": "منوی دیتابیس..."}
+
+    WAITING_FOR_BACKUP_FILE: dict = {
+        "en": "Please send your database backup file to restore the database.",
+        "fa": "لطفا فایل پشتیبان دیتابیس خود را برای بازگردانی بفرستید.",
+    }
+
+    NO_FILE: dict = {
+        "en": "⚠️ No file was sent. Please send a database backup file.",
+        "fa": "⚠️ هیچ فایلی ارسال نشد. لطفا یک فایل پشتیبان دیتابیس ارسال کنید.",
+    }
+
+    INVALID_FILE: dict = {
+        "en": "⚠️ Invalid file format. Please send a .db file.",
+        "fa": "⚠️ فرمت فایل نامعتبر است. لطفا یک فایل .db ارسال کنید.",
+    }
+
+    RESTORING: dict = {
+        "en": "🔄 Restoring database from backup...",
+        "fa": "🔄 در حال بازگرداندن دیتابیس از پشتیبان...",
+    }
+
+    RESTORE_SUCCESS: dict = {
+        "en": "✅ Database has been successfully restored from backup!",
+        "fa": "✅ دیتابیس با موفقیت از پشتیبان بازگردانده شد!",
+    }
+
+    # Button texts
+    BUTTON_ADMINS: dict = {"en": "👤 Admins", "fa": "👤 ادمین‌ها"}
+    BUTTON_PANELS: dict = {"en": "🌐 Panels", "fa": "🌐 پنل‌ها"}
+    BUTTON_SETTINGS: dict = {"en": "⚙️ Settings", "fa": "⚙️ تنظیمات"}
+    BUTTON_LOGS: dict = {"en": "📝 Logs", "fa": "📝 لاگ‌ها"}
+    BUTTON_SALES_PLAN: dict = {"en": "🛍️ Sales Plan", "fa": "🛍️ پلن فروش"}
+    BUTTON_NOTIFICATIONS: dict = {"en": "🔔 Notifications", "fa": "🔔 اعلان‌ها"}
+    BUTTON_HELP_TEXT: dict = {"en": "📄 Help text", "fa": "📄 متن راهنما"}
+    BUTTON_REGISTRATION_TEXT: dict = {
+        "en": "⚪ Registration text",
+        "fa": "⚪ متن ثبت‌نام",
+    }
+    BUTTON_DATABASE: dict = {"en": "📦 Database", "fa": "📦 دیتابیس"}
+    BUTTON_LANGUAGE: dict = {"en": "🌎 Language", "fa": "🌎 زبان"}
+    BUTTON_BACK: dict = {"en": "🔙 Back", "fa": "🔙 بازگشت"}
+    BUTTON_BACK_TO_SETTINGS: dict = {
+        "en": "🔙 Back to settings",
+        "fa": "🔙 بازگشت به تنظیمات",
+    }
+    BUTTON_BACKUP: dict = {"en": "📥 Backup", "fa": "📥 پشتیبان‌گیری"}
+    BUTTON_RESTORE: dict = {"en": "📤 Restore", "fa": "📤 بازگردانی"}
+    BUTTON_ADD_PLAN: dict = {"en": "➕ Add a plan", "fa": "➕ افزودن پلن"}
+    BUTTON_DELETE_PLAN: dict = {"en": "❌ Delete a plan", "fa": "❌ حذف پلن"}
+    BUTTON_EDIT_PLAN: dict = {"en": "⚙️ Edit a plan", "fa": "⚙️ ویرایش پلن"}
+    BUTTON_CARD_METHOD: dict = {"en": "💳 Card method setting", "fa": "💳 تنظیمات کارت"}
+    BUTTON_ENGLISH: dict = {"en": "🇺🇸 English", "fa": "🇺🇸 انگلیسی"}
+    BUTTON_PERSIAN: dict = {"en": "🇮🇷 Persian", "fa": "🇮🇷 فارسی"}
+    BUTTON_CANCEL: dict = {"en": "❌ Cancel", "fa": "❌ انصراف"}
+    BUTTON_SIGN_UP: dict = {"en": "💎 sign up", "fa": "💎 ثبت‌نام"}
+    BUTTON_LOGIN: dict = {"en": "🛡️ Login", "fa": "🛡️ ورود"}
+    BUTTON_HELP: dict = {"en": "ℹ️ Help", "fa": "ℹ️ راهنما"}
+    BUTTON_MY_ACCOUNT: dict = {"en": "💎 My account", "fa": "💎 حساب من"}
+    BUTTON_STORE: dict = {"en": "🛍️ Store", "fa": "🛍️ فروشگاه"}
+    BUTTON_LOGOUT: dict = {"en": "❌ Logout", "fa": "❌ خروج"}
+    BUTTON_OPEN_PANEL: dict = {"en": "🛜 Open panel", "fa": "🛜 باز کردن پنل"}
+    BUTTON_ACCEPT: dict = {"en": "✅ Accept", "fa": "✅ پذیرش"}
+    BUTTON_DECLINE: dict = {"en": "❌ Decline", "fa": "❌ رد"}
+    BUTTON_YES: dict = {"en": "✅ Yes", "fa": "✅ بله"}
+    BUTTON_NO: dict = {"en": "❌ No", "fa": "❌ خیر"}
+    BUTTON_CONFIRM: dict = {"en": "✅ Confirm", "fa": "✅ تایید"}
+    BUTTON_REJECT: dict = {"en": "❌ Reject", "fa": "❌ رد"}
+
 
 BOT_MESSAGE = _MessageSetings()

@@ -19,6 +19,12 @@ async def handle_start_notif_status(callback: types.CallbackQuery):
     _, bot_language, user_role = callback.data.split(":")
 
     if user_role != "main_admin":
+        await callback.answer(
+            BOT_MESSAGE.ERROR[bot_language].format(
+                e="Access denied" if bot_language == "en" else "دسترسی رد شد"
+            ),
+            show_alert=True,
+        )
         return
 
     current_status = bot_settings_query.get_start_notif()
@@ -33,7 +39,14 @@ async def handle_start_notif_status(callback: types.CallbackQuery):
         )
     else:
         await callback.message.edit_text(
-            BOT_MESSAGE.ERROR[bot_language], reply_markup=settings_menu()
+            BOT_MESSAGE.ERROR[bot_language].format(
+                e=(
+                    "Failed to change notification status"
+                    if bot_language == "en"
+                    else "تغییر وضعیت اعلان ناموفق بود"
+                )
+            ),
+            reply_markup=settings_menu(bot_language),
         )
     await callback.answer()
 
@@ -43,6 +56,12 @@ async def handle_create_notif_status(callback: types.CallbackQuery):
     _, bot_language, user_role = callback.data.split(":")
 
     if user_role != "main_admin":
+        await callback.answer(
+            BOT_MESSAGE.ERROR[bot_language].format(
+                e="Access denied" if bot_language == "en" else "دسترسی رد شد"
+            ),
+            show_alert=True,
+        )
         return
 
     current_status = bot_settings_query.get_create_notif()
@@ -57,7 +76,14 @@ async def handle_create_notif_status(callback: types.CallbackQuery):
         )
     else:
         await callback.message.edit_text(
-            BOT_MESSAGE.ERROR[bot_language], reply_markup=settings_menu()
+            BOT_MESSAGE.ERROR[bot_language].format(
+                e=(
+                    "Failed to change notification status"
+                    if bot_language == "en"
+                    else "تغییر وضعیت اعلان ناموفق بود"
+                )
+            ),
+            reply_markup=settings_menu(bot_language),
         )
     await callback.answer()
 
@@ -67,6 +93,12 @@ async def handle_delete_notif_status(callback: types.CallbackQuery):
     _, bot_language, user_role = callback.data.split(":")
 
     if user_role != "main_admin":
+        await callback.answer(
+            BOT_MESSAGE.ERROR[bot_language].format(
+                e="Access denied" if bot_language == "en" else "دسترسی رد شد"
+            ),
+            show_alert=True,
+        )
         return
 
     current_status = bot_settings_query.get_delete_notif()
@@ -81,7 +113,14 @@ async def handle_delete_notif_status(callback: types.CallbackQuery):
         )
     else:
         await callback.message.edit_text(
-            BOT_MESSAGE.ERROR[bot_language], reply_markup=settings_menu()
+            BOT_MESSAGE.ERROR[bot_language].format(
+                e=(
+                    "Failed to change notification status"
+                    if bot_language == "en"
+                    else "تغییر وضعیت اعلان ناموفق بود"
+                )
+            ),
+            reply_markup=settings_menu(bot_language),
         )
     await callback.answer()
 
@@ -94,11 +133,10 @@ async def handle_confirm_registration(callback: types.CallbackQuery, state: FSMC
 
     await callback.message.answer(
         BOT_MESSAGE.CHOOSE_A_USERNAME_FOR_THE_REQUESTER[bot_language],
-        reply_markup=cancel_keyboard(),
+        reply_markup=cancel_keyboard(bot_language),
     )
 
     await state.update_data(requested_user_id=chat_id, bot_language=bot_language)
-
     await state.set_state(RegisterUserStates.enter_username)
 
 
