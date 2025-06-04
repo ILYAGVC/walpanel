@@ -48,6 +48,7 @@ class Setting(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     language = Column(String, default="en")
     card_payment_enabled = Column(Boolean, default=True)
+    Intermediary_payment_gateway = Column(Boolean, default=False)
 
 
 class News(Base):
@@ -62,6 +63,13 @@ class CardNumber(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     number = Column(String, nullable=False)
+
+
+class PaymentGatewaykeys(Base):
+    __tablename__ = "Payment_gateway_keys"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    Intermediary_gateway_key = Column(String, nullable=True)
 
 
 class HelpMessage(Base):
@@ -85,3 +93,13 @@ class BotSettings(Base):
     start_notif = Column("start_notif", Boolean, default=True)
     create_notif = Column("create_notif", Boolean, default=True)
     delete_notif = Column("delete_notif", Boolean, default=True)
+
+
+class PurchaseHistory(Base):
+    __tablename__ = "purchase_history"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    amount = Column(Integer, nullable=False)
+    chat_id = Column(Integer, nullable=False)
+    purchase_date = Column(Date, nullable=False)
+    status = Column(String, nullable=False, default="pending")
