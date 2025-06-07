@@ -65,13 +65,13 @@ async def handle_admins_button(
             )
             return
 
-        message_text = BOT_MESSAGE.DEALERS_STATUS[bot_language].format(
-            title=(
-                "📊 Dealers/Admins Status\n\n"
-                if bot_language == "en"
-                else "📊 وضعیت نمایندگان/ادمین‌ها\n\n"
-            )
+        title = (
+            "📊 Dealers/Admins Status\n\n"
+            if bot_language == "en"
+            else "📊 وضعیت نمایندگان/ادمین‌ها\n\n"
         )
+        message_text = title
+
         try:
             for admin in admins:
                 admin_status = "active" if admin["is_active"] else "disabled"
@@ -105,13 +105,12 @@ async def handle_panels_button(
             )
             return
 
-        message_text = BOT_MESSAGE.PANELS_STATUS[bot_language].format(
-            title=(
-                "📊 Panel Status Report\n\n"
-                if bot_language == "en"
-                else "📊 گزارش وضعیت پنل‌ها\n\n"
-            )
+        title = (
+            "📊 Panel Status Report\n\n"
+            if bot_language == "en"
+            else "📊 گزارش وضعیت پنل‌ها\n\n"
         )
+        message_text = title
         try:
             for panel in panels:
                 panel_status = await panels_api.server_status(
