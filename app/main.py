@@ -14,6 +14,7 @@ from app.routers.mainadmin_router.admin_get import router as mainadmin_get
 from app.routers.mainadmin_router.news_post import router as news_post
 from app.routers.mainadmin_router.news_get import router as news_get
 from app.middleware import RedirectUnauthorizedMiddleware
+from app.routers.extopay_payment import router as payment_router
 
 
 app = FastAPI(docs_url=None)
@@ -31,6 +32,7 @@ app.include_router(panel_get)
 app.include_router(panel_post)
 app.include_router(news_post)
 app.include_router(news_get)
+app.include_router(payment_router)
 
 
 # if __name__ == "__main__":

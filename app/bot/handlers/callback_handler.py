@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from app.bot.keyboards.main_admin_keyboards import registration_confirmation_menu
-from app.bot.services.query import settings_query, plans_query, admins_query
+from app.bot.services.query import settings_query, plans_query, payment_gateway_query
 from app.bot.messages.messages import BOT_MESSAGE
 from app.bot.states.states import RegisterUserStates, PaymentState
 from app.bot.config import MAIN_ADMIN
@@ -59,30 +59,58 @@ async def handle_buy_plan(callback: types.CallbackQuery):
         )
         await callback.message.delete()
 
-        if await settings_query.get_card_method():
-            # Create confirmation keyboard
-            keyboard = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [
-                        InlineKeyboardButton(
-                            text=BOT_MESSAGE.PAYMENT_WITH_CARD[bot_language],
-                            callback_data=f"confirm_payment:{plan_id}:{chat_id}:{bot_language}",
-                        )
-                    ],
+        # Check payments methods
+        card_enabled = await settings_query.get_card_method()
+        intermediary_enabled = await settings_query.get_intermediary_gateway()
+
+        if not (card_enabled or intermediary_enabled):
+            await callback.message.answer(
+                BOT_MESSAGE.PAYMENT_DISABLED[bot_language], parse_mode="HTML"
+            )
+            return
+
+        keyboard_buttons = []
+
+        if card_enabled:
+            keyboard_buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text=BOT_MESSAGE.PAYMENT_WITH_CARD[bot_language],
+                        callback_data=f"confirm_payment_card:{plan_id}:{chat_id}:{bot_language}",
+                    )
                 ]
             )
 
-            await callback.message.answer(
-                message_text + "\n\n" + BOT_MESSAGE.SEND_PAYMENT_METHODS[bot_language],
-                parse_mode="HTML",
-                reply_markup=keyboard,
+        if intermediary_enabled:
+            keyboard_buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text=BOT_MESSAGE.PAYMENT_WITH_INTERMEDIARY[bot_language],
+                        callback_data=f"confirm_payment_intermediary:{plan_id}:{chat_id}:{bot_language}",
+                    )
+                ]
             )
-        else:
-            await callback.message.answer(
-                BOT_MESSAGE.CARD_PAYMENT_DISABLED[bot_language], parse_mode="HTML"
-            )
+
+        keyboard = InlineKeyboardMarkup(inline_keyboard=keyboard_buttons)
+
+        await callback.message.answer(
+            message_text + "\n\n" + BOT_MESSAGE.SEND_PAYMENT_METHODS[bot_language],
+            parse_mode="HTML",
+            reply_markup=keyboard,
+        )
 
     except Exception as e:
         await callback.answer(
             BOT_MESSAGE.ERROR[bot_language].format(e=e), show_alert=True
         )
+
+
+@router.callback_query(F.data.startswith("cancel_payment:"))
+async def cancel_payment(callback: types.CallbackQuery):
+    _, bot_language = callback.data.split(":")
+    await callback.message.delete()
+    await callback.answer(
+        BOT_MESSAGE.PAYMENT_CANCELLED[bot_language],
+        parse_mode="HTML",
+        show_alert=True,
+    )
