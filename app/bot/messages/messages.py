@@ -359,13 +359,104 @@ class _MessageSetings(BaseSettings):
         ),
     }
 
-    PAYMENT_WITH_CARD: dict = {"en": "💳 Card Payment", "fa": "💳 کارت به کارت"}
-
     CANCEL: dict = {"en": "❌ Cancel", "fa": "❌ انصراف"}
 
     SEND_PAYMENT_METHODS: dict = {
         "en": "Please click the confirm button to proceed with card payment.",
         "fa": "لطفا برای ادامه خرید یکی از روش های موجود را انتخاب کنید.",
+    }
+    PRE_PAY_WITH_GATEWAY: dict = {
+        "en": (
+            "💳 Payment via ExToPay\n\n"
+            "📊 Order Details:\n"
+            "💰 Amount: {price} Toman|$\n"
+            "⚠️ Note:\n"
+            "• Your transaction will be automatically confirmed after payment\n"
+            "• If not automatically confirmed, please contact support\n\n"
+            "Click the button below to pay 👇"
+        ),
+        "fa": (
+            "💳 پرداخت از طریق درگاه ExToPay\n\n"
+            "📊 جزئیات سفارش:\n"
+            "💰 مبلغ: {price} تومان\n"
+            "⚠️ توجه:\n"
+            "• پس از پرداخت، تراکنش شما به صورت خودکار تایید خواهد شد\n"
+            "• در صورت عدم تایید خودکار، لطفا با پشتیبانی تماس بگیرید\n\n"
+            "برای پرداخت روی دکمه زیر کلیک کنید 👇"
+        ),
+    }
+
+    PAYMENT_SUCCESS: dict = {
+        "en": (
+            "✅ Payment Successful\n\n"
+            "📊 Order Details:\n\n"
+            "🆔 Oeder ID: <code>{order_id}</code>\n"
+            "🎉 Your traffic and subscription time have been successfully added"
+        ),
+        "fa": (
+            "✅ پرداخت با موفقیت انجام شد\n\n"
+            "📊 جزئیات سفارش:\n\n"
+            "🆔 کد پیگیری: <code>{order_id}</code>\n"
+            "🎉 ترافیک و زمان اشتراک شما با موفقیت اضافه شد"
+        ),
+    }
+
+    GEATWAY_ERROR: dict = {
+        "en": ("Gateway payment failed. Please try again later."),
+        "fa": ("پرداخت از طریق درگاه ناموفق بود. لطفا بعدا دوباره تلاش کنید."),
+    }
+    PAYMENT_FAILED: dict = {
+        "en": (
+            "❌ Payment Failed\n\n"
+            "🆔 Tracking code:\n<code>{order_id}</code>\n"
+            "⚠️ If the amount was deducted from your account, it will be refunded within 24 hours"
+        ),
+        "fa": (
+            "❌ پرداخت ناموفق\n\n"
+            "🆔 کد پیگیری:\n<code>{order_id}</code>\n"
+            "⚠️ در صورت کسر وجه از حساب شما، طی 24 ساعت آینده به حساب شما بازگردانده خواهد شد"
+        ),
+    }
+    ADMIN_PAYMENT_SUCCESS_NOTIF: dict = {
+        "en": (
+            "🟢 New Successful Payment!\n\n"
+            "📊 Payment Details:\n"
+            "💰 Plan price: {amount} Toman|$\n"
+            "🆔 Plan id: {plan_id}\n"
+            "🆔 Order ID:\n<code>{order_id}</code>\n"
+            "🆔 Chat id: {chat_id}\n"
+            "🕒 Timestamp: {timestamp}\n"
+        ),
+        "fa": (
+            "🟢 پرداخت موفق جدید!\n\n"
+            "📊 جزئیات پرداخت:\n"
+            "💰 قیمت پلن: {amount} تومان\n"
+            "🆔 ایدی پلن: {plan_id}\n"
+            "🆔 ایدی سفارش:\n<code>{order_id}</code>\n"
+            "🆔 چت ایدی نماینده: {chat_id}\n"
+            "🕒 زمان: {timestamp}\n"
+        ),
+    }
+
+    ADMIN_PAYMENT_FAILED_NOTIF: dict = {
+        "en": (
+            "🔴 New Failed Payment!\n\n"
+            "📊 Payment Details:\n"
+            "💰 Plan price: {amount} Toman|$\n"
+            "🆔 Plan id: {plan_id}\n"
+            "🆔 Order ID:\n<code>{order_id}</code>\n"
+            "🆔 Chat id: {chat_id}\n"
+            "🕒 Timestamp: {timestamp}\n"
+        ),
+        "fa": (
+            "🔴 پرداخت ناموفق جدید!\n\n"
+            "📊 جزئیات پرداخت:\n"
+            "💰 قیمت پلن: {amount} تومان\n"
+            "🆔 ایدی پلن: {plan_id}\n"
+            "🆔 ایدی سفارش:\n<code>{order_id}</code>\n"
+            "🆔 چت ایدی نماینده: {chat_id}\n"
+            "🕒 تاریخ: {timestamp}\n"
+        ),
     }
 
     SEND_CARD_PAYMENT_PHOTO: dict = {
@@ -420,13 +511,13 @@ class _MessageSetings(BaseSettings):
     }
 
     PAYMENT_CANCELLED: dict = {
-        "en": "Payment process has been cancelled.",
-        "fa": "فرآیند پرداخت لغو شد.",
+        "en": "Payment process has been cancelled!",
+        "fa": "فرآیند پرداخت لغو شد!",
     }
 
-    CARD_PAYMENT_DISABLED: dict = {
+    PAYMENT_DISABLED: dict = {
         "en": "Card payment is currently disabled. Please try again later.",
-        "fa": "پرداخت کارت به کارت در حال حاضر غیرفعال است. لطفا بعداً تلاش کنید.",
+        "fa": "پرداخت در حال حاضر غیرفعال است. لطفا بعداً تلاش کنید.",
     }
     LOGOUT: dict = {
         "en": "You have been logged out of your panel‼️",
@@ -441,8 +532,21 @@ class _MessageSetings(BaseSettings):
         ),
         "fa": (
             "💳 <b>تنظیمات پرداخت کارت به کارت</b>\n\n"
-            "🔄 وضعیت: {status}\n"
+            "ℹ️ وضعیت: {status}\n"
             "💳 شماره کارت: {card_num}\n"
+        ),
+    }
+
+    INTERMEDIARY_METHOD_SETTINGS: dict = {
+        "en": (
+            "⛓️‍💥 <b>Intermediary Payment Settings</b>\n\n"
+            "🔄 Status: {status}\n"
+            "🔑 API Key: {api_key}\n"
+        ),
+        "fa": (
+            "⛓️‍💥 <b>تنظیمات درگاه پرداخت واسط</b>\n\n"
+            "ℹ️ وضعیت: {status}\n"
+            "🔑 کلید: {api_key}\n"
         ),
     }
 
@@ -453,14 +557,125 @@ class _MessageSetings(BaseSettings):
         "fa": "💳 تغییر شماره کارت",
     }
 
+    CHANGE_INTERMEDIARY_METHOD_STATUS: dict = {
+        "en": "🔄 Change Status",
+        "fa": "🔄 تغییر وضعیت",
+    }
+
+    CHANGE_INTERMEDIARY_METHOD_API_KEY: dict = {
+        "en": "🔑 Change API Key",
+        "fa": "🔑 تغییر API Key",
+    }
+    HELP_INTERMEDIARY_METHOD: dict = {
+        "en": ("ℹ️ Tihs only available for Iranians."),
+        "fa": (
+            "ℹ️ برای استفاده از این درگاه واسطه، شما نیازه به کلید اختصاصی خودتون دارید، برای دریافت کلید و اطلاعات بیشتر میتونید به پشتیبانی این درگاه پیام بدید:\n"
+            "<b>@wetoma</b>\n\n"
+        ),
+    }
     ENTER_NEW_CARD_NUMBER: dict = {
         "en": "Please enter the new card number:",
         "fa": "لطفا شماره کارت جدید را وارد کنید:",
+    }
+    ENTER_NEW_API_KEY: dict = {
+        "en": "Please enter the new API key:",
+        "fa": "لطفا API key جدید را وارد کنید:",
     }
 
     CARD_NUMBER_UPDATED: dict = {
         "en": "✅ Card number has been updated successfully!",
         "fa": "✅ شماره کارت با موفقیت بروزرسانی شد!",
+    }
+
+    APIKEY_UPDATED: dict = {
+        "en": "✅ API key has been updated successfully!",
+        "fa": "✅ با موفقیت بروزرسانی شد!",
+    }
+
+    DATABASE_MENU: dict = {"en": "Database menu...", "fa": "منوی دیتابیس..."}
+
+    WAITING_FOR_BACKUP_FILE: dict = {
+        "en": "Please send your database backup file to restore the database.",
+        "fa": "لطفا فایل پشتیبان دیتابیس خود را برای بازگردانی بفرستید.",
+    }
+
+    NO_FILE: dict = {
+        "en": "⚠️ No file was sent. Please send a database backup file.",
+        "fa": "⚠️ هیچ فایلی ارسال نشد. لطفا یک فایل پشتیبان دیتابیس ارسال کنید.",
+    }
+
+    INVALID_FILE: dict = {
+        "en": "⚠️ Invalid file format. Please send a .db file.",
+        "fa": "⚠️ فرمت فایل نامعتبر است. لطفا یک فایل .db ارسال کنید.",
+    }
+
+    RESTORING: dict = {
+        "en": "🔄 Restoring database from backup...",
+        "fa": "🔄 در حال بازگرداندن دیتابیس از پشتیبان...",
+    }
+
+    RESTORE_SUCCESS: dict = {
+        "en": "✅ Database has been successfully restored from backup!",
+        "fa": "✅ دیتابیس با موفقیت از پشتیبان بازگردانده شد!",
+    }
+
+    # Button texts
+    BUTTON_ADMINS: dict = {"en": "👤 Admins", "fa": "👤 ادمین‌ها"}
+    BUTTON_PANELS: dict = {"en": "🌐 Panels", "fa": "🌐 پنل‌ها"}
+    BUTTON_SETTINGS: dict = {"en": "⚙️ Settings", "fa": "⚙️ تنظیمات"}
+    BUTTON_LOGS: dict = {"en": "📝 Logs", "fa": "📝 لاگ‌ها"}
+    BUTTON_SALES_PLAN: dict = {"en": "🛍️ Sales Plan", "fa": "🛍️ پلن فروش"}
+    BUTTON_NOTIFICATIONS: dict = {"en": "🔔 Notifications", "fa": "🔔 اعلان‌ها"}
+    BUTTON_HELP_TEXT: dict = {"en": "📄 Help text", "fa": "📄 متن راهنما"}
+    BUTTON_REGISTRATION_TEXT: dict = {
+        "en": "⚪ Registration text",
+        "fa": "⚪ متن ثبت‌نام",
+    }
+    BUTTON_DATABASE: dict = {"en": "📦 Database", "fa": "📦 دیتابیس"}
+    BUTTON_LANGUAGE: dict = {"en": "🌎 Language", "fa": "🌎 زبان"}
+    BUTTON_BACK: dict = {"en": "🔙 Back", "fa": "🔙 بازگشت"}
+    BUTTON_BACK_TO_SETTINGS: dict = {
+        "en": "🔙 Back to settings",
+        "fa": "🔙 بازگشت به تنظیمات",
+    }
+    BUTTON_BACKUP: dict = {"en": "📥 Backup", "fa": "📥 پشتیبان‌گیری"}
+    BUTTON_RESTORE: dict = {"en": "📤 Restore", "fa": "📤 بازگردانی"}
+    BUTTON_ADD_PLAN: dict = {"en": "➕ Add a plan", "fa": "➕ افزودن پلن"}
+    BUTTON_DELETE_PLAN: dict = {"en": "❌ Delete a plan", "fa": "❌ حذف پلن"}
+    BUTTON_EDIT_PLAN: dict = {"en": "⚙️ Edit a plan", "fa": "⚙️ ویرایش پلن"}
+    BUTTON_CARD_METHOD: dict = {"en": "💳 Card method setting", "fa": "💳 تنظیمات کارت"}
+    BUTTON_INTERMEDIARY_METHOD: dict = {
+        "en": "⛓️ ExToPay method setting",
+        "fa": "⛓️ تنظیمات درگاه ExToPay",
+    }
+    BUTTON_INTERMEDIARY_METHOD_HELP: dict = {
+        "en": "📗 ExToPay help",
+        "fa": "📗 راهنمای ExToPay",
+    }
+    BUTTON_ENGLISH: dict = {"en": "🇺🇸 English", "fa": "🇺🇸 انگلیسی"}
+    BUTTON_PERSIAN: dict = {"en": "🇮🇷 Persian", "fa": "🇮🇷 فارسی"}
+    BUTTON_CANCEL: dict = {"en": "❌ Cancel", "fa": "❌ انصراف"}
+    BUTTON_SIGN_UP: dict = {"en": "💎 sign up", "fa": "💎 ثبت‌نام"}
+    BUTTON_LOGIN: dict = {"en": "🛡️ Login", "fa": "🛡️ ورود"}
+    BUTTON_HELP: dict = {"en": "ℹ️ Help", "fa": "ℹ️ راهنما"}
+    BUTTON_MY_ACCOUNT: dict = {"en": "💎 My account", "fa": "💎 حساب من"}
+    BUTTON_STORE: dict = {"en": "🛍️ Store", "fa": "🛍️ فروشگاه"}
+    BUTTON_LOGOUT: dict = {"en": "❌ Logout", "fa": "❌ خروج"}
+    BUTTON_OPEN_PANEL: dict = {"en": "🛜 Open panel", "fa": "🛜 باز کردن پنل"}
+    BUTTON_ACCEPT: dict = {"en": "✅ Accept", "fa": "✅ پذیرش"}
+    BUTTON_DECLINE: dict = {"en": "❌ Decline", "fa": "❌ رد"}
+    BUTTON_YES: dict = {"en": "✅ Yes", "fa": "✅ بله"}
+    BUTTON_NO: dict = {"en": "❌ No", "fa": "❌ خیر"}
+    BUTTON_CONFIRM: dict = {"en": "✅ Confirm", "fa": "✅ تایید"}
+    BUTTON_REJECT: dict = {"en": "❌ Reject", "fa": "❌ رد"}
+    PAYMENT_WITH_CARD: dict = {"en": "💳 Card Payment", "fa": "💳 کارت به کارت"}
+    PAYMENT_WITH_INTERMEDIARY: dict = {
+        "en": "🔗 ExToPay Payment",
+        "fa": "🔗 درگاه پرداخت ExToPay",
+    }
+    BUTTON_PAY: dict = {
+        "en": "💳 Pay",
+        "fa": "💳 پرداخت",
     }
 
 

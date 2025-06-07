@@ -7,6 +7,8 @@ from app.db.models import (
     BotSettings,
     HelpMessage,
     RegisteringMessage,
+    PaymentGatewaykeys,
+    PurchaseHistory,
 )
 from app.db.engine import SessionLocal
 from app.log.logger_config import logger
@@ -207,6 +209,27 @@ class SettingsQuery:
             return new_status
         except Exception as e:
             logger.error(f"Error in change_card_method_status in bot: {e}")
+            return None
+
+    async def get_intermediary_gateway(self):
+        try:
+            setting = self.db.query(Setting).first()
+            if setting:
+                return setting.Intermediary_payment_gateway
+            else:
+                return False
+        except Exception as e:
+            logger.error(f"Error in get_intermediary_gateway in bot: {e}")
+
+    async def change_intermediary_gateway_status(self):
+        try:
+            status = await self.get_intermediary_gateway()
+            new_status = not status
+            self.db.query(Setting).update({"Intermediary_payment_gateway": new_status})
+            self.db.commit()
+            return new_status
+        except Exception as e:
+            logger.error(f"Error in change_intermediary_gateway_status in bot: {e}")
             return None
 
 
@@ -464,6 +487,67 @@ class RegisteringMessageQuery:
             return None
 
 
+class PaymentGatewayKeysQuery:
+    def __init__(self):
+        self.db = SessionLocal()
+
+    def get_intermediary_gateway_key(self):
+        try:
+            key = self.db.query(PaymentGatewaykeys).first()
+            if not key:
+                return "xxxXXXxxx"
+            return key.Intermediary_gateway_key
+        except Exception as e:
+            logger.error(f"Error in get_intermediary_gateway_key in bot: {e}")
+            return None
+
+    async def change_intermediary_gateway_key(self, new_api_key: str):
+        try:
+            key = self.db.query(PaymentGatewaykeys).first()
+            if key:
+                key.Intermediary_gateway_key = new_api_key
+            else:
+                new_key = PaymentGatewaykeys(Intermediary_gateway_key=new_api_key)
+                self.db.add(new_key)
+            self.db.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Error in change_intermediary_gateway_key in bot: {e}")
+            return None
+
+
+class PurchaseHistoryQuery:
+    def __init__(self):
+        self.db = SessionLocal()
+
+    async def add_purchase_history(
+        self,
+        chat_id: int,
+        amount: int,
+        order_id: str,
+        timestamp: datetime,
+        status: bool,
+    ):
+        try:
+            # Convert datetime to date for database storage
+            purchase_date = (
+                timestamp.date() if isinstance(timestamp, datetime) else timestamp
+            )
+            purchase = PurchaseHistory(
+                chat_id=chat_id,
+                amount=amount,
+                order_id=order_id,
+                purchase_date=purchase_date,
+                status="paid" if status else "failed",
+            )
+            self.db.add(purchase)
+            self.db.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Error in add_purchase_history in bot: {e}")
+            return False
+
+
 admins_query = AdminQuery()
 panels_query = PanelQuery()
 plans_query = PlansQuery()
@@ -472,3 +556,5 @@ bot_settings_query = BotSettingsQuery()
 help_message_query = HelpMessageQuery()
 registering_message_query = RegisteringMessageQuery()
 settings_query = SettingsQuery()
+payment_gateway_query = PaymentGatewayKeysQuery()
+purchase_history_query = PurchaseHistoryQuery()

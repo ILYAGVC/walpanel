@@ -8,49 +8,38 @@ from aiogram.types import (
 from app.bot.messages.messages import BOT_MESSAGE
 
 
-def main_admin_menu():
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="👤 Admins"), KeyboardButton(text="🌐 Panels")],
-            [KeyboardButton(text="⚙️ Settings")],
-            [KeyboardButton(text="📝 Logs")],
-        ],
-        resize_keyboard=True,
-        one_time_keyboard=True,
-    )
-    return keyboard
-
-
-def settings_menu():
+def main_admin_menu(bot_language: str):
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="🛍️ Sales Plan"),
-                KeyboardButton(text="🔔 Notifications"),
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_ADMINS[bot_language]),
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_PANELS[bot_language]),
+            ],
+            [KeyboardButton(text=BOT_MESSAGE.BUTTON_SETTINGS[bot_language])],
+            [KeyboardButton(text=BOT_MESSAGE.BUTTON_LOGS[bot_language])],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+    return keyboard
+
+
+def settings_menu(bot_language: str):
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_SALES_PLAN[bot_language]),
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_NOTIFICATIONS[bot_language]),
             ],
             [
-                KeyboardButton(text="📄 Help text"),
-                KeyboardButton(text="⚪ Registration text"),
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_HELP_TEXT[bot_language]),
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_REGISTRATION_TEXT[bot_language]),
             ],
-            [KeyboardButton(text="📦 Backup"), KeyboardButton(text="🌎 Language")],
-            [KeyboardButton(text="🔙 Back")],
-        ],
-        resize_keyboard=True,
-        one_time_keyboard=True,
-    )
-    return keyboard
-
-
-def sales_plan_menu():
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text="➕ Add a plan")],
             [
-                KeyboardButton(text="❌ Delete a plan"),
-                KeyboardButton(text="⚙️ Edit a plan"),
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_DATABASE[bot_language]),
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_LANGUAGE[bot_language]),
             ],
-            [KeyboardButton(text="💳 Card method setting")],
-            [KeyboardButton(text="🔙 Back to settings")],
+            [KeyboardButton(text=BOT_MESSAGE.BUTTON_BACK[bot_language])],
         ],
         resize_keyboard=True,
         one_time_keyboard=True,
@@ -58,11 +47,14 @@ def sales_plan_menu():
     return keyboard
 
 
-def language_menu():
+def database_menu(bot_language: str):
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="🇺🇸 English"), KeyboardButton(text="🇮🇷 Persian")],
-            [KeyboardButton(text="🔙 Back")],
+            [
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_BACKUP[bot_language]),
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_RESTORE[bot_language]),
+            ],
+            [KeyboardButton(text=BOT_MESSAGE.BUTTON_BACK_TO_SETTINGS[bot_language])],
         ],
         resize_keyboard=True,
         one_time_keyboard=True,
@@ -70,10 +62,17 @@ def language_menu():
     return keyboard
 
 
-def cancel_keyboard():
+def sales_plan_menu(bot_language: str):
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="❌ Cancel")],
+            [KeyboardButton(text=BOT_MESSAGE.BUTTON_ADD_PLAN[bot_language])],
+            [
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_DELETE_PLAN[bot_language]),
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_EDIT_PLAN[bot_language]),
+            ],
+            [KeyboardButton(text=BOT_MESSAGE.BUTTON_CARD_METHOD[bot_language])],
+            [KeyboardButton(text=BOT_MESSAGE.BUTTON_INTERMEDIARY_METHOD[bot_language])],
+            [KeyboardButton(text=BOT_MESSAGE.BUTTON_BACK_TO_SETTINGS[bot_language])],
         ],
         resize_keyboard=True,
         one_time_keyboard=True,
@@ -81,11 +80,37 @@ def cancel_keyboard():
     return keyboard
 
 
-def confirmation_keyboard():
+def language_menu(bot_language: str):
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="✅ Yes")],
-            [KeyboardButton(text="❌ No")],
+            [
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_ENGLISH[bot_language]),
+                KeyboardButton(text=BOT_MESSAGE.BUTTON_PERSIAN[bot_language]),
+            ],
+            [KeyboardButton(text=BOT_MESSAGE.BUTTON_BACK[bot_language])],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+    return keyboard
+
+
+def cancel_keyboard(bot_language: str):
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BOT_MESSAGE.BUTTON_CANCEL[bot_language])],
+        ],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+    return keyboard
+
+
+def confirmation_keyboard(bot_language: str):
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BOT_MESSAGE.BUTTON_YES[bot_language])],
+            [KeyboardButton(text=BOT_MESSAGE.BUTTON_NO[bot_language])],
         ],
         resize_keyboard=True,
         one_time_keyboard=True,
@@ -98,13 +123,13 @@ def registration_confirmation_menu(chat_id: int, bot_language: str):
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="✅ Confirm",
+                    text=BOT_MESSAGE.BUTTON_CONFIRM[bot_language],
                     callback_data=f"confirm_registration:{chat_id}:{bot_language}",
                 )
             ],
             [
                 InlineKeyboardButton(
-                    text="❌ Reject",
+                    text=BOT_MESSAGE.BUTTON_REJECT[bot_language],
                     callback_data=f"cancel_registration:{chat_id}:{bot_language}",
                 )
             ],
@@ -150,6 +175,32 @@ def card_method_settings_keyboard(bot_language: str):
                 InlineKeyboardButton(
                     text=BOT_MESSAGE.CHANGE_CARD_NUMBER[bot_language],
                     callback_data=f"change_card_number:{bot_language}",
+                )
+            ],
+        ]
+    )
+    return keyboard
+
+
+def intermediary_method_settings_keyboard(bot_language: str):
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=BOT_MESSAGE.CHANGE_INTERMEDIARY_METHOD_STATUS[bot_language],
+                    callback_data=f"change_intermediary_method_status:{bot_language}",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=BOT_MESSAGE.CHANGE_INTERMEDIARY_METHOD_API_KEY[bot_language],
+                    callback_data=f"change_intermediary_method_api_key:{bot_language}",
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=BOT_MESSAGE.BUTTON_INTERMEDIARY_METHOD_HELP[bot_language],
+                    callback_data=f"intermediary_method_help:{bot_language}",
                 )
             ],
         ]

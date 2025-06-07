@@ -15,14 +15,15 @@ NC='\033[0m'
 print_banner() {
     clear
     echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║${NC}${BOLD}                    WALPANEL INSTALLER                     ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}║${NC}${BOLD}                    WALPANEL INSTALLER                      ${NC}${BLUE}║${NC}"
     echo -e "${BLUE}╠════════════════════════════════════════════════════════════╣${NC}"
-    echo -e "${BLUE}║${NC}${CYAN} [1] Install Walpanel${NC}${BLUE}                                     ║${NC}"
-    echo -e "${BLUE}║${NC}${CYAN} [2] Update Walpanel${NC}${BLUE}                                      ║${NC}"
-    echo -e "${BLUE}║${NC}${CYAN} [3] Check Status${NC}${BLUE}                                         ║${NC}"
-    echo -e "${BLUE}║${NC}${CYAN} [4] Donate${NC}${BLUE}                                              ║${NC}"
-    echo -e "${BLUE}║${NC}${CYAN} [5] Uninstall Walpanel${NC}${BLUE}                                  ║${NC}"
-    echo -e "${BLUE}║${NC}${CYAN} [0] Exit${NC}${BLUE}                                               ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [1] Install Stable Version${NC}${BLUE}                                 ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [2] Install Develop Version${NC}${BLUE}                                ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [3] Update Walpanel${NC}${BLUE}                                        ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [4] Check Status${NC}${BLUE}                                           ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [5] Donate${NC}${BLUE}                                                 ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [6] Uninstall Walpanel${NC}${BLUE}                                     ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [0] Exit${NC}${BLUE}                                                   ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
     echo
 }
@@ -71,7 +72,18 @@ check_dependencies() {
     echo -e "${GREEN}[+] Dependencies installed successfully${NC}"
 }
 
+install_stable() {
+    echo -e "${BLUE}[*] Installing stable version...${NC}"
+    install "master"
+}
+
+install_develop() {
+    echo -e "${BLUE}[*] Installing develop version...${NC}"
+    install "develop"
+}
+
 install() {
+    local branch=$1
     echo -e "${BLUE}[*] Starting installation...${NC}"
 
     if [ -d "$INSTALL_DIR" ]; then
@@ -85,6 +97,11 @@ install() {
     }
 
     cd "$INSTALL_DIR" || exit 1
+    git checkout "$branch" || {
+        echo -e "${RED}[-] Failed to checkout $branch branch${NC}"
+        exit 1
+    }
+
     cp .env.example .env
 
     echo -e "${BLUE}[*] Configuration${NC}"
@@ -93,18 +110,22 @@ install() {
     read -p "Telegram admin chat ID: " ADMIN_CHAT_ID
     read -p "Telegram bot token: " BOT_TOKEN
     read -p "Domain/subdomain (e.g. panel.example.com): " SUBDOMAIN
+    read -p "Domain port (https ports only, example 443, 2053, ...): " DOMAIN_PORT
+    DOMAIN_PORT=${DOMAIN_PORT:-443}
 
-    PANEL_ADDRESS="https://$SUBDOMAIN/login/"
+    PANEL_ADDRESS="https://$SUBDOMAIN:$DOMAIN_PORT/login/"
+    EXTOPAY_CALLBACK_URL="https://$SUBDOMAIN:$DOMAIN_PORT/payment/callback"
 
     sed -i "s|USERNAME=.*|USERNAME=$USERNAME|g" .env
     sed -i "s|PASSWORD=.*|PASSWORD=$PASSWORD|g" .env
     sed -i "s|ADMIN_CHAT_ID=.*|ADMIN_CHAT_ID=$ADMIN_CHAT_ID|g" .env
     sed -i "s|BOT_TOKEN=.*|BOT_TOKEN=$BOT_TOKEN|g" .env
     sed -i "s|PANEL_ADDRESS=.*|PANEL_ADDRESS=$PANEL_ADDRESS|g" .env
+    sed -i "s|EXTOPAY_CALLBACK_URL=.*|EXTOPAY_CALLBACK_URL=$EXTOPAY_CALLBACK_URL|g" .env
 
     echo -e "${BLUE}[*] Setting up Caddy reverse proxy...${NC}"
     cat > /etc/caddy/Caddyfile <<EOF
-$SUBDOMAIN {
+$SUBDOMAIN:$DOMAIN_PORT {
     reverse_proxy localhost:8000
 }
 EOF
@@ -115,8 +136,8 @@ EOF
         echo -e "${RED}[-] Docker compose failed${NC}"
         exit 1
     }
-
-    echo -e "${GREEN}[+] Walpanel installed! Access it at: https://$SUBDOMAIN/login/${NC}"
+    clear
+    echo -e "${GREEN}[+] Walpanel installed! Access it at: https://$SUBDOMAIN:$DOMAIN_PORT/login/${NC}"
 }
 
 update() {
@@ -126,7 +147,22 @@ update() {
         return
     fi
     cd "$INSTALL_DIR" || exit 1
-    git pull
+    
+    # Get current branch
+    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    echo -e "${BLUE}[*] Current version: ${CYAN}$CURRENT_BRANCH${NC}"
+    
+    # Update based on current branch
+    if [ "$CURRENT_BRANCH" = "develop" ]; then
+        echo -e "${BLUE}[*] Updating develop version...${NC}"
+        git fetch origin develop
+        git pull origin develop
+    else
+        echo -e "${BLUE}[*] Updating stable version...${NC}"
+        git fetch origin master
+        git pull origin master
+    fi
+    
     docker compose down
     docker compose up -d --build
     echo -e "${GREEN}[+] Update complete${NC}"
@@ -154,7 +190,7 @@ status() {
 donate() {
     clear
     echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║${NC}${BOLD}                 SUPPORT WALPANEL DEVELOPMENT              ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}║${NC}${BOLD}                 SUPPORT WALPANEL DEVELOPMENT               ${NC}${BLUE}║${NC}"
     echo -e "${BLUE}╠════════════════════════════════════════════════════════════╣${NC}"
     echo -e "${BLUE}║${NC} Donate (TRON - TRC20): ${GREEN}$DONATION_ADDRESS${NC}${BLUE}     ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
@@ -163,13 +199,14 @@ donate() {
 
 while true; do
     print_banner
-    read -p "Select an option [0-5]: " opt
+    read -p "Select an option [0-6]: " opt
     case $opt in
-        1) check_dependencies && install ;;
-        2) update ;;
-        3) status ;;
-        4) donate ;;
-        5) uninstall ;;
+        1) check_dependencies && install_stable ;;
+        2) check_dependencies && install_develop ;;
+        3) update ;;
+        4) status ;;
+        5) donate ;;
+        6) uninstall ;;
         0) echo -e "${GREEN}Goodbye!${NC}"; exit 0 ;;
         *) echo -e "${RED}Invalid choice${NC}" ;;
     esac
