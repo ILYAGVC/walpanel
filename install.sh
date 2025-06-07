@@ -15,15 +15,15 @@ NC='\033[0m'
 print_banner() {
     clear
     echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║${NC}${BOLD}                    WALPANEL INSTALLER                     ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}║${NC}${BOLD}                    WALPANEL INSTALLER                      ${NC}${BLUE}║${NC}"
     echo -e "${BLUE}╠════════════════════════════════════════════════════════════╣${NC}"
-    echo -e "${BLUE}║${NC}${CYAN} [1] Install Stable Version${NC}${BLUE}                              ║${NC}"
-    echo -e "${BLUE}║${NC}${CYAN} [2] Install Develop Version${NC}${BLUE}                             ║${NC}"
-    echo -e "${BLUE}║${NC}${CYAN} [3] Update Walpanel${NC}${BLUE}                                      ║${NC}"
-    echo -e "${BLUE}║${NC}${CYAN} [4] Check Status${NC}${BLUE}                                         ║${NC}"
-    echo -e "${BLUE}║${NC}${CYAN} [5] Donate${NC}${BLUE}                                              ║${NC}"
-    echo -e "${BLUE}║${NC}${CYAN} [6] Uninstall Walpanel${NC}${BLUE}                                  ║${NC}"
-    echo -e "${BLUE}║${NC}${CYAN} [0] Exit${NC}${BLUE}                                               ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [1] Install Stable Version${NC}${BLUE}                                 ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [2] Install Develop Version${NC}${BLUE}                                ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [3] Update Walpanel${NC}${BLUE}                                        ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [4] Check Status${NC}${BLUE}                                           ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [5] Donate${NC}${BLUE}                                                 ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [6] Uninstall Walpanel${NC}${BLUE}                                     ║${NC}"
+    echo -e "${BLUE}║${NC}${CYAN} [0] Exit${NC}${BLUE}                                                   ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
     echo
 }
@@ -110,7 +110,7 @@ install() {
     read -p "Telegram admin chat ID: " ADMIN_CHAT_ID
     read -p "Telegram bot token: " BOT_TOKEN
     read -p "Domain/subdomain (e.g. panel.example.com): " SUBDOMAIN
-    read -p "Domain port (default: 443): " DOMAIN_PORT
+    read -p "Domain port (https ports only, example 443, 2053, ...): " DOMAIN_PORT
     DOMAIN_PORT=${DOMAIN_PORT:-443}
 
     PANEL_ADDRESS="https://$SUBDOMAIN:$DOMAIN_PORT/login/"
@@ -136,7 +136,7 @@ EOF
         echo -e "${RED}[-] Docker compose failed${NC}"
         exit 1
     }
-
+    clear
     echo -e "${GREEN}[+] Walpanel installed! Access it at: https://$SUBDOMAIN:$DOMAIN_PORT/login/${NC}"
 }
 
@@ -190,7 +190,7 @@ status() {
 donate() {
     clear
     echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${BLUE}║${NC}${BOLD}                 SUPPORT WALPANEL DEVELOPMENT              ${NC}${BLUE}║${NC}"
+    echo -e "${BLUE}║${NC}${BOLD}                 SUPPORT WALPANEL DEVELOPMENT               ${NC}${BLUE}║${NC}"
     echo -e "${BLUE}╠════════════════════════════════════════════════════════════╣${NC}"
     echo -e "${BLUE}║${NC} Donate (TRON - TRC20): ${GREEN}$DONATION_ADDRESS${NC}${BLUE}     ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
