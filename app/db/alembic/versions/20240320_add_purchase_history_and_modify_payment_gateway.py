@@ -29,6 +29,7 @@ def upgrade():
         "purchase_history",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("amount", sa.Integer(), nullable=False),
+        sa.Column("order_id", sa.String(), nullable=False, unique=True),
         sa.Column("chat_id", sa.Integer(), nullable=False),
         sa.Column("purchase_date", sa.Date(), nullable=False),
         sa.Column("status", sa.String(), nullable=False, server_default="pending"),

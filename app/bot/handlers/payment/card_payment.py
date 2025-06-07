@@ -11,7 +11,7 @@ from app.bot.keyboards.keyboards import cancel_keyboard, cancel_payment_keyboard
 router = Router()
 
 
-@router.callback_query(F.data.startswith("confirm_payment:"))
+@router.callback_query(F.data.startswith("confirm_payment_card:"))
 async def handle_confirm_payment(callback: types.CallbackQuery, state: FSMContext):
     try:
         _, plan_id, chat_id, bot_language = callback.data.split(":")
@@ -173,7 +173,7 @@ async def handle_reject_payment(callback: types.CallbackQuery):
         )
 
 
-@router.callback_query(F.data.startswith("cancel_payment:"))
+@router.callback_query(F.data.startswith("cancel_payment_card:"))
 async def handle_cancel_payment(callback: types.CallbackQuery, state: FSMContext):
     try:
         _, bot_language = callback.data.split(":")

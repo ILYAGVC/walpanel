@@ -100,3 +100,23 @@ def cancel_payment_keyboard(bot_language: str):
         ]
     )
     return keyboard
+
+
+def intermediary_gateway_keyboard(amount, bot_language: str, plan_id):
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=BOT_MESSAGE.BUTTON_PAY[bot_language],
+                    callback_data=f"process_gateway_payment:{bot_language}:{amount}:{plan_id}",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text=BOT_MESSAGE.BUTTON_CANCEL[bot_language],
+                    callback_data=f"cancel_payment:{bot_language}",
+                ),
+            ],
+        ],
+    )
+    return keyboard

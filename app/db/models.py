@@ -100,6 +100,7 @@ class PurchaseHistory(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     amount = Column(Integer, nullable=False)
+    order_id = Column(String, nullable=False, unique=True)
     chat_id = Column(Integer, nullable=False)
     purchase_date = Column(Date, nullable=False)
     status = Column(String, nullable=False, default="pending")

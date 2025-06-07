@@ -42,10 +42,12 @@ class LoginUserStates(StatesGroup):
 
 class PaymentState(StatesGroup):
     waiting_for_card_payment = State()
+    waiting_for_intermediary_payment = State()
 
 
 class SettingsState(StatesGroup):
     waiting_for_card_number = State()
+    waiting_api_key = State()
 
 
 class DatabaseRestoreState(StatesGroup):

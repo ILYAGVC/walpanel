@@ -5,11 +5,19 @@ from app.bot.keyboards.main_admin_keyboards import (
     settings_menu,
     cancel_keyboard,
 )
-from app.bot.services.query import bot_settings_query, settings_query, card_query
+from app.bot.services.query import (
+    bot_settings_query,
+    settings_query,
+    card_query,
+    payment_gateway_query,
+)
 from app.bot.oprations.notif_settings import get_current_notif_settings
 from app.bot.messages.messages import BOT_MESSAGE
 from app.bot.states.states import RegisterUserStates, SettingsState
-from app.bot.keyboards.main_admin_keyboards import card_method_settings_keyboard
+from app.bot.keyboards.main_admin_keyboards import (
+    card_method_settings_keyboard,
+    intermediary_method_settings_keyboard,
+)
 
 router = Router()
 
@@ -157,7 +165,6 @@ async def handle_change_card_method_status(callback: types.CallbackQuery):
             parse_mode="HTML",
             reply_markup=card_method_settings_keyboard(bot_language),
         )
-        await callback.answer()
     except Exception as e:
         await callback.answer(
             BOT_MESSAGE.ERROR[bot_language].format(e=e), show_alert=True
@@ -173,11 +180,58 @@ async def handle_change_card_number(callback: types.CallbackQuery, state: FSMCon
         await callback.message.edit_text(
             BOT_MESSAGE.ENTER_NEW_CARD_NUMBER[bot_language], parse_mode="HTML"
         )
-        await callback.answer()
     except Exception as e:
         await callback.answer(
             BOT_MESSAGE.ERROR[bot_language].format(e=e), show_alert=True
         )
+
+
+@router.callback_query(F.data.startswith("change_intermediary_method_status:"))
+async def handle_change_intermediary_method_status(callback: types.CallbackQuery):
+    try:
+        _, bot_language = callback.data.split(":")
+        await settings_query.change_intermediary_gateway_status()
+        status = await settings_query.get_intermediary_gateway()
+        api_key = payment_gateway_query.get_intermediary_gateway_key()
+        status_text = "✅" if status else "❌"
+
+        await callback.message.edit_text(
+            BOT_MESSAGE.INTERMEDIARY_METHOD_SETTINGS[bot_language].format(
+                status=status_text, api_key=api_key
+            ),
+            parse_mode="HTML",
+            reply_markup=intermediary_method_settings_keyboard(bot_language),
+        )
+    except Exception as e:
+        await callback.answer(
+            BOT_MESSAGE.ERROR[bot_language].format(e=e), show_alert=True
+        )
+
+
+@router.callback_query(F.data.startswith("change_intermediary_method_api_key:"))
+async def handle_change_intermediary_method_key(
+    callback: types.CallbackQuery, state: FSMContext
+):
+    try:
+        _, bot_language = callback.data.split(":")
+        await state.update_data(bot_language=bot_language)
+        await state.set_state(SettingsState.waiting_api_key)
+        await callback.message.edit_text(
+            BOT_MESSAGE.ENTER_NEW_API_KEY[bot_language], parse_mode="HTML"
+        )
+    except Exception as e:
+        await callback.answer(
+            BOT_MESSAGE.ERROR[bot_language].format(e=e), show_alert=True
+        )
+
+
+@router.callback_query(F.data.startswith("intermediary_method_help:"))
+async def handle_intermediary_method_help(callback: types.CallbackQuery):
+    _, bot_language = callback.data.split(":")
+    await callback.message.answer(
+        BOT_MESSAGE.HELP_INTERMEDIARY_METHOD[bot_language],
+        parse_mode="HTML",
+    )
 
 
 @router.message(SettingsState.waiting_for_card_number)
@@ -205,7 +259,30 @@ async def handle_new_card_number(message: types.Message, state: FSMContext):
                 status=status_text, card_num=new_card_number
             ),
             parse_mode="HTML",
-            reply_markup=card_method_settings_keyboard(bot_language),
+        )
+    except Exception as e:
+        await message.answer(
+            BOT_MESSAGE.ERROR[bot_language].format(e=e), parse_mode="HTML"
+        )
+        await state.clear()
+
+
+@router.message(SettingsState.waiting_api_key)
+async def handle_new_api_key(message: types.Message, state: FSMContext):
+    try:
+        data = await state.get_data()
+        bot_language = data.get("bot_language")
+        new_api_key = message.text.strip()
+
+        await payment_gateway_query.change_intermediary_gateway_key(new_api_key)
+        await state.clear()
+
+        status = await settings_query.get_intermediary_gateway()
+        status_text = "✅" if status else "❌"
+
+        await message.answer(
+            BOT_MESSAGE.APIKEY_UPDATED[bot_language],
+            parse_mode="HTML",
         )
     except Exception as e:
         await message.answer(

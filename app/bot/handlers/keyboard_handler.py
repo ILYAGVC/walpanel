@@ -9,6 +9,7 @@ from app.bot.keyboards.main_admin_keyboards import (
     cancel_keyboard,
     card_method_settings_keyboard,
     database_menu,
+    intermediary_method_settings_keyboard,
 )
 from app.bot.keyboards.keyboards import (
     sign_up_menu,
@@ -24,6 +25,7 @@ from app.bot.services.query import (
     registering_message_query,
     plans_query,
     card_query,
+    payment_gateway_query,
 )
 from app.admin_services.api import panels_api
 from app.bot.messages.messages import BOT_MESSAGE
@@ -430,6 +432,31 @@ async def handle_card_method_button(
             ),
             parse_mode="HTML",
             reply_markup=card_method_settings_keyboard(bot_language),
+        )
+
+
+@router.message(
+    F.text.in_(
+        [
+            BOT_MESSAGE.BUTTON_INTERMEDIARY_METHOD["en"],
+            BOT_MESSAGE.BUTTON_INTERMEDIARY_METHOD["fa"],
+        ]
+    )
+)
+async def handle_intermediary_method_button(
+    message: types.Message, user_role: str, bot_language: str
+):
+    if user_role == "main_admin":
+        status = await settings_query.get_intermediary_gateway()
+        status_text = "✅" if status else "❌"
+        api_key = payment_gateway_query.get_intermediary_gateway_key()
+
+        await message.answer(
+            BOT_MESSAGE.INTERMEDIARY_METHOD_SETTINGS[bot_language].format(
+                status=status_text, api_key=api_key
+            ),
+            parse_mode="HTML",
+            reply_markup=intermediary_method_settings_keyboard(bot_language),
         )
 
 
