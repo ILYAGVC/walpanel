@@ -505,7 +505,7 @@
 
         .copy-actions {
             display: flex;
-            justify-content: flex-end;
+            justify-content: center;
             gap: 0.5rem;
         }
 
@@ -769,13 +769,16 @@
                 <h3 class="modal-title">Client Configuration</h3>
                 <button class="modal-close" id="closeCopyConfigModal">&times;</button>
             </div>
-            <div class="copy-content" id="configContent">
+            <!-- QR Code Canvas -->
+            <canvas id="qrCanvas" style="display:block; margin: 0 auto 1.5rem auto;"></canvas>
+            <!-- Hidden config link for copy only -->
+            <div class="copy-content" id="configContent" style="display:none;">
                 Loading configuration...
             </div>
             <div class="copy-actions">
                 <button class="btn btn-secondary" id="cancelCopyConfig">Close</button>
                 <button class="btn btn-primary" id="copyConfigBtn">
-                    <i class="fas fa-copy"></i> Copy
+                    <i class="fas fa-copy"></i> Copy Subscription
                 </button>
             </div>
         </div>
@@ -805,6 +808,7 @@
             </form>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
     <script>
         // Mobile menu functionality
         const sidebar = document.getElementById('sidebar');
@@ -1200,13 +1204,25 @@
         function showCopyConfigModal(clientId, subId) {
             if (!sublink || !subId) {
                 configContent.textContent = 'Error: Configuration not available';
+                configContent.style.display = 'none';
                 copyConfigModal.style.display = 'flex';
+                document.getElementById('qrCanvas').style.display = 'none';
                 return;
             }
 
             const fullLink = `${sublink}/${subId}`;
             configContent.textContent = fullLink;
+            configContent.style.display = 'none';
             copyConfigModal.style.display = 'flex';
+
+            // Generate QR code
+            const qrCanvas = document.getElementById('qrCanvas');
+            qrCanvas.style.display = 'block';
+            new QRious({
+                element: qrCanvas,
+                value: fullLink,
+                size: 180
+            });
         }
 
         copyConfigBtn.addEventListener('click', async () => {
