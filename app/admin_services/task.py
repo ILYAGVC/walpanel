@@ -45,6 +45,8 @@ class Task:
             return False
 
     def get_users(self, db, username):
+        client_list = []
+
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
@@ -52,40 +54,60 @@ class Task:
             result = panels_api.show_users(
                 panel.url, panel.username, panel.password, admin.inbound_id
             )
+            if not result or "obj" not in result or "settings" not in result["obj"]:
+                logger.error("Result or settings not found in panel response")
+                return {"clients": [], "error": "Panel did not return valid user data"}
+
+            settings_str = result["obj"]["settings"]
+            if not settings_str:
+                logger.error("Settings string is empty")
+                return {"clients": [], "error": "Settings data is empty"}
+
+            try:
+                settings_json = json.loads(settings_str)
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON decode error: {e}")
+                return {"clients": [], "error": "Invalid settings JSON from panel"}
+
+            clients = settings_json.get("clients", [])
+
             clients_status = panels_api.user_status(panel.url)
             online_emails = clients_status.get("obj") or []
 
-            settings_json = json.loads(result["obj"]["settings"])
-            clients = settings_json.get("clients", [])
-            client_list = []
-
             for c in clients:
-                client_obj = panels_api.user_obj(panel.url, c["email"])
+                try:
+                    client_obj = panels_api.user_obj(panel.url, c["email"])
+                    upload = client_obj["obj"].get("up", 0)
+                    download = client_obj["obj"].get("down", 0)
+                    total_usage = (upload + download) / (1024**3)
 
-                upload = client_obj["obj"]["up"]
-                download = client_obj["obj"]["down"]
-                total_usage = (upload + download) / (1024**3)
-
-                client_list.append(
-                    {
-                        "email": c["email"],
-                        "online": c["email"] in online_emails,
-                        "id": c["id"],
-                        "totalGB": c["totalGB"] / (1024**3),
-                        "totalUsage": total_usage,
-                        "expiryTime": datetime.fromtimestamp(
-                            c["expiryTime"] / 1000
-                        ).strftime("%Y-%m-%d"),
-                        "enable": c["enable"],
-                        "subId": c["subId"],
-                    }
-                )
+                    client_list.append(
+                        {
+                            "email": c["email"],
+                            "online": c["email"] in online_emails,
+                            "id": c["id"],
+                            "totalGB": c["totalGB"] / (1024**3),
+                            "totalUsage": total_usage,
+                            "expiryTime": datetime.fromtimestamp(
+                                c["expiryTime"] / 1000
+                            ).strftime("%Y-%m-%d"),
+                            "enable": c["enable"],
+                            "subId": c["subId"],
+                        }
+                    )
+                except Exception as client_error:
+                    logger.warning(
+                        f"Failed to process client {c['email']}: {client_error}"
+                    )
 
             return {"clients": client_list}
+
         except Exception as e:
             logger.error(f"Error fetching user list: {e}")
-            panels_api.login_with_out_savekey(panel.url, panel.username, panel.password)
-            return {"clients": [], "error": "Failed to fetch user list, try again."}
+            return {
+                "clients": client_list,
+                "error": "Failed to fetch user list, try again.",
+            }
 
     def create_user(self, db, username: str, request: CreateUserInput):
         if not self.check_admin_traffic(db, username, request.totalGB):
