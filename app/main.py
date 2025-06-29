@@ -13,12 +13,14 @@ from app.routers.mainadmin_router.admin_post import router as mainadmin_post
 from app.routers.mainadmin_router.admin_get import router as mainadmin_get
 from app.routers.mainadmin_router.news_post import router as news_post
 from app.routers.mainadmin_router.news_get import router as news_get
+from app.routers.pruchase_router.plan_post import router as purchase_post
+from app.routers.pruchase_router.plan_get import router as purchase_get
 from app.middleware import RedirectUnauthorizedMiddleware
 
 # from app.routers.extopay_payment import router as payment_router
 
 
-app = FastAPI(docs_url=None)
+app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(RedirectUnauthorizedMiddleware)
@@ -33,6 +35,8 @@ app.include_router(panel_get)
 app.include_router(panel_post)
 app.include_router(news_post)
 app.include_router(news_get)
+app.include_router(purchase_post)
+app.include_router(purchase_get)
 # app.include_router(payment_router)
 
 

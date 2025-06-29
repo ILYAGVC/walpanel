@@ -50,3 +50,16 @@ class UpdateUserInput(BaseModel):
 
 class CreateNews(BaseModel):
     message: str
+
+
+class CreatePlan(BaseModel):
+    traffic: int
+    price: int
+    days: int
+
+
+class Edit_Plan(BaseModel):
+    id: int
+    traffic: int
+    price: int
+    days: int
