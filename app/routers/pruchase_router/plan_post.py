@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.schema._input import CreatePlan, Edit_Plan
-from app.schema.output import PanelDisplay
 from sqlalchemy.orm import Session
 from app.db.engine import get_db
 from app.oprations.purchase_plan import plans_query

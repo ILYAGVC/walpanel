@@ -63,3 +63,11 @@ class Edit_Plan(BaseModel):
     traffic: int
     price: int
     days: int
+
+
+class AddNewCardNumber(BaseModel):
+    card: str
+
+
+class AddNewExtopayKey(BaseModel):
+    key: str
