@@ -23,3 +23,27 @@ async def get_extopay_key(
     username: str = Depends(mainadmin_required),
 ):
     return await payment_setting_query.get_extopay_key(db)
+
+
+@router.get("/get-payment-setting")
+async def get_payment_setting(
+    db: Session = Depends(get_db),
+    username: str = Depends(mainadmin_required),
+):
+    return await payment_setting_query.get_payment_setting(db)
+
+
+@router.get("/change-card-payment-status")
+async def change_card_payment_status(
+    db: Session = Depends(get_db),
+    username: str = Depends(mainadmin_required),
+):
+    return await payment_setting_query.update_cardpayment_status(db)
+
+
+@router.get("/change-extopay-payment-status")
+async def change_extopay_payment_status(
+    db: Session = Depends(get_db),
+    username: str = Depends(mainadmin_required),
+):
+    return await payment_setting_query.update_extopay_status(db)

@@ -3,7 +3,7 @@ from fastapi import status
 from sqlalchemy.orm import Session
 
 from app.schema._input import AddNewCardNumber, AddNewExtopayKey
-from app.db.models import CardNumber, PaymentGatewaykeys
+from app.db.models import CardNumber, PaymentGatewaykeys, Setting
 from app.log.logger_config import logger
 
 
@@ -95,6 +95,69 @@ class PaymentSettings:
             return {
                 "status": False,
                 "message": f"Error in add extopay key in database.",
+            }
+
+    async def get_payment_setting(self, db: Session):
+        try:
+            setting = db.query(Setting).first()
+            if not setting:
+                return {
+                    "status": False,
+                    "message": "Payment settings not found.",
+                }
+            return {
+                "status": True,
+                "settings": {
+                    "card_number": setting.card_payment_enabled,
+                    "extopay_key": setting.Intermediary_payment_gateway,
+                },
+            }
+        except Exception as e:
+            logger.error(f"Error in get payment settings from database: {e}")
+            return {
+                "status": False,
+                "message": f"Error in get payment settings from database.",
+            }
+
+    async def update_cardpayment_status(self, db: Session):
+        try:
+            setting = db.query(Setting).first()
+            setting.card_payment_enabled = not setting.card_payment_enabled
+            db.commit()
+            return {
+                "status": True,
+                "message": "Card payment status updated successfully.",
+            }
+        except Exception as e:
+            logger.error(f"Error in update card payment status: {e}")
+            return {
+                "status": False,
+                "message": f"Error in update card payment status.",
+            }
+
+    async def update_extopay_status(self, db: Session, request: AddNewExtopayKey):
+        try:
+            setting = db.query(Setting).first()
+            setting.Intermediary_payment_gateway = (
+                not setting.Intermediary_payment_gateway
+            )
+            if request.key:
+                key = db.query(PaymentGatewaykeys).first()
+                if key:
+                    key.Intermediary_gateway_key = request.key
+                else:
+                    key = PaymentGatewaykeys(Intermediary_gateway_key=request.key)
+                    db.add(key)
+            db.commit()
+            return {
+                "status": True,
+                "message": "Extopay payment status updated successfully.",
+            }
+        except Exception as e:
+            logger.error(f"Error in update extopay payment status: {e}")
+            return {
+                "status": False,
+                "message": f"Error in update extopay payment status.",
             }
 
 
