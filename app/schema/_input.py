@@ -37,7 +37,7 @@ class UpdateAdminInput(BaseModel):
 
 class CreateUserInput(BaseModel):
     email: str
-    totalGB: int
+    totalGB: float
     expiryTime: int
 
 
