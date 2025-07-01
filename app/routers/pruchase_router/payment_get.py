@@ -1,10 +1,14 @@
 from fastapi import APIRouter, Depends
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import Session
 
 from app.db.engine import get_db
 from app.oprations.payment_settings import payment_setting_query
 from app.auth.auth_controller import mainadmin_required
+
+import os
+
 
 router = APIRouter(prefix="/payment", tags=["Payments"])
 
@@ -47,3 +51,38 @@ async def change_extopay_payment_status(
     username: str = Depends(mainadmin_required),
 ):
     return await payment_setting_query.update_extopay_status(db)
+
+
+@router.get("/get-receipt-image")
+async def get_receipt_image(
+    db: Session = Depends(get_db),
+    username: str = Depends(mainadmin_required),
+):
+    images_path = "data/receipts/"
+    files = os.listdir(images_path)
+    print(files)
+
+    image_urls = [f"/data/receipts/{file}" for file in files if file.lower().endswith(('.jpg'))]
+
+    return {"images": image_urls}
+
+
+@router.get("/delete-receipt-image/{img_name}")
+async def delete_receipt_image(
+    img_name: str,
+    db: Session = Depends(get_db),
+    username: str = Depends(mainadmin_required),
+):
+    images_path = "data/receipts/"
+    file_path = os.path.join(images_path, img_name)
+
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        return {
+            "status": True,
+            "message": "Image deleted successfully"}
+    else:
+        return {
+            "status": False,
+            "message": "Image not found"
+        }

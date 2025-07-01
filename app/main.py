@@ -25,6 +25,7 @@ from app.middleware import RedirectUnauthorizedMiddleware
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/data/receipts", StaticFiles(directory="data/receipts"), name="receipts")
 app.add_middleware(RedirectUnauthorizedMiddleware)
 
 app.include_router(login)
