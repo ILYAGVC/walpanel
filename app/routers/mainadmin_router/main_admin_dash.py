@@ -57,3 +57,25 @@ async def admins(
     return templates.TemplateResponse(
         "admins.html", {"request": request, "user": user, "admins": admins}
     )
+
+
+@router.get("/settings/")
+async def settings(
+    request: Request,
+    user: str = Depends(mainadmin_required),
+    db: Session = Depends(get_db),
+):
+    return templates.TemplateResponse(
+        "settings.html", {"request": request, "user": user}
+    )
+
+
+@router.get("/receipts/")
+async def receipts(
+    request: Request,
+    user: str = Depends(mainadmin_required),
+    db: Session = Depends(get_db),
+):
+    return templates.TemplateResponse(
+        "receipts.html", {"request": request, "user": user}
+    )

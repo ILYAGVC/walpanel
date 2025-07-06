@@ -135,19 +135,12 @@ class PaymentSettings:
                 "message": f"Error in update card payment status.",
             }
 
-    async def update_extopay_status(self, db: Session, request: AddNewExtopayKey):
+    async def update_extopay_status(self, db: Session):
         try:
             setting = db.query(Setting).first()
             setting.Intermediary_payment_gateway = (
                 not setting.Intermediary_payment_gateway
             )
-            if request.key:
-                key = db.query(PaymentGatewaykeys).first()
-                if key:
-                    key.Intermediary_gateway_key = request.key
-                else:
-                    key = PaymentGatewaykeys(Intermediary_gateway_key=request.key)
-                    db.add(key)
             db.commit()
             return {
                 "status": True,

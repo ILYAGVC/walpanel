@@ -25,4 +25,4 @@ async def edit_plan(
     db: Session = Depends(get_db),
     username: str = Depends(mainadmin_required),
 ):
-    return plans_query.edit_plan(db, request)
+    return await plans_query.edit_plan(db, request)
