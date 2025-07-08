@@ -61,7 +61,6 @@ async def get_receipt_image(
 ):
     images_path = "data/receipts/"
     files = os.listdir(images_path)
-    print(files)
 
     image_urls = [f"/data/receipts/{file}" for file in files if file.lower().endswith(('.jpg'))]
 
@@ -100,7 +99,7 @@ async def aproval_payment(
     dealer_name = image_name.split('_')[0]
     plan_id = image_name.split('_')[2]
 
-    update_dealer = await admin_operations.aproval_payment_with_image(dealer_name, int(plan_id))
+    update_dealer = await admin_operations.aproval_payment_with_image(db, dealer_name, int(plan_id))
     if update_dealer:
         return {
             "status": True,

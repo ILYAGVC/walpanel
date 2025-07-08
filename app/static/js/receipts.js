@@ -87,29 +87,9 @@ function displayReceipts(images) {
     
     receiptsGrid.innerHTML = images.map(imageUrl => {
         const fileName = imageUrl.split('/').pop();
-        const fileDate = getFileDate(fileName);
-        
+        const username = fileName.split('_')[0];
         return `
-            <div class="receipt-card">
-                <div class="receipt-image-container">
-                    <img src="${imageUrl}" alt="Receipt" class="receipt-image" onclick="openImageModal('${imageUrl}')">
-                    <div class="receipt-overlay">
-                        <div class="receipt-actions">
-                            <button class="receipt-btn" onclick="openImageModal('${imageUrl}')">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="receipt-btn danger" onclick="showDeleteModal('${fileName}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="receipt-info">
-                    <div class="receipt-name">${fileName}</div>
-                    <div class="receipt-date">${fileDate}</div>
-                </div>
-            </div>
-        `;
+            <div class=\"receipt-card\">\n                <div class=\"receipt-image-container\">\n                    <img src=\"${imageUrl}\" alt=\"Receipt\" class=\"receipt-image\" onclick=\"openImageModal('${imageUrl}', '${fileName}')\">\n                    <div class=\"receipt-overlay\">\n                        <div class=\"receipt-actions\">\n                            <button class=\"receipt-btn\" onclick=\"openImageModal('${imageUrl}', '${fileName}')\">\n                                <i class=\"fas fa-eye\"></i>\n                            </button>\n                        </div>\n                    </div>\n                </div>\n                <div class=\"receipt-info\">\n                    <div class=\"receipt-username\">\n                        <span style=\"color:#fff;font-weight:bold;\">Admin:</span> <span style=\"color:#bdbdbd;font-weight:bold;\">${username}</span>\n                    </div>\n                    <div class=\"receipt-name\" style=\"color:#bdbdbd;\">${fileName}</div>\n                </div>\n            </div>\n        `;
     }).join('');
 }
 
@@ -128,14 +108,14 @@ function getFileDate(fileName) {
 }
 
 // Function to open image in modal
-function openImageModal(imageUrl) {
-    // Create a simple modal to show the full image
+function openImageModal(imageUrl, fileName) {
+    // Remove any existing modal
+    document.querySelectorAll('.modal.active').forEach(m => m.remove());
     const modal = document.createElement('div');
     modal.className = 'modal active';
     modal.style.zIndex = '3000';
-    
     modal.innerHTML = `
-        <div class="modal-content" style="max-width: 90%; max-height: 90%;">
+        <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">
                     <i class="fas fa-image"></i>
@@ -146,13 +126,17 @@ function openImageModal(imageUrl) {
                 </button>
             </div>
             <div class="modal-body" style="text-align: center; padding: 0;">
-                <img src="${imageUrl}" alt="Receipt" style="max-width: 100%; max-height: 70vh; object-fit: contain;">
+                <img src="${imageUrl}" alt="Receipt">
+                <div class="receipt-name" style="margin: 8px 0;">${fileName}</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="this.closest('.modal').remove()">Cancel</button>
+                <button class="btn btn-danger" onclick="modalDeleteReceipt('${fileName}', this)">Delete</button>
+                <button class="btn btn-success" onclick="modalApproveReceipt('${fileName}', this)">Approve</button>
             </div>
         </div>
     `;
-    
     document.body.appendChild(modal);
-    
     // Close modal when clicking outside
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
@@ -256,4 +240,120 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeDeleteModal();
     }
-}); 
+});
+
+// Utility function to remove file extension
+function getImageNameWithoutExtension(filename) {
+    return filename.replace(/\.[^/.]+$/, "");
+}
+
+// Add approveReceipt function
+async function approveReceipt(fileName) {
+    const imageName = getImageNameWithoutExtension(fileName);
+    try {
+        const response = await fetch(`/payment/aproval-payment/${imageName}`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            if (response.status === 401) {
+                window.location.href = '/login';
+                return;
+            }
+            throw new Error('Failed to approve receipt');
+        }
+        const result = await response.json();
+        if (result.status) {
+            showMessage('Receipt approved successfully', 'success');
+            loadReceipts();
+        } else {
+            showMessage(result.message || 'Failed to approve receipt', 'error');
+        }
+    } catch (error) {
+        console.error('Error approving receipt:', error);
+        showMessage('Failed to approve receipt', 'error');
+    }
+}
+
+// Modal Approve/Delete functions
+async function modalApproveReceipt(fileName, btn) {
+    btn.disabled = true;
+    const imageName = getImageNameWithoutExtension(fileName);
+    try {
+        const response = await fetch(`/payment/aproval-payment/${imageName}`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            if (response.status === 401) {
+                window.location.href = '/login';
+                return;
+            }
+            throw new Error('Failed to approve receipt');
+        }
+        const result = await response.json();
+        showToast(result.message, result.status ? 'success' : 'error');
+        if (result.status) {
+            setTimeout(async () => {
+                await fetch(`/payment/delete-receipt-image/${fileName}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                loadReceipts();
+            }, 1000);
+        }
+    } catch (error) {
+        console.error('Error approving receipt:', error);
+        showToast('Failed to approve receipt', 'error');
+    }
+    document.querySelectorAll('.modal.active').forEach(m => m.remove());
+}
+
+async function modalDeleteReceipt(fileName, btn) {
+    btn.disabled = true;
+    try {
+        const response = await fetch(`/payment/delete-receipt-image/${fileName}`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            if (response.status === 401) {
+                window.location.href = '/login';
+                return;
+            }
+            throw new Error('Failed to delete receipt');
+        }
+        const result = await response.json();
+        if (result.status) {
+            showMessage('Receipt deleted successfully', 'success');
+            loadReceipts();
+        } else {
+            showMessage(result.message || 'Failed to delete receipt', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting receipt:', error);
+        showMessage('Failed to delete receipt', 'error');
+    }
+    document.querySelectorAll('.modal.active').forEach(m => m.remove());
+}
+
+function showToast(message, type) {
+    const toast = document.getElementById('toast-message');
+    toast.textContent = message;
+    toast.style.background = type === 'success' ? '#4caf50' : '#f44336';
+    toast.style.display = 'block';
+    clearTimeout(window.toastTimeout);
+    window.toastTimeout = setTimeout(() => {
+        toast.style.display = 'none';
+    }, 2500);
+}
+
+async function approvePayment(imageName) {
+    try {
+        const response = await fetch(`/payment/aproval-payment/${imageName}`);
+        const data = await response.json();
+        showToast(data.message, data.status ? 'success' : 'error');
+    } catch (error) {
+        showToast('Server error', 'error');
+    }
+} 

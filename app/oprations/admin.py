@@ -172,8 +172,9 @@ class AdminOperations:
 
         try:
             if admin:
+                base_date = max(admin.expiry_time, date.today()) if admin.expiry_time else date.today()
+                admin.expiry_time = base_date + timedelta(days=plan.days)
                 admin.traffic += plan.traffic
-                admin.expiry_time = date.today() + timedelta(days=plan.days)
                 db.commit()
                 db.refresh(admin)
                 return True
