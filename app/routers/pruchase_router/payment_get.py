@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.engine import get_db
 from app.oprations.payment_settings import payment_setting_query
-from app.auth.auth_controller import mainadmin_required
+from app.auth.auth_controller import mainadmin_required, get_current_user
 
 import os
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/payment", tags=["Payments"])
 @router.get("/get-cardnumber")
 async def get_cardnumber(
     db: Session = Depends(get_db),
-    username: str = Depends(mainadmin_required),
+    username: str = Depends(get_current_user),
 ):
     return await payment_setting_query.get_card_number(db)
 
@@ -32,7 +32,7 @@ async def get_extopay_key(
 @router.get("/get-payment-setting")
 async def get_payment_setting(
     db: Session = Depends(get_db),
-    username: str = Depends(mainadmin_required),
+    username: str = Depends(get_current_user),
 ):
     return await payment_setting_query.get_payment_setting(db)
 

@@ -76,3 +76,16 @@ def get_clients_data(
     data = admin_task.get_users(db, username["username"])
     sublink = admin_task.get_sublinks(db, username["username"])
     return {"data": data, "sublink": sublink}
+
+@router.get("/plans")
+def get_plans(
+    request: Request,
+    db: Session = Depends(get_db),
+    username: dict = Depends(get_current_user),
+):
+    return templates.TemplateResponse(
+        "admin/plans.html",
+        {
+            "request": request,
+        },
+    )

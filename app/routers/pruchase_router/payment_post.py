@@ -30,8 +30,9 @@ async def add_extopay_key(
     return await payment_setting_query.add_or_change_extopay_key(db, request)
 
 
-@router.post("/upload-receipt-image")
+@router.post("/upload-receipt-image/{plan_id}")
 async def upload_receipt_image(
+    plan_id: int,
     file: UploadFile = File(media_type="image/*"),
     db: Session = Depends(get_db),
     username: str = Depends(get_current_user),
@@ -43,8 +44,8 @@ async def upload_receipt_image(
             "message": "No image uploaded.",
         }
     try:
-        now = time.strftime("%Y-%m-%d_%H-%M-%S")
-        image_path = f"data/receipts/{username['username']}_{now}.jpg"
+        now = time.strftime("%Y-%m-%d-%H-%M-%S")
+        image_path = f"data/receipts/{username['username']}_{now}_{plan_id}.jpg"
         with open(image_path, "wb") as f:
             f.write(image)
         return {
