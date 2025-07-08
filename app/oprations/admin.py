@@ -1,5 +1,5 @@
 from app.schema._input import CreateAdminInput, UpdateAdminInput
-from app.db.models import Admin
+from app.db.models import Admin, Plans
 from app.db.engine import get_db
 from app.log.logger_config import logger
 from sqlalchemy.orm import Session, joinedload
@@ -165,6 +165,23 @@ class AdminOperations:
             )
 
         return True
+    
+    async def aproval_payment_with_image(self, db: Session, dealer_name: str, plan_id: int):
+        admin = db.query(Admin).filter(Admin.username == dealer_name).first()
+        plan = db.query(Plans).filter(Plans.id == plan_id).first()
 
+        try:
+            if admin:
+                admin.traffic += plan.traffic
+                admin.expiry_time = date.today() + timedelta(days=plan.days)
+                db.commit()
+                db.refresh(admin)
+                return True
+            else:
+                return False
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error in aproval_payment_with_image: {e}")
+            return False
 
 admin_operations = AdminOperations()

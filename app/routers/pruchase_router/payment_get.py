@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.db.engine import get_db
 from app.oprations.payment_settings import payment_setting_query
+from app.oprations.admin import admin_operations
 from app.auth.auth_controller import mainadmin_required, get_current_user
 
 import os
@@ -85,4 +86,28 @@ async def delete_receipt_image(
         return {
             "status": False,
             "message": "Image not found"
+        }
+    
+@router.get("/aproval-payment/{image_name}")
+async def aproval_payment(
+    image_name: str,
+    db: Session = Depends(get_db),
+    username: str = Depends(mainadmin_required),
+):
+    '''
+    this function is aproval payment with receipt image
+    '''
+    dealer_name = image_name.split('_')[0]
+    plan_id = image_name.split('_')[2]
+
+    update_dealer = await admin_operations.aproval_payment_with_image(dealer_name, int(plan_id))
+    if update_dealer:
+        return {
+            "status": True,
+            "message": "Payment approved successfully"
+        }
+    else:
+        return {
+            "status": False,
+            "message": "Payment not approved"
         }
