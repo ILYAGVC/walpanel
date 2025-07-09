@@ -9,6 +9,7 @@ from app.db.engine import get_db
 from app.oprations.panel import panel_operations
 from app. oprations.purchase_plan import plans_query
 from app.oprations.admin import admin_operations
+from app.log.logger_config import get_10_logs
 
 
 
@@ -26,12 +27,14 @@ async def dashboard(
     panels = panel_operations.get_panels(db)
     admins = admin_operations.get_all_admins(db)
     plans = await plans_query.get_plans(db)
+    logs = get_10_logs()
+
 
     if user is None:
         raise HTTPException(status_code=401, detail="Unauthorized")
     return templates.TemplateResponse(
         "dashboard.html",
-        {"request": request, "user": user, "panels": panels, "admins": admins, "plans": plans},
+        {"request": request, "user": user, "panels": panels, "admins": admins, "plans": plans, "logs": logs},
     )
 
 
