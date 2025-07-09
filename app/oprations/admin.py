@@ -1,14 +1,13 @@
+from fastapi.exceptions import HTTPException
+from fastapi import status
+from datetime import datetime, timedelta, date
+
+
 from app.schema._input import CreateAdminInput, UpdateAdminInput
 from app.db.models import Admin, Plans
 from app.db.engine import get_db
 from app.log.logger_config import logger
 from sqlalchemy.orm import Session, joinedload
-from fastapi.exceptions import HTTPException
-from fastapi import status
-from datetime import datetime, timedelta, date
-import asyncio
-import time
-import datetime
 
 
 class AdminOperations:
@@ -57,10 +56,14 @@ class AdminOperations:
         return {"message": "successful"}
 
     def get_all_admins(self, db: Session):
+        from app.admin_services.task import admin_task
         admins = db.query(Admin).options(joinedload(Admin.panel)).all()
         result = []
 
         for admin in admins:
+            get_clients = admin_task.get_users(db, admin.username)
+            clients = get_clients.get("clients", [])
+            total_clients = len([c for c in clients if "email" in c and c["email"]])
             admin_data = {
                 "id": admin.id,
                 "username": admin.username,
@@ -77,6 +80,7 @@ class AdminOperations:
                 ),
                 "is_active": admin.is_active,
                 "is_banned": admin.is_banned,
+                "total_clients": total_clients,
             }
             result.append(admin_data)
 

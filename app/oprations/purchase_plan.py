@@ -13,10 +13,12 @@ class PlansQuery:
     async def get_plans(self, db: Session):
         try:
             plans = db.query(Plans).all()
+            plans_count = len(plans)
             if not plans:
-                return {"status": False, "message": "No plans found", "plans": []}
+                return {"status": False, "count": plans_count, "message": "No plans found", "plans": []}
             return {
                 "status": True,
+                "count": plans_count,
                 "plans": [
                     {
                         "id": plan.id,

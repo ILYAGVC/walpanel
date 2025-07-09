@@ -57,67 +57,83 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <div class="header">
-                <h1 class="page-title">
-                    <i class="fas fa-chart-line"></i>
-                    Dashboard Overview
-                </h1>
-            </div>
-
-            <div class="stats-grid">
-                <!-- Total Panels Card -->
-                <div class="stat-card stat-card-primary">
-                    <i class="fas fa-server stat-icon"></i>
-                    <div class="stat-value">{{ panels|length }}</div>
-                    <div class="stat-label">Total Panels</div>
-                    <i class="fas fa-server floating-icon"></i>
-                </div>
-
-                <!-- Total Admins Card -->
-                <div class="stat-card stat-card-success">
-                    <i class="fas fa-users-cog stat-icon"></i>
-                    <div class="stat-value">{{ admins|length }}</div>
-                    <div class="stat-label">Total Admins</div>
-                    <i class="fas fa-users-cog floating-icon"></i>
+            <div class="dashboard-header-modern">
+                <div class="dashboard-social-box">
+                    <div class="social-item">
+                        <a href="https://t.me/primezdev" target="_blank" class="social-link">
+                            <i class="fab fa-telegram-plane"></i>
+                            <span>@primezdev</span>
+                        </a>
+                    </div>
+                    <div class="social-item">
+                        <a href="https://github.com/primeZdev/walpanel" target="_blank" class="social-link">
+                            <i class="fab fa-github"></i>
+                            <span>GitHub Stars:</span>
+                            <span id="github-stars">...</span>
+                        </a>
+                    </div>
                 </div>
             </div>
-            <div class="sponsor-container">
-                <div class="sponsor-content active" data-type="ad">
-                    <div class="sponsor-content-inner">
-                        <div class="sponsor-icon">
-                            <i class="fas fa-ad"></i>
-                        </div>
-                        <div class="sponsor-text">
-                            <h3>تبلیغ | Ads</h3>
-                            <p> 📺 ...(برای رزور کیک کنید) جایگاه آگهی شما</p>
-
-                            <a href="https://t.me/primezdev" class="sponsor-btn" target="_blank">Open</a>
+            <div class="dashboard-row-modern">
+                <div class="stat-card-modern">
+                    <div class="stat-icon stat-icon-blue"><i class="fas fa-server"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ panels|length }}</div>
+                        <div class="stat-label">Total Panels</div>
+                    </div>
+                </div>
+                <div class="stat-card-modern">
+                    <div class="stat-icon stat-icon-green"><i class="fas fa-users-cog"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ admins|length }}</div>
+                        <div class="stat-label">Total Admins</div>
+                    </div>
+                </div>
+                <div class="stat-card-modern">
+                    <div class="stat-icon stat-icon-purple"><i class="fas fa-user-friends"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ admins | sum(attribute='total_clients') }}</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                </div>
+                <div class="stat-card-modern">
+                    <div class="stat-icon stat-icon-orange"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ plans|length }}</div>
+                        <div class="stat-label">Total Purchase Plans</div>
+                    </div>
+                </div>
+            </div>
+            <div class="dashboard-row-bottom">
+                <div class="dashboard-card dashboard-sponsor-card">
+                    <div class="sponsor-ad-card">
+                        <div class="ad-card-content">
+                            <div class="ad-card-text">
+                                <h2>
+                                    <span class="ad-card-icon"><i class="fas fa-ad"></i></span>
+                                    جایگاه تبلیغ شما
+                                </h2>
+                                <p>کسب‌وکار خود را به هزاران کاربر معرفی کنید! اینجا می‌توانید تبلیغ ویژه خود را قرار دهید و بازدید بیشتری جذب کنید.</p>
+                                <a href="https://t.me/primezdev" class="ad-card-btn" target="_blank">رزرو تبلیغ</a>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <div class="dashboard-card dashboard-chart-card">
+                    <div class="chart-center-label">Number of users your admins have</div>
+                    <canvas id="adminsPieChart"></canvas>
 
-                <div class="sponsor-content" data-type="telegram">
-                    <div class="sponsor-content-inner">
-                        <div class="sponsor-icon">
-                            <i class="fab fa-telegram"></i>
-                        </div>
-                        <div class="sponsor-text">
-                            <h3>Join Our Channel</h3>
-                            <p>Get latest updates and support</p>
-                            <a href="https://t.me/primez_dev" class="sponsor-btn" target="_blank">Join Now</a>
-                        </div>
-                    </div>
                 </div>
-
-                <div class="sponsor-controls">
-                    <button class="control-btn active" data-target="ad"></button>
-                    <button class="control-btn" data-target="telegram"></button>
+                <div class="dashboard-card dashboard-history-card">
+                    <div class="history-center-text">
+                        <div class="history-title-main">PAYMENT HISTORY</div>
+                        <div class="history-title-sub">COMING SOON</div>
+                    </div>
                 </div>
             </div>
         </main>
 
         <script>
-
             // Mobile menu functionality
             const sidebar = document.getElementById('sidebar');
             const mobileMenuToggle = document.getElementById('mobileMenuToggle');
@@ -165,8 +181,86 @@
                     showContent(index);
                 });
             });
-
         </script>
+        <!-- Admins Data for Chart.js -->
+        <script type="application/json" id="admins-data">
+            {{ admins|default([])|tojson|safe }}
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+        <script>
+            window.addEventListener('DOMContentLoaded', function() {
+                var adminsData = JSON.parse(document.getElementById('admins-data').textContent);
+                if (Array.isArray(adminsData) && adminsData.length > 0) {
+                    var adminNames = adminsData.map(function(a) { return a.username; });
+                    var adminClients = adminsData.map(function(a) { return a.total_clients; });
+                    var pieColors = [
+                        '#4e79a7', '#76b7b2', '#59a14f', '#edc949', '#f28e2b', '#e15759', '#af7aa1', '#ff9da7', '#9c755f', '#bab0ab'
+                    ];
+                    var ctx = document.getElementById('adminsPieChart').getContext('2d');
+                    var selectedIndex = null;
+                    var chart = new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: adminNames,
+                            datasets: [{
+                                data: adminClients,
+                                backgroundColor: pieColors,
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            cutout: '70%',
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                datalabels: {
+                                    color: '#222',
+                                    font: {
+                                        weight: 'bold',
+                                        size: 16
+                                    },
+                                    formatter: function(value, context) {
+                                        if (selectedIndex === context.dataIndex) {
+                                            return value;
+                                        }
+                                        return context.chart.data.labels[context.dataIndex];
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            var label = context.label || '';
+                                            var value = context.parsed;
+                                            return 'total users: ' + value;
+                                        }
+                                    }
+                                }
+                            },
+                            onClick: function(evt, elements) {
+                                if (elements.length > 0) {
+                                    selectedIndex = elements[0].index;
+                                    chart.update();
+                                }
+                            }
+                        },
+                        plugins: [ChartDataLabels]
+                    });
+                }
+            });
+        </script>
+        <!-- GitHub Stars Fetcher -->
+        <script>
+        fetch('https://api.github.com/repos/primeZdev/walpanel')
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById('github-stars').textContent = data.stargazers_count || 0;
+          });
+        </script>
+    </div>
 </body>
 
-</html>
+</html></html>
+

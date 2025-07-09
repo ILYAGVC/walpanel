@@ -1,11 +1,15 @@
 from fastapi import APIRouter, Request, Depends, HTTPException, Response
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
+
+
 from app.auth.auth_controller import mainadmin_required
 from app.db.engine import get_db
 from app.oprations.panel import panel_operations
+from app. oprations.purchase_plan import plans_query
 from app.oprations.admin import admin_operations
-from sqlalchemy.orm import Session
+
 
 
 templates = Jinja2Templates(directory="templates")
@@ -21,11 +25,13 @@ async def dashboard(
 ):
     panels = panel_operations.get_panels(db)
     admins = admin_operations.get_all_admins(db)
+    plans = await plans_query.get_plans(db)
+
     if user is None:
         raise HTTPException(status_code=401, detail="Unauthorized")
     return templates.TemplateResponse(
         "dashboard.html",
-        {"request": request, "user": user, "panels": panels, "admins": admins},
+        {"request": request, "user": user, "panels": panels, "admins": admins, "plans": plans},
     )
 
 
