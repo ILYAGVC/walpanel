@@ -18,9 +18,9 @@ from app.routers.pruchase_router.plan_get import router as purchase_get
 from app.routers.pruchase_router.payment_post import router as payment_post
 from app.routers.pruchase_router.payment_get import router as payment_get
 from app.routers.mainadmin_router.backup_restore import router as backup_restore
+from app.routers.pruchase_router.extopay_payment import router as extopay_payment
 from app.middleware import RedirectUnauthorizedMiddleware
 
-# from app.routers.extopay_payment import router as payment_router
 
 
 app = FastAPI()
@@ -44,7 +44,8 @@ app.include_router(purchase_get)
 app.include_router(payment_post)
 app.include_router(payment_get)
 app.include_router(backup_restore)
-# app.include_router(payment_router)
+app.include_router(extopay_payment)
+
 
 
 # if __name__ == "__main__":

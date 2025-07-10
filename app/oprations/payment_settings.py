@@ -1,7 +1,8 @@
 from fastapi.exceptions import HTTPException
-from fastapi import status
+from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from app.db.engine import get_db
 from app.schema._input import AddNewCardNumber, AddNewExtopayKey
 from app.db.models import CardNumber, PaymentGatewaykeys, Setting
 from app.log.logger_config import logger
@@ -52,7 +53,7 @@ class PaymentSettings:
                 "message": f"Error in add card number in database.",
             }
 
-    async def get_extopay_key(self, db: Session):
+    async def get_extopay_key(self, db: Session=Depends(get_db)):
         try:
             key = db.query(PaymentGatewaykeys).first()
             if not key:

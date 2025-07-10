@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from sqlalchemy.orm import Session
+
 
 from app.db.engine import get_db
 from app.oprations.payment_settings import payment_setting_query
@@ -99,7 +99,7 @@ async def aproval_payment(
     dealer_name = image_name.split('_')[0]
     plan_id = image_name.split('_')[2]
 
-    update_dealer = await admin_operations.aproval_payment_with_image(db, dealer_name, int(plan_id))
+    update_dealer = await admin_operations.aproval_payment_(db, dealer_name, int(plan_id))
     if update_dealer:
         return {
             "status": True,

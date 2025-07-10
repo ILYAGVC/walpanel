@@ -170,7 +170,7 @@ class AdminOperations:
 
         return True
     
-    async def aproval_payment_with_image(self, db: Session, dealer_name: str, plan_id: int):
+    async def aproval_payment_(self, db: Session, dealer_name: str, plan_id: int):
         admin = db.query(Admin).filter(Admin.username == dealer_name).first()
         plan = db.query(Plans).filter(Plans.id == plan_id).first()
 
@@ -188,5 +188,7 @@ class AdminOperations:
             db.rollback()
             logger.error(f"Error in aproval_payment_with_image: {e}")
             return False
+        
+
 
 admin_operations = AdminOperations()
