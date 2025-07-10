@@ -34,7 +34,7 @@ async def dashboard(
         raise HTTPException(status_code=401, detail="Unauthorized")
     return templates.TemplateResponse(
         "dashboard.html",
-        {"request": request, "user": user, "panels": panels, "admins": admins, "plans": plans, "logs": logs},
+        {"request": request, "user": user, "panels": panels, "admins": admins, "plans": plans['plans'], "logs": logs},
     )
 
 
