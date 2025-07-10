@@ -1,8 +1,11 @@
+from fastapi import Depends
+from sqlalchemy.orm import Session
 from typing import Optional, Dict, Any
 
 import requests
 import os
 
+from app.db.engine import get_db
 from app.log.logger_config import logger
 from app.oprations.payment_settings import payment_setting_query
 from dotenv import load_dotenv
@@ -22,16 +25,17 @@ class ExtopayApi:
         self,
         order_id: str,
         amount: int,
+        db: Session,
     ) -> Optional[Dict[str, Any]]:
         """
         Returns:
             Dict containing payment URL and details if successful, None if failed
         """
         try:
-            key = await payment_setting_query.get_extopay_key()
+            key = await payment_setting_query.get_extopay_key(db)
             url = f"{self.base_url}/index.php"
             data = {
-                "key": key,
+                "key": key["key"],
                 "action": "web_pay",
                 "amount": amount,
                 "order_id": order_id,
@@ -72,7 +76,7 @@ class ExtopayApi:
         try:
             key = await payment_setting_query.get_extopay_key()
             url = f"{self.base_url}/index.php"
-            data = {"key": key, "action": "web_pay_status", "token": token}
+            data = {"key": key["key"], "action": "web_pay_status", "token": token}
 
             response = requests.post(url=url, json=data, headers=self.headers)
             response_data = response.json()

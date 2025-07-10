@@ -14,10 +14,11 @@ from app.log.logger_config import logger
 router = APIRouter(prefix="/payment", tags=["payment"])
 
 
-@router.get("/Extopay")
+@router.get("/Extopay/")
 async def payment_request(
+    db: Session = Depends(get_db),
     amount: int = Query(..., description="the plan price"),
-    plan_id: int = Query(..., decimal_places="plan id"),
+    plan_id: int = Query(..., description="plan id"),
     username: str = Depends(get_current_user)
 ):
     try:
@@ -27,7 +28,7 @@ async def payment_request(
         logger.info(
             f"Received payment request: amount={amount}, order_id={order_id}"
         )
-        link = await extopay_api.make_payment_url(order_id, amount)
+        link = await extopay_api.make_payment_url(order_id, amount, db)
         return {
             "status": True,
             "link": link["link"]
@@ -38,7 +39,7 @@ async def payment_request(
         raise HTTPException(status_code=400, detail="Payment request failed")
 
 
-@router.get("/Extopay-callback/")
+@router.get("/callback/")
 async def payment_callback(
     token: str = Query(..., description="Payment token from gateway"),
     result: str = Query(..., description="Payment result (OK or NOK)"),

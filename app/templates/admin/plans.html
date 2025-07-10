@@ -221,7 +221,6 @@
             <form id="extopayForm" style="display:none; margin-top: 1.5rem;">
                 <div style="margin-bottom: 1rem;">
                     <label style="font-weight: bold;">Extopay Payment</label>
-                    <div style="margin-top: 0.5rem;">(Extopay payment instructions...)</div>
                 </div>
                 <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 1rem;">Pay with Extopay</button>
             </form>
@@ -229,6 +228,7 @@
         </div>
     </div>
     <script>
+        let selectedPlan = null;
         async function fetchPlans() {
             const plansList = document.getElementById('plansList');
             plansList.innerHTML = '<div class="loading">Loading plans...</div>';
@@ -240,6 +240,7 @@
                     plansList.innerHTML = '<div class="empty-state">No plans found!</div>';
                     return;
                 }
+                window.allPlans = data.plans;
                 plansList.innerHTML = data.plans.map(plan => `
                     <div class="plan-card">
                         <div class="plan-icon"><i class="fas fa-wifi"></i></div>
@@ -256,6 +257,11 @@
             }
         }
         function buyPlan(planId) {
+            if (window.allPlans) {
+                selectedPlan = window.allPlans.find(p => p.id === planId);
+            } else {
+                selectedPlan = { id: planId };
+            }
             openPaymentModal(planId);
         }
         document.addEventListener('DOMContentLoaded', fetchPlans);
@@ -348,6 +354,9 @@
             document.getElementById('cardToCardForm').style.display = 'none';
             document.getElementById('extopayForm').style.display = 'block';
             document.getElementById('paymentMessage').textContent = '';
+            document.getElementById('extopayForm').reset && document.getElementById('extopayForm').reset();
+            document.getElementById('paymentMessage').innerHTML = '';
+            document.getElementById('extopayForm').querySelector('.extopay-link-btn')?.remove();
         };
         document.getElementById('cardToCardForm').onsubmit = async function(e) {
             e.preventDefault();
@@ -387,10 +396,43 @@
                 document.getElementById('paymentMessage').textContent = 'Server error.';
             }
         };
-        document.getElementById('extopayForm').onsubmit = function(e) {
+        document.getElementById('extopayForm').onsubmit = async function(e) {
             e.preventDefault();
-
-            document.getElementById('paymentMessage').textContent = 'Extopay payment submitted! (Not implemented)';
+            document.getElementById('paymentMessage').textContent = '';
+            document.getElementById('extopayForm').querySelector('.extopay-link-btn')?.remove();
+            if (!selectedPlan || !selectedPlan.price || !selectedPlan.id) {
+                document.getElementById('paymentMessage').textContent = 'Plan info not found.';
+                return;
+            }
+            document.getElementById('paymentMessage').textContent = 'Processing...';
+            try {
+                const params = new URLSearchParams({
+                    amount: selectedPlan.price,
+                    plan_id: selectedPlan.id
+                });
+                const response = await fetch(`/payment/Extopay/?${params.toString()}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.status && data.link) {
+                    document.getElementById('cardToCardForm').style.display = 'none';
+                    document.getElementById('extopayForm').style.display = 'none';
+                    document.getElementById('paymentMethods').style.display = 'none';
+                    document.getElementById('paymentMessage').innerHTML = `
+                        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 0;">
+                            <span style="font-size:1.2rem;font-weight:bold;margin-bottom:1rem;">Click the button below to pay online</span>
+                            <a href="${data.link}" target="_blank" class="btn btn-success extopay-link-btn" style="width:100%;margin-top:1rem;display:inline-block;text-align:center;">
+                                Pay Online
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('paymentMessage').textContent = data.detail || 'Failed to get payment link.';
+                }
+            } catch (err) {
+                document.getElementById('paymentMessage').textContent = 'Server error.';
+            }
         };
     </script>
 </body>
