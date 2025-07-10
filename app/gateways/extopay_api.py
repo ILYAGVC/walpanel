@@ -1,36 +1,45 @@
+from fastapi import Depends
+from sqlalchemy.orm import Session
 from typing import Optional, Dict, Any
 
 import requests
+import os
 
-from app.bot.config import EXTOPAY_CALLBACK_URL
+from app.db.engine import get_db
 from app.log.logger_config import logger
-from app.bot.services.query import payment_gateway_query
+from app.oprations.payment_settings import payment_setting_query
+from dotenv import load_dotenv
+
+dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
+load_dotenv(dotenv_path)
+
+EXTOPAY_CALLBACK_URL = str(os.getenv("EXTOPAY_CALLBACK_URL"))
 
 
-class IntermediaryGatewayAPI:
-    def __init__(self, api_key: str):
-        self.api_key = api_key
+class ExtopayApi:
+    def __init__(self):
         self.base_url = "https://dgpaneltr.sbs/zirgozar/api"
         self.headers = {"Content-Type": "application/json"}
 
-    async def make_a_payment_url(
+    async def make_payment_url(
         self,
         order_id: str,
         amount: int,
-        callback_url: str,
+        db: Session,
     ) -> Optional[Dict[str, Any]]:
         """
         Returns:
             Dict containing payment URL and details if successful, None if failed
         """
         try:
+            key = await payment_setting_query.get_extopay_key(db)
             url = f"{self.base_url}/index.php"
             data = {
-                "key": self.api_key,
+                "key": key["key"],
                 "action": "web_pay",
                 "amount": amount,
                 "order_id": order_id,
-                "callback_url": callback_url,
+                "callback_url": EXTOPAY_CALLBACK_URL,
             }
 
             response = requests.post(url=url, json=data, headers=self.headers)
@@ -57,7 +66,7 @@ class IntermediaryGatewayAPI:
                 return None
 
         except Exception as e:
-            logger.error(f"Error in make_a_payment_url: {e}")
+            logger.error(f"Error in make_payment_url: {e}")
             return None
 
     async def check_payment_status(self, token: str) -> Optional[Dict[str, Any]]:
@@ -65,8 +74,9 @@ class IntermediaryGatewayAPI:
         Check payment status using token
         """
         try:
+            key = await payment_setting_query.get_extopay_key()
             url = f"{self.base_url}/index.php"
-            data = {"key": self.api_key, "action": "web_pay_status", "token": token}
+            data = {"key": key["key"], "action": "web_pay_status", "token": token}
 
             response = requests.post(url=url, json=data, headers=self.headers)
             response_data = response.json()
@@ -92,6 +102,4 @@ class IntermediaryGatewayAPI:
             return None
 
 
-# Create an instance with your API key
-api_key = payment_gateway_query.get_intermediary_gateway_key()
-intermediary_api = IntermediaryGatewayAPI(api_key=api_key)
+extopay_api = ExtopayApi()

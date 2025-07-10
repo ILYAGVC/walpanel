@@ -107,8 +107,6 @@ install() {
     echo -e "${BLUE}[*] Configuration${NC}"
     read -p "Admin username: " USERNAME
     read -p "Admin password: " PASSWORD
-    read -p "Telegram admin chat ID: " ADMIN_CHAT_ID
-    read -p "Telegram bot token: " BOT_TOKEN
     read -p "Domain/subdomain (e.g. panel.example.com): " SUBDOMAIN
     read -p "Domain port (https ports only, example 443, 2053, ...): " DOMAIN_PORT
     DOMAIN_PORT=${DOMAIN_PORT:-443}
@@ -118,8 +116,6 @@ install() {
 
     sed -i "s|USERNAME=.*|USERNAME=$USERNAME|g" .env
     sed -i "s|PASSWORD=.*|PASSWORD=$PASSWORD|g" .env
-    sed -i "s|ADMIN_CHAT_ID=.*|ADMIN_CHAT_ID=$ADMIN_CHAT_ID|g" .env
-    sed -i "s|BOT_TOKEN=.*|BOT_TOKEN=$BOT_TOKEN|g" .env
     sed -i "s|PANEL_ADDRESS=.*|PANEL_ADDRESS=$PANEL_ADDRESS|g" .env
     sed -i "s|EXTOPAY_CALLBACK_URL=.*|EXTOPAY_CALLBACK_URL=$EXTOPAY_CALLBACK_URL|g" .env
 

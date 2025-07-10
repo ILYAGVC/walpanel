@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Control Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/payment-settings.css">
+</head>
+
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <span>Control Panel</span>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="/dashboard/" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    Dashboard
+                </a>
+                <a href="/dashboard/panels/" class="nav-item">
+                    <i class="fas fa-server"></i>
+                    Panels
+                </a>
+                <a href="/dashboard/admins/" class="nav-item">
+                    <i class="fas fa-users-cog"></i>
+                    Admins
+                </a>
+                <a href="/dashboard/receipts/" class="nav-item">
+                    <i class="fas fa-receipt"></i>
+                    Receipts
+                </a>
+                <a href="/dashboard/settings/" class="nav-item active">
+                    <i class="fas fa-cog"></i>
+                    Settings
+                </a>
+                <a href="/login/" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <h1 class="page-title">
+                    <i class="fas fa-cog"></i>
+                    Settings
+                </h1>
+            </div>
+
+            <div class="settings-container">
+                <!-- News Management Section -->
+                <div class="settings-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-newspaper"></i>
+                        News Management
+                    </h2>
+                    <div class="settings-grid">
+                        <div class="setting-card">
+                            <div class="setting-header">
+                                <!-- <div class="setting-icon">
+                                    <i class="fas fa-plus fa-fw"></i>
+                                </div> -->
+                                <div class="setting-info">
+                                    <h3>Create News</h3>
+                                    <p>Write and publish a new news article</p>
+                                </div>
+                            </div>
+                            <div class="setting-actions">
+                                <button class="btn btn-primary" id="createNewsBtn">
+                                    <i class="fas fa-edit"></i>
+                                    Create News
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="setting-card">
+                            <div class="setting-header">
+                                <!-- <div class="setting-icon">
+                                    <i class="fas fa-list fa-fw"></i>
+                                </div> -->
+                                <div class="setting-info">
+                                    <h3>View All News</h3>
+                                    <p>View and manage all published news articles</p>
+                                </div>
+                            </div>
+                            <div class="setting-actions">
+                                <button class="btn btn-primary" id="viewNewsBtn">
+                                    <i class="fas fa-eye"></i>
+                                    View News
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchase Plan Management Section -->
+                <div class="settings-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-shopping-cart"></i>
+                        Purchase Plan Management
+                    </h2>
+                    <div class="settings-grid">
+                        <div class="setting-card">
+                            <div class="setting-header">
+                                <!-- <div class="setting-icon">
+                                    <i class="fas fa-plus fa-fw"></i>
+                                </div> -->
+                                <div class="setting-info">
+                                    <h3>Create Plan</h3>
+                                    <p>Create a new purchase plan with traffic, price, and duration</p>
+                                </div>
+                            </div>
+                            <div class="setting-actions">
+                                <button class="btn btn-primary" id="createPlanBtn">
+                                    <i class="fas fa-edit"></i>
+                                    Create Plan
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="setting-card">
+                            <div class="setting-header">
+                                <!-- <div class="setting-icon">
+                                    <i class="fas fa-list fa-fw"></i>
+                                </div> -->
+                                <div class="setting-info">
+                                    <h3>View All Plans</h3>
+                                    <p>View and manage all purchase plans</p>
+                                </div>
+                            </div>
+                            <div class="setting-actions">
+                                <button class="btn btn-primary" id="viewPlansBtn">
+                                    <i class="fas fa-eye"></i>
+                                    View Plans
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchase Settings Section -->
+                <div class="settings-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-credit-card"></i>
+                        Purchase Settings
+                    </h2>
+                    <div class="settings-grid">
+                        <div class="setting-card">
+                            <div class="setting-header">
+                                <div class="setting-info">
+                                    <h3>Payment Configuration</h3>
+                                    <p>Manage payment settings, card numbers, and payment gateways</p>
+                                </div>
+                            </div>
+                            <div class="setting-actions">
+                                <button class="btn btn-primary" id="paymentSettingsBtn">
+                                    <i class="fas fa-cog"></i>
+                                    Configure Payments
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backup and Restore Section -->
+                <div class="settings-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-database"></i>
+                        Backup and Restore
+                    </h2>
+                    <div class="settings-grid">
+                        <div class="setting-card">
+                            <div class="setting-header">
+                                <div class="setting-info">
+                                    <h3>Database Backup</h3>
+                                    <p>Download a backup of the current database</p>
+                                </div>
+                            </div>
+                            <div class="setting-actions">
+                                <button class="btn btn-success" id="backupBtn">
+                                    <i class="fas fa-download"></i>
+                                    Download Backup
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="setting-card">
+                            <div class="setting-header">
+                                <div class="setting-info">
+                                    <h3>Database Restore</h3>
+                                    <p>Restore database from a backup file (will restart the system)</p>
+                                </div>
+                            </div>
+                            <div class="setting-actions">
+                                <button class="btn btn-warning" id="restoreBtn">
+                                    <i class="fas fa-upload"></i>
+                                    Restore Database
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create News Modal -->
+    <div class="modal" id="createNewsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-plus"></i>
+                    Create News
+                </h2>
+                <button class="close-modal" onclick="hideModal('createNewsModal')">&times;</button>
+            </div>
+
+            <form id="createNewsForm">
+                <div id="createNewsMessage" class="message" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="newsMessage" class="form-label">News Message*</label>
+                    <textarea id="newsMessage" class="form-control" rows="6" placeholder="Enter your news message here..." required></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="hideModal('createNewsModal')">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Publish News
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View All News Modal -->
+    <div class="modal" id="viewNewsModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-list"></i>
+                    All News
+                </h2>
+                <button class="close-modal" onclick="hideModal('viewNewsModal')">&times;</button>
+            </div>
+
+            <div id="newsList" style="max-height: 500px; overflow-y: auto;">
+                <div class="loading">Loading news...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Plan Modal -->
+    <div class="modal" id="createPlanModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-plus"></i>
+                    Create Purchase Plan
+                </h2>
+                <button class="close-modal" onclick="hideModal('createPlanModal')">&times;</button>
+            </div>
+
+            <form id="createPlanForm">
+                <div id="createPlanMessage" class="message" style="display: none;"></div>
+
+                <div class="form-group">
+                    <label for="planTraffic" class="form-label">Traffic (GB)*</label>
+                    <input type="number" id="planTraffic" class="form-control" placeholder="Enter traffic in GB" required min="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="planPrice" class="form-label">Price*</label>
+                    <input type="number" id="planPrice" class="form-control" placeholder="Enter price" required min="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="planDays" class="form-label">Duration (Days)*</label>
+                    <input type="number" id="planDays" class="form-control" placeholder="Enter duration in days" required min="1">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="hideModal('createPlanModal')">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Create Plan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View All Plans Modal -->
+    <div class="modal" id="viewPlansModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-list"></i>
+                    All Purchase Plans
+                </h2>
+                <button class="close-modal" onclick="hideModal('viewPlansModal')">&times;</button>
+            </div>
+
+            <div id="plansList" style="max-height: 500px; overflow-y: auto;">
+                <div class="loading">Loading plans...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Plan Modal -->
+    <div class="modal" id="editPlanModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-edit"></i>
+                    Edit Purchase Plan
+                </h2>
+                <button class="close-modal" onclick="hideModal('editPlanModal')">&times;</button>
+            </div>
+
+            <form id="editPlanForm">
+                <div id="editPlanMessage" class="message" style="display: none;"></div>
+
+                <input type="hidden" id="editPlanId">
+
+                <div class="form-group">
+                    <label for="editPlanTraffic" class="form-label">Traffic (GB)*</label>
+                    <input type="number" id="editPlanTraffic" class="form-control" placeholder="Enter traffic in GB" required min="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="editPlanPrice" class="form-label">Price*</label>
+                    <input type="number" id="editPlanPrice" class="form-control" placeholder="Enter price" required min="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="editPlanDays" class="form-label">Duration (Days)*</label>
+                    <input type="number" id="editPlanDays" class="form-control" placeholder="Enter duration in days" required min="1">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="hideModal('editPlanModal')">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Update Plan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Settings Modal -->
+    <div class="modal payment-settings-modal" id="paymentSettingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-credit-card"></i>
+                    Payment Settings
+                </h2>
+                <button class="close-modal" onclick="hideModal('paymentSettingsModal')">&times;</button>
+            </div>
+
+            <div id="paymentSettingsMessage" class="message" style="display: none;"></div>
+
+
+
+            <!-- Card Number Section -->
+            <div class="settings-section" style="margin-bottom: 2rem;">
+                <h3 style="color: var(--light); margin-bottom: 1rem;">
+                    <i class="fas fa-credit-card"></i>
+                    Card Number Settings
+                </h3>
+                <form id="cardNumberForm">
+                    <div class="form-group">
+                        <label for="cardNumber" class="form-label">Card Number*</label>
+                        <input type="text" id="cardNumber" class="form-control" placeholder="Enter card number" required>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            Update Card Number
+                        </button>
+                        <button type="button" class="btn btn-outline status-button" id="cardStatusBtn" onclick="toggleCardPaymentStatus()">
+                            <i class="fas fa-toggle-on"></i>
+                            <span id="cardStatusText" class="status-text">Loading...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Extopay Key Section -->
+            <div class="settings-section" style="margin-bottom: 2rem;">
+                <h3 style="color: var(--light); margin-bottom: 1rem;">
+                    <i class="fas fa-key"></i>
+                    Extopay Key Settings
+                </h3>
+                <form id="extopayKeyForm">
+                    <div class="form-group">
+                        <label for="extopayKey" class="form-label">Extopay Key*</label>
+                        <input type="text" id="extopayKey" class="form-control" placeholder="Enter Extopay key" required>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            Update Extopay Key
+                        </button>
+                        <button type="button" class="btn btn-outline status-button" id="extopayStatusBtn" onclick="toggleExtopayPaymentStatus()">
+                            <i class="fas fa-toggle-on"></i>
+                            <span id="extopayStatusText" class="status-text">Loading...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="hideModal('paymentSettingsModal')">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Restore Database Modal -->
+    <div class="modal" id="restoreModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">
+                    <i class="fas fa-upload"></i>
+                    Restore Database
+                </h2>
+                <button class="close-modal" onclick="hideModal('restoreModal')">&times;</button>
+            </div>
+
+            <div id="restoreMessage" class="message" style="display: none;"></div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
+                    <h4 style="color: #ffc107; margin: 0 0 0.5rem 0;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Warning
+                    </h4>
+                    <p style="color: var(--gray-dark); margin: 0; line-height: 1.5;">
+                        This action will replace the current database with the uploaded backup file. 
+                        The system will automatically restart after the restore process. 
+                        Make sure you have a backup of your current data before proceeding.
+                    </p>
+                </div>
+            </div>
+
+            <form id="restoreForm">
+                <div class="form-group">
+                    <label for="backupFile" class="form-label">Backup File*</label>
+                    <input type="file" id="backupFile" class="form-control" accept=".db" required>
+                    <small style="color: var(--gray-dark);">Select a .db backup file to restore</small>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="hideModal('restoreModal')">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-upload"></i>
+                        Restore Database
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu functionality
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        // Toggle sidebar on mobile
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        });
+
+        // Close sidebar when clicking overlay
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+
+        // Close sidebar when window is resized to desktop size
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 1024) {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            }
+        });
+
+        // News Management Functions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create News Button
+            document.getElementById('createNewsBtn').addEventListener('click', function() {
+                showModal('createNewsModal');
+            });
+
+            // View News Button
+            document.getElementById('viewNewsBtn').addEventListener('click', function() {
+                showModal('viewNewsModal');
+                loadAllNews();
+            });
+
+            // Create News Form
+            document.getElementById('createNewsForm').addEventListener('submit', handleCreateNews);
+
+            // Create Plan Button
+            document.getElementById('createPlanBtn').addEventListener('click', function() {
+                showModal('createPlanModal');
+            });
+
+            // View Plans Button
+            document.getElementById('viewPlansBtn').addEventListener('click', function() {
+                showModal('viewPlansModal');
+                loadAllPlans();
+            });
+
+            // Create Plan Form
+            document.getElementById('createPlanForm').addEventListener('submit', handleCreatePlan);
+
+            // Edit Plan Form
+            document.getElementById('editPlanForm').addEventListener('submit', handleEditPlan);
+
+            // Payment Settings Button
+            document.getElementById('paymentSettingsBtn').addEventListener('click', function() {
+                showModal('paymentSettingsModal');
+                loadCurrentPaymentSettings();
+            });
+
+            // Card Number Form
+            document.getElementById('cardNumberForm').addEventListener('submit', handleUpdateCardNumber);
+
+            // Extopay Key Form
+            document.getElementById('extopayKeyForm').addEventListener('submit', handleUpdateExtopayKey);
+
+            // Backup Button
+            document.getElementById('backupBtn').addEventListener('click', handleBackup);
+
+            // Restore Button
+            document.getElementById('restoreBtn').addEventListener('click', function() {
+                showModal('restoreModal');
+            });
+
+            // Restore Form
+            document.getElementById('restoreForm').addEventListener('submit', handleRestore);
+        });
+
+        // Modal Functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = '';
+            if (modalId === 'createNewsModal') {
+                document.getElementById('createNewsForm').reset();
+                const messageEl = document.getElementById('createNewsMessage');
+                messageEl.style.display = 'none';
+                messageEl.textContent = '';
+            } else if (modalId === 'createPlanModal') {
+                document.getElementById('createPlanForm').reset();
+                const messageEl = document.getElementById('createPlanMessage');
+                messageEl.style.display = 'none';
+                messageEl.textContent = '';
+            } else if (modalId === 'editPlanModal') {
+                document.getElementById('editPlanForm').reset();
+                const messageEl = document.getElementById('editPlanMessage');
+                messageEl.style.display = 'none';
+                messageEl.textContent = '';
+            } else if (modalId === 'paymentSettingsModal') {
+                document.getElementById('cardNumberForm').reset();
+                document.getElementById('extopayKeyForm').reset();
+                const messageEl = document.getElementById('paymentSettingsMessage');
+                messageEl.style.display = 'none';
+                messageEl.textContent = '';
+            } else if (modalId === 'restoreModal') {
+                document.getElementById('restoreForm').reset();
+                const messageEl = document.getElementById('restoreMessage');
+                messageEl.style.display = 'none';
+                messageEl.textContent = '';
+            }
+        }
+
+        // Create News Handler
+        async function handleCreateNews(e) {
+            e.preventDefault();
+
+            const formData = {
+                message: document.getElementById('newsMessage').value.trim()
+            };
+
+            if (!formData.message) {
+                return showMessage('createNewsMessage', 'Message is required', 'error');
+            }
+
+            try {
+                const response = await fetch('/news/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to create news');
+                }
+
+                showMessage('createNewsMessage', 'News created successfully!', 'success');
+                setTimeout(() => {
+                    hideModal('createNewsModal');
+                }, 1500);
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('createNewsMessage', error.message, 'error');
+            }
+        }
+
+        // Load All News
+        async function loadAllNews() {
+            const newsList = document.getElementById('newsList');
+            newsList.innerHTML = '<div class="loading">Loading news...</div>';
+
+            try {
+                const response = await fetch('/news/all');
+                if (!response.ok) throw new Error('Failed to load news');
+
+                const news = await response.json();
+
+                if (news.length === 0) {
+                    newsList.innerHTML = '<div class="empty-state">No news found</div>';
+                    return;
+                }
+
+                newsList.innerHTML = news.map(item => `
+                    <div class="news-item" style="border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                            <h3 style="margin: 0; color: var(--light); font-size: 1.1rem;">News</h3>
+                            <button class="btn btn-danger" onclick="deleteNews(${item.id})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <p style="color: var(--gray-dark); margin: 0; line-height: 1.5;">${item.message}</p>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading news:', error);
+                newsList.innerHTML = '<div class="error">Failed to load news: ' + error.message + '</div>';
+            }
+        }
+
+        // Delete News
+        async function deleteNews(newsId) {
+            if (confirm('Are you sure you want to delete this news? This action cannot be undone.')) {
+                try {
+                    const response = await fetch(`/news/delete/${newsId}`, {
+                        method: 'GET'
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.detail || 'Failed to delete news');
+                    }
+
+                    const data = await response.json();
+                    
+                    // Check if deletion was successful based on backend response
+                    if (data.messsage === 'successful') {
+                        // Reload the news list
+                        loadAllNews();
+                    } else {
+                        throw new Error('Failed to delete news');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error: ' + error.message);
+                }
+            }
+        }
+
+        // Create Plan Handler
+        async function handleCreatePlan(e) {
+            e.preventDefault();
+
+            const formData = {
+                traffic: parseInt(document.getElementById('planTraffic').value),
+                price: parseInt(document.getElementById('planPrice').value),
+                days: parseInt(document.getElementById('planDays').value)
+            };
+
+            if (!formData.traffic || !formData.price || !formData.days) {
+                return showMessage('createPlanMessage', 'All fields are required', 'error');
+            }
+
+            if (formData.traffic < 1 || formData.price < 1 || formData.days < 1) {
+                return showMessage('createPlanMessage', 'All values must be greater than 0', 'error');
+            }
+
+            try {
+                const response = await fetch('/plan/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to create plan');
+                }
+
+                if (data.status) {
+                    showMessage('createPlanMessage', 'Plan created successfully!', 'success');
+                    setTimeout(() => {
+                        hideModal('createPlanModal');
+                    }, 1500);
+                } else {
+                    throw new Error(data.message || 'Failed to create plan');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('createPlanMessage', error.message, 'error');
+            }
+        }
+
+        // Load All Plans
+        async function loadAllPlans() {
+            const plansList = document.getElementById('plansList');
+            plansList.innerHTML = '<div class="loading">Loading plans...</div>';
+
+            try {
+                const response = await fetch('/plan/all');
+                if (!response.ok) throw new Error('Failed to load plans');
+
+                const data = await response.json();
+
+                if (!data.status || !data.plans || data.plans.length === 0) {
+                    plansList.innerHTML = '<div class="empty-state">No plans found</div>';
+                    return;
+                }
+
+                plansList.innerHTML = data.plans.map(plan => `
+                    <div class="plan-item" style="border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                            <h3 style="margin: 0; color: var(--light); font-size: 1.1rem;">Plan #${plan.id}</h3>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-primary" onclick="editPlan(${plan.id})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger" onclick="deletePlan(${plan.id})" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
+                            <div style="background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 0.25rem;">
+                                <strong style="color: var(--primary);">Traffic:</strong> ${plan.traffic} GB
+                            </div>
+                            <div style="background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 0.25rem;">
+                                <strong style="color: var(--primary);">Price:</strong> ${plan.price}
+                            </div>
+                            <div style="background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 0.25rem;">
+                                <strong style="color: var(--primary);">Duration:</strong> ${plan.deadline} days
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading plans:', error);
+                plansList.innerHTML = '<div class="error">Failed to load plans: ' + error.message + '</div>';
+            }
+        }
+
+        // Edit Plan
+        async function editPlan(planId) {
+            try {
+                const response = await fetch(`/plan${planId}`);
+                if (!response.ok) throw new Error('Failed to load plan details');
+
+                const data = await response.json();
+
+                if (!data.status) {
+                    throw new Error(data.message || 'Failed to load plan details');
+                }
+
+                // Populate the edit form
+                document.getElementById('editPlanId').value = planId;
+                document.getElementById('editPlanTraffic').value = data.traffic;
+                document.getElementById('editPlanPrice').value = data.price;
+                document.getElementById('editPlanDays').value = data.days;
+
+                // Show the edit modal
+                showModal('editPlanModal');
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Edit Plan Handler
+        async function handleEditPlan(e) {
+            e.preventDefault();
+
+            const planId = parseInt(document.getElementById('editPlanId').value);
+            const formData = {
+                id: planId,
+                traffic: parseInt(document.getElementById('editPlanTraffic').value),
+                price: parseInt(document.getElementById('editPlanPrice').value),
+                days: parseInt(document.getElementById('editPlanDays').value)
+            };
+
+            if (!formData.traffic || !formData.price || !formData.days) {
+                return showMessage('editPlanMessage', 'All fields are required', 'error');
+            }
+
+            if (formData.traffic < 1 || formData.price < 1 || formData.days < 1) {
+                return showMessage('editPlanMessage', 'All values must be greater than 0', 'error');
+            }
+
+            try {
+                const response = await fetch('/plan/edit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to update plan');
+                }
+
+                if (data.status) {
+                    showMessage('editPlanMessage', 'Plan updated successfully!', 'success');
+                    setTimeout(() => {
+                        hideModal('editPlanModal');
+                        loadAllPlans(); // Refresh the plans list
+                    }, 1500);
+                } else {
+                    throw new Error(data.message || 'Failed to update plan');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('editPlanMessage', error.message, 'error');
+            }
+        }
+
+        // Delete Plan
+        async function deletePlan(planId) {
+            if (confirm('Are you sure you want to delete this plan? This action cannot be undone.')) {
+                try {
+                    const response = await fetch(`/plan/delete/${planId}`, {
+                        method: 'GET'
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.detail || 'Failed to delete plan');
+                    }
+
+                    const data = await response.json();
+                    
+                    if (data.status) {
+                        // Reload the plans list
+                        loadAllPlans();
+                    } else {
+                        throw new Error(data.message || 'Failed to delete plan');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error: ' + error.message);
+                }
+            }
+        }
+
+        // Helper Functions
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = message;
+                element.className = `message message-${type}`;
+                element.style.display = 'block';
+            }
+        }
+
+        // Payment Settings Functions
+        async function loadCurrentPaymentSettings() {
+            try {
+                // Load payment settings
+                const settingsResponse = await fetch('/payment/get-payment-setting');
+                const settingsData = await settingsResponse.json();
+
+                // Load card number
+                const cardResponse = await fetch('/payment/get-cardnumber');
+                const cardData = await cardResponse.json();
+
+                // Load extopay key
+                const extopayResponse = await fetch('/payment/get-extopay-key');
+                const extopayData = await extopayResponse.json();
+
+                // Populate form fields with current values
+                if (cardData.status && cardData.card) {
+                    document.getElementById('cardNumber').value = cardData.card;
+                }
+                if (extopayData.status && extopayData.key) {
+                    document.getElementById('extopayKey').value = extopayData.key;
+                }
+
+                // Update status buttons
+                if (settingsData.status) {
+                    // Card payment status
+                    const cardStatusBtn = document.getElementById('cardStatusBtn');
+                    const cardStatusText = document.getElementById('cardStatusText');
+                    const isCardEnabled = settingsData.settings.card_number;
+                    
+                    cardStatusBtn.className = isCardEnabled ? 'btn btn-success' : 'btn btn-outline';
+                    cardStatusText.textContent = isCardEnabled ? 'Enabled' : 'Disabled';
+                    
+                    // Extopay payment status
+                    const extopayStatusBtn = document.getElementById('extopayStatusBtn');
+                    const extopayStatusText = document.getElementById('extopayStatusText');
+                    const isExtopayEnabled = settingsData.settings.extopay_key;
+                    
+                    extopayStatusBtn.className = isExtopayEnabled ? 'btn btn-success' : 'btn btn-outline';
+                    extopayStatusText.textContent = isExtopayEnabled ? 'Enabled' : 'Disabled';
+                }
+
+            } catch (error) {
+                console.error('Error loading payment settings:', error);
+                showMessage('paymentSettingsMessage', 'Failed to load payment settings: ' + error.message, 'error');
+            }
+        }
+
+        // Update Card Number
+        async function handleUpdateCardNumber(e) {
+            e.preventDefault();
+
+            const cardNumber = document.getElementById('cardNumber').value.trim();
+
+            if (!cardNumber) {
+                return showMessage('paymentSettingsMessage', 'Card number is required', 'error');
+            }
+
+            try {
+                const response = await fetch('/payment/add-cardnumber', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ card: cardNumber })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to update card number');
+                }
+
+                if (data.status) {
+                    showMessage('paymentSettingsMessage', 'Card number updated successfully!', 'success');
+                    loadCurrentPaymentSettings(); // Refresh the display
+                } else {
+                    throw new Error(data.message || 'Failed to update card number');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('paymentSettingsMessage', error.message, 'error');
+            }
+        }
+
+        // Update Extopay Key
+        async function handleUpdateExtopayKey(e) {
+            e.preventDefault();
+
+            const extopayKey = document.getElementById('extopayKey').value.trim();
+
+            if (!extopayKey) {
+                return showMessage('paymentSettingsMessage', 'Extopay key is required', 'error');
+            }
+
+            try {
+                const response = await fetch('/payment/add-extopay-key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ key: extopayKey })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to update Extopay key');
+                }
+
+                if (data.status) {
+                    showMessage('paymentSettingsMessage', 'Extopay key updated successfully!', 'success');
+                    loadCurrentPaymentSettings(); // Refresh the display
+                } else {
+                    throw new Error(data.message || 'Failed to update Extopay key');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('paymentSettingsMessage', error.message, 'error');
+            }
+        }
+
+        // Toggle Card Payment Status
+        async function toggleCardPaymentStatus() {
+            try {
+                const response = await fetch('/payment/change-card-payment-status', {
+                    method: 'GET'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to toggle card payment status');
+                }
+
+                if (data.status) {
+                    showMessage('paymentSettingsMessage', 'Card payment status updated successfully!', 'success');
+                    loadCurrentPaymentSettings(); // Refresh the display
+                } else {
+                    throw new Error(data.message || 'Failed to toggle card payment status');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('paymentSettingsMessage', error.message, 'error');
+            }
+        }
+
+        // Toggle Extopay Payment Status
+        async function toggleExtopayPaymentStatus() {
+            try {
+                const response = await fetch('/payment/change-extopay-payment-status', {
+                    method: 'GET'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Failed to toggle Extopay payment status');
+                }
+
+                if (data.status) {
+                    showMessage('paymentSettingsMessage', 'Extopay payment status updated successfully!', 'success');
+                    loadCurrentPaymentSettings(); // Refresh the display
+                } else {
+                    throw new Error(data.message || 'Failed to toggle Extopay payment status');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('paymentSettingsMessage', error.message, 'error');
+            }
+        }
+
+        // Backup Database Handler
+        async function handleBackup() {
+            try {
+                const response = await fetch('/backup_restore/backup', {
+                    method: 'GET'
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to create backup');
+                }
+
+                // Create a blob from the response and download it
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'walpanel_backup.db';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                // Show success message
+                alert('Backup downloaded successfully!');
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Restore Database Handler
+        async function handleRestore(e) {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('backupFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                return showMessage('restoreMessage', 'Please select a backup file', 'error');
+            }
+
+            // Check if file is a .db file
+            if (!file.name.endsWith('.db')) {
+                return showMessage('restoreMessage', 'Please select a valid .db backup file', 'error');
+            }
+
+            // Confirm the action
+            if (!confirm('Are you sure you want to restore the database? This will replace all current data and restart the system.')) {
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/backup_restore/restore', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to restore database');
+                }
+
+                if (data.status) {
+                    showMessage('restoreMessage', 'Database restored successfully! The system will restart shortly...', 'success');
+                    
+                    // Wait a moment then redirect to login page
+                    setTimeout(() => {
+                        window.location.href = '/login/';
+                    }, 3000);
+                } else {
+                    throw new Error(data.message || 'Failed to restore database');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('restoreMessage', error.message, 'error');
+            }
+        }
+    </script>
+
+
+</body>
+
+</html> 

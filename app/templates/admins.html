@@ -7,6 +7,77 @@
     <title>Admins Management | Control Panel</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.2rem;
+        margin-top: 1.2rem;
+    }
+    @media (max-width: 600px) {
+        .cards-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.2rem;
+    }
+    .card-header .card-avatar {
+        flex-shrink: 0;
+    }
+    .card-header .card-info-inline {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 0.2rem;
+        height: 100%;
+    }
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
+    .card-status-row {
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+    }
+    .status-label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 0.1rem 0.5rem;
+        border-radius: 0.4rem;
+        background: rgba(0,179,255,0.08);
+        color: #00b3ff;
+    }
+    .status-label.active {
+        background: rgba(30,203,129,0.12);
+        color: #1ecb81;
+    }
+    .status-label.inactive {
+        background: rgba(255,77,79,0.12);
+        color: #ff4d4f;
+    }
+    .panel-info span {
+        color: #8a97a8 !important;
+        font-weight: 400;
+    }
+    .panel-info strong, .panel-info p, .panel-info {
+        color: #fff;
+    }
+    .avatar-active {
+        background: var(--success) !important;
+    }
+    .avatar-inactive {
+        background: var(--danger) !important;
+    }
+    </style>
 </head>
 
 <body>
@@ -14,7 +85,6 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="logo">
-                <i class="fas fa-shield-alt"></i>
                 <span>Control Panel</span>
             </div>
 
@@ -30,6 +100,14 @@
                 <a href="/dashboard/admins/" class="nav-item active">
                     <i class="fas fa-users-cog"></i>
                     Admins
+                </a>
+                <a href="/dashboard/receipts/" class="nav-item">
+                    <i class="fas fa-receipt"></i>
+                    Receipts
+                </a>
+                <a href="/dashboard/settings/" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    Settings
                 </a>
                 <a href="/login/" class="nav-item">
                     <i class="fas fa-sign-out-alt"></i>
@@ -58,39 +136,34 @@
                 </button>
             </div>
 
-            <div class="admins-grid_">
+            <div class="cards-grid">
                 {% if admins %}
                 {% for admin in admins %}
-                <div class="admin-card_">
-                    <!-- Status Indicator -->
-                    <div
-                        class="status-indicator {% if admin.is_active %}status-active{% else %}status-inactive{% endif %}">
-                    </div>
-
-                    <div class="admin-header_">
-                        <div class="admin-avatar_">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-avatar {% if admin.is_active %}avatar-active{% else %}avatar-inactive{% endif %}">
                             <i class="fas fa-user-shield"></i>
                         </div>
-                        <div class="admin-info_">
-                            <div class="admin-name_">: {{ admin.username }}</div>
+                        <div class="card-info-inline">
+                            <h3 class="card-title">Username: {{ admin.username }}</h3>
                         </div>
                     </div>
-
-                    {% if admin.panel and admin.panel.name %}
-                    <div class="panel-info">
-                        <p><strong>Panel:</strong> <span>{{ admin.panel.name }}</span></p>
-                        <p><strong>Inbound id:</strong> <span>{{ admin.inbound_id }}</span></p>
-                        <p><strong>Remaining Traffic:</strong> <span>{{ admin.traffic }} GB</span></p>
-                        <p><strong>Remaining Days:</strong> <span>{{ admin.expiry_time }} D</span></p>
-                        <p><strong>Status:</strong>
-                            <span class="{% if admin.is_active %}text-success{% else %}text-danger{% endif %}">
-                                {% if admin.is_active %}Active{% else %}Inactive{% endif %}
-                            </span>
-                        </p>
+                    <div class="card-info">
+                        {% if admin.panel and admin.panel.name %}
+                        <div class="panel-info">
+                            <p><strong>Panel:</strong> <span>{{ admin.panel.name }}</span></p>
+                            <p><strong>Inbound id:</strong> <span>{{ admin.inbound_id }}</span></p>
+                            <p><strong>Remaining Traffic:</strong> <span>{{ admin.traffic }} GB</span></p>
+                            <p><strong>Remaining Days:</strong> <span>{{ admin.expiry_time }} D</span></p>
+                            <p><strong>Status:</strong>
+                                <span class="{% if admin.is_active %}text-success{% else %}text-danger{% endif %}">
+                                    {% if admin.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </p>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
-
-                    <div class="admin-actions">
+                    <div class="card-actions">
                         <button class="btn btn-outline edit-admin-btn" data-admin='{
                             "id": "{{ admin.id }}",
                             "panel_id": "{{ admin.panel_id }}",

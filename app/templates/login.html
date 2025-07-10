@@ -8,61 +8,46 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            /* Color Scheme */
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --dark: #1e293b;
-            --darker: #0f172a;
-            --light: #f8fafc;
-            --lighter: #ffffff;
-            --gray: #e2e8f0;
-            --gray-dark: #94a3b8;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-
-            /* Effects */
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            --shadow-md: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-
-            /* Typography */
-            --font-sans: 'Vazir', 'Segoe UI', Tahoma, sans-serif;
-        }
-
-        /* Base Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            --background: #181f27;
+            --sidebar-bg: #151b22;
+            --card-bg: #232b35cc; 
+            --text-main: #e6eaf0;
+            --text-secondary: #8a97a8;
+            --primary: #00b3ff;
+            --success: #1ecb81;
+            --danger: #ff4d4f;
+            --warning: #ffc107;
+            --border: #232b35;
+            --shadow: 0 4px 24px 0 rgb(0 0 0 / 0.25);
+            --font-sans: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
         }
 
         body {
             font-family: var(--font-sans);
-            background-color: var(--darker);
-            color: var(--light);
+            background-color: var(--background);
+            color: var(--text-main);
             line-height: 1.6;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-image: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            background-image: linear-gradient(135deg, #181f27 0%, #151b22 100%);
         }
 
         /* Login Container */
         .login-container {
-            background: var(--dark);
+            background: var(--card-bg);
             border-radius: 1rem;
             padding: 2.5rem;
             width: 100%;
             max-width: 420px;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
             text-align: center;
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(16px) saturate(120%);
+            -webkit-backdrop-filter: blur(16px) saturate(120%);
         }
 
         .login-container::before {
@@ -72,13 +57,13 @@
             right: 0;
             width: 100%;
             height: 6px;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            background: linear-gradient(90deg, var(--primary) 0%, #0090cc 100%);
         }
 
         .login-container h2 {
             font-size: 1.75rem;
             margin-bottom: 2rem;
-            color: var(--light);
+            color: var(--text-main);
             font-weight: 600;
             position: relative;
             display: inline-block;
@@ -111,34 +96,42 @@
             top: 50%;
             right: 1rem;
             transform: translateY(-50%);
-            color: var(--gray-dark);
+            color: var(--text-secondary);
         }
 
         .login-form input {
-            width: 100%;
+            width: 90%;
+            max-width: 260px;
+            min-width: 140px;
             padding: 1rem 3rem 1rem 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(35, 43, 53, 0.85);
+            border: 1px solid var(--border);
             border-radius: 0.5rem;
-            color: var(--light);
+            color: var(--text-main);
             font-family: var(--font-sans);
             transition: var(--transition);
             font-size: 1rem;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            margin: 0 auto;
         }
 
         .login-form input:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            box-shadow: 0 0 0 3px rgba(0, 179, 255, 0.2);
         }
 
         .login-form input::placeholder {
-            color: var(--gray-dark);
+            color: var(--text-secondary);
         }
 
         .login-form button {
+            width: 70%;
+            max-width: 180px;
+            min-width: 100px;
             background: var(--primary);
-            color: white;
+            color: #fff;
             border: none;
             padding: 1rem;
             border-radius: 0.5rem;
@@ -147,14 +140,16 @@
             cursor: pointer;
             transition: var(--transition);
             margin-top: 0.5rem;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
         }
 
         .login-form button:hover {
-            background: var(--primary-dark);
+            background: #0090cc;
             transform: translateY(-2px);
             box-shadow: var(--shadow);
         }
-
 
         /* Logo */
         .login-logo {
@@ -162,18 +157,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 0.75rem;
-        }
-
-        .login-logo i {
-            font-size: 2rem;
-            color: var(--primary);
-        }
-
-        .login-logo span {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--light);
         }
 
         /* Responsive */
@@ -183,13 +166,6 @@
                 margin: 0 1rem;
             }
         }
-
-        .message {
-            margin-top: 1rem;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            background-color: rgba(239, 68, 68, 0.1);
-        }
     </style>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts.css" rel="stylesheet">
 </head>
@@ -197,13 +173,10 @@
 <body class="login-body">
     <div class="login-container">
         <div class="login-logo">
-            <i class="fas fa-shield-alt"></i>
-            <span>Admin Panel</span>
+            <img src="/static/Logo.png" alt="Logo" style="width: 90px; height: 90px; border-radius: 12px;">
         </div>
 
         <h2>Login to Your Account</h2>
-
-        <div id="error-message" class="message" style="display: none; color: var(--danger);"></div>
 
         <form method="POST" class="login-form">
             <div class="input-group">
@@ -224,16 +197,7 @@
 
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const errorMessage = "{{ error_message|default('') }}";
-            if (errorMessage) {
-                const errorDiv = document.getElementById('error-message');
-                errorDiv.textContent = errorMessage;
-                errorDiv.style.display = 'block';
-            }
-        });
-    </script>
+
 </body>
 
 </html>
