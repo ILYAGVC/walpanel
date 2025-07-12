@@ -482,7 +482,7 @@
             editClientEmailInput.value = client.email;
             editClientSubIdInput.value = client.subId;
 
-            editClientDataLimitInput.value = (client.totalGB / (1024 * 1024 * 1024)).toFixed(0);
+            editClientDataLimitInput.value = parseFloat(client.totalGB).toFixed(1);
 
             if (client.expiryTime && !isNaN(client.expiryTime)) {
                 const expiryDate = new Date(parseInt(client.expiryTime));
@@ -506,7 +506,7 @@
             const clientId = editClientIdInput.value;
             const email = editClientEmailInput.value;
             const subId = editClientSubIdInput.value;
-            const dataLimitGB = parseInt(editClientDataLimitInput.value);
+            const dataLimitGB = parseFloat(editClientDataLimitInput.value);
             const expiryDate = editClientExpiryDateInput.value;
 
             if (!clientId || !email || !subId || isNaN(dataLimitGB) || !expiryDate) {
@@ -515,8 +515,6 @@
             }
 
             try {
-                const dataLimitBytes = dataLimitGB * 1024 * 1024 * 1024;
-
                 const expiryTimestamp = new Date(expiryDate).getTime();
 
                 const response = await fetch(`/admin/UpdateClient/${clientId}`, {
@@ -527,7 +525,7 @@
                     },
                     body: JSON.stringify({
                         email: email,
-                        totalGB: dataLimitBytes,
+                        totalGB: dataLimitGB,
                         expiryTime: expiryTimestamp,
                         subid: subId
                     })
@@ -674,8 +672,6 @@
             }
 
             try {
-                // Convert GB to bytes and days to timestamp
-                const dataLimitBytes = dataLimitGB * 1024 * 1024 * 1024;
                 const expiryDate = new Date();
                 expiryDate.setDate(expiryDate.getDate() + expiryDays);
                 const expiryTimestamp = expiryDate.getTime();
@@ -691,7 +687,7 @@
                     },
                     body: JSON.stringify({
                         email: finalEmail,
-                        totalGB: dataLimitBytes,
+                        totalGB: dataLimitGB,
                         expiryTime: expiryTimestamp
                     })
                 });
@@ -701,7 +697,6 @@
                     const errorMessage = errorData.detail || 'Failed to add client';
                     throw new Error(errorMessage);
                 }
-
 
                 // Close modal and refresh data
                 addClientModal.style.display = 'none';
