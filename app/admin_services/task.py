@@ -56,7 +56,10 @@ class Task:
             )
             if not result or "obj" not in result or "settings" not in result["obj"]:
                 logger.error("Result or settings not found in panel response")
-                return {"clients": [], "error": "Panel did not return valid user data"}
+                panels_api.login_with_out_savekey(
+                    panel.url, panel.username, panel.password
+                )
+                self.get_users(db, username)  # Retry
 
             settings_str = result["obj"]["settings"]
             if not settings_str:
@@ -104,6 +107,9 @@ class Task:
 
         except Exception as e:
             logger.error(f"Error fetching user list: {e}")
+            panels_api.login_with_out_savekey(
+                panel.url, panel.username, panel.password
+            )
             return {
                 "clients": client_list,
                 "error": "Failed to fetch user list, try again.",

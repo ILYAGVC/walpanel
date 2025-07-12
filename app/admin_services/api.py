@@ -21,7 +21,7 @@ class PanelAPI:
             )
 
             if response.status_code == 200:
-                self.logged_in_panels = f"{address}|{username}"
+                self.logged_in_panels.add(f"{address}|{username}")
                 return True
             else:
                 logger.error(f"Login failed with status code: {response.status_code}")
@@ -65,17 +65,18 @@ class PanelAPI:
                     return None
 
             response = method(url, **kwargs)
-            if response.status_code == 401:
 
+            if response is not None and response.status_code == 401:
                 logger.warning(f"Session expired for {address}, re-logging in...")
-                self._logged_in_panels.discard(key)
+                self.logged_in_panels.discard(key)
+
                 if self.login(address, username, password):
                     response = method(url, **kwargs)
 
-            if response.ok:
+            if response is not None and response.ok:
                 return response.json() if json_response else response
             else:
-                logger.warning(f"Request failed with status: {response.status_code}")
+                logger.error(f"Request failed with status: {getattr(response, 'status_code', 'no response')}")
                 return None
 
         except requests.exceptions.RequestException as e:
