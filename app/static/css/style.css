@@ -1435,3 +1435,10 @@ body {
 .sponsor-ad-card .ad-card-icon {
     box-shadow: 0 0 16px 0 #f28e2b88, 0 2px 8px 0 #f28e2b44;
 }
+
+@media (max-width: 600px) {
+    .modal-content {
+    max-height: 80vh;
+    overflow-y: auto;
+    }
+}

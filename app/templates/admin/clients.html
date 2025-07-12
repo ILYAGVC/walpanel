@@ -307,16 +307,16 @@
 
             tbody.innerHTML = paginatedClients.map(client => `
                 <tr>
-                        <td data-label="Email">
-                        <span class="status-light ${client.online ? 'online' : 'offline'}"></span>
-                        ${client.email || 'N/A'}
-                    </td>
+                        <td data-label="Email" style="display: flex; align-items: center;">
+                            <span class="status-dot ${client.online ? 'online' : 'offline'}"></span>
+                            <span class="email-text">${client.email || 'N/A'}</span>
+                        </td>
                         <td data-label="Data Usage">
                         <div class="usage-info">
-                            <span>${formatBytes(client.totalUsage)} / ${client.totalGB} GB</span>
+                            <span>${client.totalUsage.toFixed(2)} / ${client.totalGB} GB</span>
                         </div>
                         <div class="usage-bar">
-                            <div class="usage-progress" style="width: ${client.usagePercentage}%"></div>
+                            <div class="usage-progress" style="width: ${client.usagePercentage}%; background: ${getUsageColor(client.usagePercentage)}"></div>
                         </div>
                     </td>
                         <td data-label="Total Data">${client.totalGB} GB</td>
@@ -414,6 +414,13 @@
             const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]);
+        }
+
+        // تابع تعیین رنگ نوار مصرف
+        function getUsageColor(percentage) {
+            if (percentage < 50) return '#4caf50'; // سبز
+            if (percentage < 80) return '#ff9800'; // زرد
+            return '#f44336'; // قرمز
         }
 
         // Update pagination info and controls
