@@ -106,7 +106,7 @@ class PanelAPI:
                     "id": _uuid,
                     "enable": True,
                     "security": "auto",
-                    "flow": "",
+                    "flow": "xtls-rprx-vision",
                     "email": email,
                     "imitIp": 0,
                     "totalGB": totalGB,

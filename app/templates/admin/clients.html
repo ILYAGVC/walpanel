@@ -251,7 +251,7 @@
                 }
 
                 const responseData = await response.json();
-                clients = responseData.data.clients || [];
+                clients = (responseData.data.clients || []).reverse();
                 sublink = responseData.sublink?.result || responseData.sublink?.url || responseData.sublink || '';
 
                 sublink = sublink.trim();
