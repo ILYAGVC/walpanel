@@ -14,8 +14,7 @@
     <div class="dashboard">
         <aside class="sidebar" id="sidebar">
             <div class="logo">
-                <i class="fas fa-shield-alt"></i>
-                <span>Admin Panel</span>
+                <span>Control Panel</span>
             </div>
 
             <nav class="nav-menu">
@@ -26,6 +25,10 @@
                 <a href="/admin-dashboard/clients/" class="nav-item">
                     <i class="fas fa-users"></i>
                     Users
+                </a>
+                <a href="/admin-dashboard/plans/" class="nav-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    Plans
                 </a>
                 <a href="/login/" class="nav-item">
                     <i class="fas fa-sign-out-alt"></i>
@@ -69,6 +72,15 @@
                     <div class="stat-label">Days Remaining</div>
                     <i class="fas fa-calendar-alt floating-icon"></i>
                 </div>
+            </div>
+
+            <!-- News Section -->
+            <div class="news-section" style="margin-top: 2rem;">
+                <h2 style="font-size: 1.3rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #fff;">
+                    <i class="fas fa-newspaper"></i>
+                    News
+                </h2>
+                <div id="newsList" style="display: flex; flex-direction: column; gap: 1rem;"></div>
             </div>
         </main>
     </div>
@@ -128,8 +140,38 @@
             }
         }
 
+        // Fetch and display news for admins
+        async function fetchAdminNews() {
+            const newsList = document.getElementById('newsList');
+            if (!newsList) return;
+            newsList.innerHTML = '<div class="loading" style="color: #fff;">Loading news...</div>';
+            try {
+                const response = await fetch('/admin-dashboard/news', { credentials: 'include' });
+                if (!response.ok) throw new Error('Failed to fetch news');
+                const news = await response.json();
+                if (!news || news.length === 0) {
+                    newsList.innerHTML = '<div class="empty-state" style="color: #fff;">No news found</div>';
+                    return;
+                }
+                newsList.innerHTML = news.map(item => `
+                    <div class="news-item" style="background: rgba(0,0,0,0.08); border-radius: 0.5rem; padding: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <i class='fas fa-bullhorn' style='color: #1ecb81;'></i>
+                            <span style="font-weight: bold; color: #fff;">New Announcement</span>
+                        </div>
+                        <p style="margin: 0; color: #fff; line-height: 1.6;">${item.message}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                newsList.innerHTML = `<div class="error" style="color: #fff;">${error.message}</div>`;
+            }
+        }
+
         // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', fetchDashboardData);
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchDashboardData();
+            fetchAdminNews();
+        });
     </script>
 </body>
 

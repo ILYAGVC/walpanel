@@ -1,0 +1,169 @@
+/* Payment Settings Styles */
+@import url('https://fonts.googleapis.com/css2?family=Vazir:wght@300;400;500;600;700&display=swap');
+
+.payment-settings-modal {
+    font-family: 'Vazir', sans-serif;
+}
+
+.payment-settings-modal .modal-content {
+    max-width: 900px;
+    width: 90%;
+}
+
+.payment-settings-modal .settings-section {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.payment-settings-modal .settings-section h3 {
+    color: var(--light);
+    margin-bottom: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.payment-settings-modal .form-group {
+    margin-bottom: 1rem;
+}
+
+.payment-settings-modal .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--light);
+    font-weight: 500;
+}
+
+.payment-settings-modal .form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--light);
+    font-family: 'Vazir', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.payment-settings-modal .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+}
+
+.payment-settings-modal .btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-family: 'Vazir', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.payment-settings-modal .btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.payment-settings-modal .btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.payment-settings-modal .btn-outline {
+    background: transparent;
+    color: var(--light);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.payment-settings-modal .btn-outline:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.payment-settings-modal .btn-success {
+    background: var(--success);
+    color: white;
+    border: 1px solid var(--success);
+}
+
+.payment-settings-modal .btn-success:hover {
+    background: var(--success-dark);
+    transform: translateY(-1px);
+}
+
+.payment-settings-modal .btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.payment-settings-modal .btn-danger:hover {
+    background: var(--danger-dark);
+    transform: translateY(-1px);
+}
+
+.payment-settings-modal .message {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    font-family: 'Vazir', sans-serif;
+    font-weight: 500;
+}
+
+.payment-settings-modal .message-success {
+    background: rgba(var(--success-rgb), 0.1);
+    color: var(--success);
+    border: 1px solid rgba(var(--success-rgb), 0.3);
+}
+
+.payment-settings-modal .message-error {
+    background: rgba(var(--danger-rgb), 0.1);
+    color: var(--danger);
+    border: 1px solid rgba(var(--danger-rgb), 0.3);
+}
+
+.payment-settings-modal .status-button {
+    min-width: 120px;
+    justify-content: center;
+}
+
+.payment-settings-modal .status-button .status-text {
+    font-weight: 600;
+}
+
+/* Loading state */
+.payment-settings-modal .loading {
+    text-align: center;
+    color: var(--gray-dark);
+    font-style: italic;
+    padding: 1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .payment-settings-modal .modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+    
+    .payment-settings-modal .settings-section {
+        padding: 1rem;
+    }
+    
+    .payment-settings-modal .btn {
+        width: 100%;
+        justify-content: center;
+        margin-right: 0;
+    }
+} 

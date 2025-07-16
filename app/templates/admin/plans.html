@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store | Control Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .store-title {
+            font-size: 2rem;
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            color: var(--text-main);
+            font-weight: bold;
+        }
+        .plans-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .plan-card {
+            background: var(--card-bg);
+            border-radius: 1.2rem;
+            box-shadow: var(--shadow);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: relative;
+            transition: box-shadow 0.18s, transform 0.18s;
+            border: 1.5px solid var(--border);
+        }
+        .plan-card:hover {
+            box-shadow: 0 8px 32px 0 #0005;
+            transform: translateY(-6px) scale(1.02);
+        }
+        .plan-icon {
+            background: var(--sidebar-bg);
+            border-radius: 0.7rem;
+            padding: 0.7rem 0.9rem;
+            margin-bottom: 1.2rem;
+            font-size: 2rem;
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+        .plan-info {
+            color: var(--text-main);
+            font-size: 1.1rem;
+            margin-bottom: 1.2rem;
+            line-height: 2;
+            width: 100%;
+        }
+        .plan-info strong {
+            color: var(--primary);
+            font-size: 1.1em;
+        }
+        .buy-btn {
+            background: var(--success);
+            color: #fff;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.7rem 2.2rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px 0 #1ecb8133;
+            align-self: flex-end;
+        }
+        .buy-btn:hover {
+            background: #17a96b;
+            box-shadow: 0 4px 16px 0 #1ecb8155;
+        }
+        .loading, .empty-state, .error {
+            color: var(--text-main);
+            text-align: center;
+            margin-top: 2rem;
+            grid-column: 1/-1;
+        }
+        .plan-prop { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 1.08rem; }
+        .plan-prop i {
+            font-size: 1.1rem;
+        }
+        .plan-prop .icon-traffic { color: var(--primary); }
+        .plan-prop .icon-price { color: var(--success); }
+        .plan-prop .icon-duration { color: var(--warning); }
+        .store-title i { color: var(--primary); }
+        @media (max-width: 1200px) { .plans-list { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 900px) { .plans-list { grid-template-columns: 1fr; } }
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1001;
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .mobile-menu-toggle:hover {
+            background: #0090cc;
+        }
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        @media (max-width: 1024px) {
+            .main-content { margin-left: 0; }
+            .sidebar { left: -280px; position: fixed; top: 0; transition: var(--transition); }
+            .sidebar.active { left: 0; }
+            .mobile-menu-toggle { display: block; }
+            .sidebar-overlay.active { display: block; }
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0; top: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.35);
+            justify-content: center;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: var(--card-bg, #fff);
+            color: var(--text-main, #222);
+            border-radius: 1.2rem;
+            padding: 2.2rem 2rem 1.5rem 2rem;
+            box-shadow: 0 8px 32px 0 #0003;
+            max-width: 420px;
+            width: 95vw;
+            position: relative;
+            animation: modalPop 0.25s cubic-bezier(.4,2,.6,1) both;
+        }
+        @keyframes modalPop {
+            0% { transform: scale(0.85) translateY(40px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .close-modal {
+            position: absolute;
+            top: 1rem; right: 1rem;
+            background: none; border: none;
+            color: var(--text-main, #222);
+            font-size: 1.7rem; cursor: pointer;
+            transition: color 0.2s;
+        }
+        .close-modal:hover { color: var(--danger, #e74c3c); }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <aside class="sidebar" id="sidebar">
+            <div class="logo">
+                <span>Control Panel</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="/admin-dashboard/" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    Dashboard
+                </a>
+                <a href="/admin-dashboard/clients/" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    Users
+                </a>
+                <a href="/admin-dashboard/plans/" class="nav-item active">
+                    <i class="fas fa-shopping-cart"></i>
+                    Store
+                </a>
+                <a href="/login/" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </a>
+            </nav>
+        </aside>
+        <main class="main-content">
+            <div class="store-title">
+                <i class="fas fa-store"></i>
+                Store
+            </div>
+            <div id="plansList" class="plans-list"></div>
+        </main>
+    </div>
+    <!-- Payment Modal -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <button class="close-modal" id="closePaymentModal">&times;</button>
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.3rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-credit-card"></i> Choose Payment Method</h2>
+            <div id="paymentMethods"></div>
+            <form id="cardToCardForm" style="display:none; margin-top: 1.5rem;">
+                <div style="margin-bottom: 1rem;">
+                    <label style="font-weight: bold;">Card Number:</label>
+                    <span id="cardNumber" style="user-select: all; font-family: monospace; font-size: 1.1rem; margin-left: 0.5rem;"></span>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <label for="receiptImage" style="font-weight: bold;">Upload Payment Receipt:</label>
+                    <input type="file" id="receiptImage" accept="image/*" style="margin-top: 0.5rem; color: var(--text-main);">
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 1rem;">Submit Receipt</button>
+            </form>
+            <form id="extopayForm" style="display:none; margin-top: 1.5rem;">
+                <div style="margin-bottom: 1rem;">
+                    <label style="font-weight: bold;">Extopay Payment</label>
+                </div>
+                <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 1rem;">Pay with Extopay</button>
+            </form>
+            <div id="paymentMessage" style="margin-top: 1rem;"></div>
+        </div>
+    </div>
+    <script>
+        let selectedPlan = null;
+        async function fetchPlans() {
+            const plansList = document.getElementById('plansList');
+            plansList.innerHTML = '<div class="loading">Loading plans...</div>';
+            try {
+                const response = await fetch('/plan/all', { credentials: 'include' });
+                if (!response.ok) throw new Error('Failed to fetch plans');
+                const data = await response.json();
+                if (!data.status || !data.plans || data.plans.length === 0) {
+                    plansList.innerHTML = '<div class="empty-state">No plans found!</div>';
+                    return;
+                }
+                window.allPlans = data.plans;
+                plansList.innerHTML = data.plans.map(plan => `
+                    <div class="plan-card">
+                        <div class="plan-icon"><i class="fas fa-wifi"></i></div>
+                        <div class="plan-info">
+                            <div class="plan-prop"><i class="fas fa-database icon-traffic"></i> <strong>Traffic:</strong> ${plan.traffic} GB</div>
+                            <div class="plan-prop"><i class="fas fa-money-bill-wave icon-price"></i> <strong>Price:</strong> ${plan.price}</div>
+                            <div class="plan-prop"><i class="fas fa-clock icon-duration"></i> <strong>Duration:</strong> ${plan.deadline} days</div>
+                        </div>
+                        <button class="buy-btn" onclick="buyPlan(${plan.id})">Buy</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                plansList.innerHTML = `<div class="error">${error.message}</div>`;
+            }
+        }
+        function buyPlan(planId) {
+            if (window.allPlans) {
+                selectedPlan = window.allPlans.find(p => p.id === planId);
+            } else {
+                selectedPlan = { id: planId };
+            }
+            openPaymentModal(planId);
+        }
+        document.addEventListener('DOMContentLoaded', fetchPlans);
+
+        // Mobile menu functionality
+        const sidebar = document.getElementById('sidebar');
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+        // Toggle sidebar on mobile
+        mobileMenuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        });
+
+        // Close sidebar when clicking overlay
+        sidebarOverlay.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        });
+
+        // Close sidebar when window is resized to desktop size
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 1024) {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            }
+        });
+
+        // Payment Modal Logic
+        let selectedPlanId = null;
+        function openPaymentModal(planId) {
+            selectedPlanId = planId;
+            document.getElementById('paymentModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            document.getElementById('paymentMessage').textContent = '';
+            document.getElementById('cardToCardForm').style.display = 'none';
+            document.getElementById('extopayForm').style.display = 'none';
+            fetchPaymentMethods();
+        }
+        document.getElementById('closePaymentModal').onclick = closePaymentModal;
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        window.onclick = function(event) {
+            if (event.target === document.getElementById('paymentModal')) closePaymentModal();
+        };
+
+        async function fetchPaymentMethods() {
+            const methodsDiv = document.getElementById('paymentMethods');
+            methodsDiv.innerHTML = '<div class="loading">Loading payment methods...</div>';
+            try {
+                const res = await fetch('/payment/get-payment-setting');
+                const data = await res.json();
+                if (!data.status || !data.settings) {
+                    methodsDiv.innerHTML = '<div class="error">No payment methods available.</div>';
+                    return;
+                }
+                let html = '';
+                if (data.settings.card_number) {
+                    html += `<button class='btn btn-primary' style='width:100%;margin-bottom:1rem;' onclick='showCardToCard()'><i class="fas fa-credit-card"></i> Card to Card</button>`;
+                }
+                if (data.settings.extopay_key) {
+                    html += `<button class='btn btn-primary' style='width:100%;' onclick='showExtopay()'><i class="fas fa-university"></i> Extopay</button>`;
+                }
+                methodsDiv.innerHTML = html;
+            } catch (e) {
+                methodsDiv.innerHTML = '<div class="error">Failed to load payment methods.</div>';
+            }
+        }
+        window.showCardToCard = async function() {
+            document.getElementById('cardToCardForm').style.display = 'block';
+            document.getElementById('extopayForm').style.display = 'none';
+            document.getElementById('paymentMessage').textContent = '';
+            // Fetch card number
+            try {
+                const res = await fetch('/payment/get-cardnumber');
+                const data = await res.json();
+                if (data.status && data.card) {
+                    document.getElementById('cardNumber').textContent = data.card;
+                } else {
+                    document.getElementById('cardNumber').textContent = 'Not available';
+                }
+            } catch (e) {
+                document.getElementById('cardNumber').textContent = 'Error';
+            }
+        };
+        window.showExtopay = function() {
+            document.getElementById('cardToCardForm').style.display = 'none';
+            document.getElementById('extopayForm').style.display = 'block';
+            document.getElementById('paymentMessage').textContent = '';
+            document.getElementById('extopayForm').reset && document.getElementById('extopayForm').reset();
+            document.getElementById('paymentMessage').innerHTML = '';
+            document.getElementById('extopayForm').querySelector('.extopay-link-btn')?.remove();
+        };
+        document.getElementById('cardToCardForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const file = document.getElementById('receiptImage').files[0];
+            if (!file) {
+                document.getElementById('paymentMessage').textContent = 'Please upload a receipt image.';
+                return;
+            }
+            const formData = new FormData();
+            formData.append('file', file);
+
+            document.getElementById('paymentMessage').textContent = 'Uploading...';
+
+            try {
+                const res = await fetch(`/payment/upload-receipt-image/${selectedPlanId}`, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (data.status) {
+                    document.getElementById('cardToCardForm').style.display = 'none';
+                    document.getElementById('extopayForm').style.display = 'none';
+                    document.getElementById('paymentMethods').style.display = 'none';
+                    document.getElementById('paymentMessage').innerHTML = `
+                        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 0;">
+                            <span style="font-size:2.5rem;">🎉</span>
+                            <span style="color:limegreen;font-weight:bold;font-size:1.2rem;margin-top:1rem;">Your purchase has been submitted!</span>
+                            <span style="margin-top:0.7rem;font-size:1rem;color:#fff;text-align:center;">Please wait for payment confirmation.<br>The plan will be added to your account after approval.</span>
+                        </div>
+                    `;
+                    document.getElementById('cardToCardForm').reset();
+                } else {
+                    document.getElementById('paymentMessage').textContent = data.message || 'Error uploading receipt.';
+                }
+            } catch (err) {
+                document.getElementById('paymentMessage').textContent = 'Server error.';
+            }
+        };
+        document.getElementById('extopayForm').onsubmit = async function(e) {
+            e.preventDefault();
+            document.getElementById('paymentMessage').textContent = '';
+            document.getElementById('extopayForm').querySelector('.extopay-link-btn')?.remove();
+            if (!selectedPlan || !selectedPlan.price || !selectedPlan.id) {
+                document.getElementById('paymentMessage').textContent = 'Plan info not found.';
+                return;
+            }
+            document.getElementById('paymentMessage').textContent = 'Processing...';
+            try {
+                const params = new URLSearchParams({
+                    amount: selectedPlan.price,
+                    plan_id: selectedPlan.id
+                });
+                const response = await fetch(`/payment/Extopay/?${params.toString()}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.status && data.link) {
+                    document.getElementById('cardToCardForm').style.display = 'none';
+                    document.getElementById('extopayForm').style.display = 'none';
+                    document.getElementById('paymentMethods').style.display = 'none';
+                    document.getElementById('paymentMessage').innerHTML = `
+                        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 0;">
+                            <span style="font-size:1.2rem;font-weight:bold;margin-bottom:1rem;">Click the button below to pay online</span>
+                            <a href="${data.link}" target="_blank" class="btn btn-success extopay-link-btn" style="width:100%;margin-top:1rem;display:inline-block;text-align:center;">
+                                Pay Online
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('paymentMessage').textContent = data.detail || 'Failed to get payment link.';
+                }
+            } catch (err) {
+                document.getElementById('paymentMessage').textContent = 'Server error.';
+            }
+        };
+    </script>
+</body>
+</html> 

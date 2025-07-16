@@ -19,6 +19,7 @@ class Task:
             panel = panel_operations.panel_data(db, admin.panel_id)
             return {"result": f"https://{panel.sub}/"}
         except Exception as e:
+            logger.error(f"Error getting sublinks: {e}")
             return JSONResponse(
                 content={"error": str(e)},
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -27,9 +28,8 @@ class Task:
     def check_admin_traffic(self, db, username, _traffic):
         try:
             admin = admin_operations.get_admin_data(db, username)
-            traffic_gb = _traffic / (1024**3)
 
-            if admin.traffic < traffic_gb:
+            if admin.traffic < _traffic:
                 return False
 
             return True
@@ -38,9 +38,7 @@ class Task:
 
     def reduce_admin_traffic(self, db, username, _traffic):
         try:
-            traffic_gb = _traffic / (1024**3)
-
-            admin_operations.reduce_traffic(db, username, traffic_gb)
+            admin_operations.reduce_traffic(db, username, _traffic)
         except Exception as e:
             return False
 
@@ -56,7 +54,10 @@ class Task:
             )
             if not result or "obj" not in result or "settings" not in result["obj"]:
                 logger.error("Result or settings not found in panel response")
-                return {"clients": [], "error": "Panel did not return valid user data"}
+                panels_api.login_with_out_savekey(
+                    panel.url, panel.username, panel.password
+                )
+                self.get_users(db, username)  # Retry
 
             settings_str = result["obj"]["settings"]
             if not settings_str:
@@ -104,6 +105,9 @@ class Task:
 
         except Exception as e:
             logger.error(f"Error fetching user list: {e}")
+            panels_api.login_with_out_savekey(
+                panel.url, panel.username, panel.password
+            )
             return {
                 "clients": client_list,
                 "error": "Failed to fetch user list, try again.",
@@ -131,7 +135,7 @@ class Task:
                 _uuid,
                 subid,
                 request.email,
-                request.totalGB,
+                int(request.totalGB * (1024**3)),
                 request.expiryTime,
             )
 
@@ -180,7 +184,7 @@ class Task:
             updated_client = {
                 "id": user_id,
                 "email": request.email,
-                "totalGB": request.totalGB,
+                "totalGB": int(request.totalGB * (1024**3)),
                 "expiryTime": request.expiryTime,
                 "enable": True,
                 "flow": "",
