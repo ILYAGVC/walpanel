@@ -225,8 +225,9 @@ class Task:
         admin = admin_operations.get_admin_data(db, username)
         panel = panel_operations.panel_data(db, admin.panel_id)
         client = panels_api.user_obj(panel.url, email)
+        _traffic = int(client["obj"]["total"] / (1024 ** 3))
 
-        if not self.check_admin_traffic(db, username, client["obj"]["total"]):
+        if not self.check_admin_traffic(db, username, _traffic):
             return JSONResponse(
                 content={"error": "Traffic limit reached"},
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -241,7 +242,7 @@ class Task:
             )
 
             if result.status_code == 200:
-                self.reduce_admin_traffic(db, username, client["obj"]["total"])
+                self.reduce_admin_traffic(db, username, _traffic)
 
             return JSONResponse(content=result.json(), status_code=status.HTTP_200_OK)
         except Exception as e:

@@ -33,7 +33,8 @@ class PaymentSettings:
         try:
             card = db.query(CardNumber).first()
             if not card:
-                card.number = request.card
+                new_card = CardNumber(number=request.card)
+                db.add(new_card)
                 db.commit()
                 return {
                     "status": True,
