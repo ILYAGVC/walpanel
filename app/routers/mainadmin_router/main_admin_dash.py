@@ -25,7 +25,7 @@ async def dashboard(
     db: Session = Depends(get_db),
 ):
     panels = panel_operations.get_panels(db)
-    admins = admin_operations.get_all_admins(db)
+    admins = await admin_operations.get_all_admins(db)
     plans = await plans_query.get_plans(db)
     logs = get_10_logs()
 
@@ -62,7 +62,7 @@ async def admins(
     user: str = Depends(mainadmin_required),
     db: Session = Depends(get_db),
 ):
-    admins = admin_operations.get_all_admins(db)
+    admins = await admin_operations.get_all_admins(db)
     return templates.TemplateResponse(
         "admins.html", {"request": request, "user": user, "admins": admins}
     )

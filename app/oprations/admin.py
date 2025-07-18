@@ -55,15 +55,14 @@ class AdminOperations:
         db.commit()
         return {"message": "successful"}
 
-    def get_all_admins(self, db: Session):
+    async def get_all_admins(self, db: Session):
         from app.admin_services.task import admin_task
         admins = db.query(Admin).options(joinedload(Admin.panel)).all()
         result = []
 
         for admin in admins:
-            get_clients = admin_task.get_users(db, admin.username)
-            clients = get_clients.get("clients", [])
-            total_clients = len([c for c in clients if "email" in c and c["email"]])
+            get_clients = await admin_task.total_users_in_inbound(db, admin.username)
+
             admin_data = {
                 "id": admin.id,
                 "username": admin.username,
@@ -80,7 +79,7 @@ class AdminOperations:
                 ),
                 "is_active": admin.is_active,
                 "is_banned": admin.is_banned,
-                "total_clients": total_clients,
+                "total_clients": get_clients
             }
             result.append(admin_data)
 

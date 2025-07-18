@@ -29,14 +29,12 @@ def dashboard(
 
 
 @router.get("/dashboard-data")
-def get_dashboard_data(
+async def get_dashboard_data(
     db: Session = Depends(get_db),
     username: dict = Depends(get_current_user),
 ):
     admin = admin_operations.get_admin_data(db, username["username"])
-    get_clients = admin_task.get_users(db, username["username"])
-    clients = get_clients.get("clients", [])
-    total_clients = len([c for c in clients if "email" in c and c["email"]])
+    total_clients = await admin_task.total_users_in_inbound(db, username["username"])
 
     return {
         "totalClients": total_clients,

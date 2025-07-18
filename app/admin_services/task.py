@@ -112,6 +112,32 @@ class Task:
                 "clients": client_list,
                 "error": "Failed to fetch user list, try again.",
             }
+        
+    async def total_users_in_inbound(self, db, username: str) -> int:
+        try:
+            client_count = 0
+            admin = admin_operations.get_admin_data(db, username)
+            panel = panel_operations.panel_data(db, admin.panel_id)
+            result = panels_api.show_users(
+                panel.url, panel.username, panel.password, admin.inbound_id
+            )
+            if not result or "obj" not in result or "settings" not in result["obj"]:
+                logger.error("Result or settings not found in panel response")
+                panels_api.login_with_out_savekey(
+                    panel.url, panel.username, panel.password
+                )
+                self.user_list(db, username)
+            
+            settings_str = result["obj"]["settings"]
+            settings_json = json.loads(settings_str)
+            clients = settings_json.get("clients", [])
+            for c in clients:
+                client_count += 1
+            return client_count
+
+        except Exception as e:
+            logger.error(f"Error fetching user list: {e}")
+            return {"error": "Failed to fetch user list, try again."}
 
     def create_user(self, db, username: str, request: CreateUserInput):
         if not self.check_admin_traffic(db, username, request.totalGB):
