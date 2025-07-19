@@ -33,7 +33,7 @@ class ExtopayApi:
         """
         try:
             key = await payment_setting_query.get_extopay_key(db)
-            url = f"{self.base_url}/payment/request?key={key}"
+            url = f"{self.base_url}/payment/request?key={key['key']}"
             data = {
                 "amount": amount,
                 "description": str(order_id),
@@ -66,7 +66,7 @@ class ExtopayApi:
         """
         try:
             key = await payment_setting_query.get_extopay_key()
-            url = f"{self.base_url}/verify?key={key}&Authority={Authority}"
+            url = f"{self.base_url}/verify?key={key['key']}&Authority={Authority}"
 
             response = requests.get(url=url, headers=self.headers)
             response_data = response.json()
