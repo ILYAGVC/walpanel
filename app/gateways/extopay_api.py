@@ -60,12 +60,12 @@ class ExtopayApi:
             logger.error(f"Error in make_payment_url: {e}")
             return None
 
-    async def check_payment_status(self, Authority: str) -> Optional[Dict[str, Any]]:
+    async def check_payment_status(self, Authority: str, db: Session) -> Optional[Dict[str, Any]]:
         """
         Check payment status using token
         """
         try:
-            key = await payment_setting_query.get_extopay_key()
+            key = await payment_setting_query.get_extopay_key(db)
             url = f"{self.base_url}/verify?key={key['key']}&Authority={Authority}"
 
             response = requests.get(url=url, headers=self.headers)
@@ -81,8 +81,8 @@ class ExtopayApi:
                 "message": response_data["message"],
                 "card_pan": response_data["card_pan"],
                 "ref_id": response_data["ref_id"],
-                "fee": response_data("fee"),
-                "shaparak_fee": response_data("shaparak_fee"),
+                "fee": response_data["fee"],
+                "shaparak_fee": response_data["shaparak_fee"],
                 "order_id": response_data["order_id"],
             }
 

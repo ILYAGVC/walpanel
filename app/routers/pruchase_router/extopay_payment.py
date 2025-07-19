@@ -30,7 +30,7 @@ async def payment_request(
             f"Received payment request: amount={amount}, order_id={order_id}"
         )
         res = await extopay_api.make_payment_url(order_id, amount, db)
-        waiting_payments[res["authority"]] = {order_id}
+        waiting_payments[res["authority"]] = order_id
         return {
             "status": True,
             "link": res["link"],
@@ -45,16 +45,16 @@ async def payment_request(
 @router.get("/callback/")
 async def payment_callback(
     Authority: str = Query(..., description="Authority"),
-    status: str = Query(..., description="Payment result (OK or NOK)"),
+    Status: str = Query(..., description="Payment result (OK or NOK)"),
     db: Session = Depends(get_db),
 ):
     try:
         logger.info(
-            f"Received payment callback: Authority={Authority}, status={status}"
+            f"Received payment callback: Authority={Authority}, status={Status}"
         )
 
-        if status == "OK" and Authority in waiting_payments:
-            payment_status = await extopay_api.check_payment_status(Authority)
+        if Status == "OK" and Authority in waiting_payments:
+            payment_status = await extopay_api.check_payment_status(Authority, db)
             logger.info(f"Payment status from gateway: {payment_status}")
 
             if not payment_status:
@@ -70,17 +70,27 @@ async def payment_callback(
                     status_code=400, detail="Payment verification failed"
                 )
             
-            order_id = waiting_payments[{Authority}]
+            order_id = waiting_payments[Authority]
             username, plan_id, timestamp, rand_num = (order_id.split("_"))
             # Convert string timestamp to date object
             purchase_date = datetime.strptime(timestamp, "%Y%m%d").date()
-                
-            if await admin_operations.aproval_payment_(db, username, plan_id):
+            
+            result = await admin_operations.aproval_payment_(db, username, plan_id)
+            if result:
                 waiting_payments.pop(Authority)
-
+                logger.info(f"Payment successful: username={username}, plan_id={plan_id}")
+                return {"status": True, "message": "Payment completed successfully."}
+            
         else:  # result is NOK
-            logger.info(f"Payment was cancelled or failed for order_id: {order_id}")
-            raise HTTPException(status_code=400, detail="Payment was cancelled or failed")
+            if Authority in waiting_payments:
+                order_id = waiting_payments[Authority]
+                waiting_payments.pop(Authority)
+                logger.info(f"Payment was cancelled or failed for order_id: {order_id}")
+                return {"status": False, "message": "Payment was cancelled or failed."}
+            else:
+                logger.info(f"Payment was cancelled or failed for authority: {Authority}")
+                return {"status": False, "message": "Payment was cancelled or failed."}
+
 
     except Exception as e:
         logger.error(f"Error processing payment callback: {e}")
