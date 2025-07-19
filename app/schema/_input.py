@@ -39,6 +39,7 @@ class CreateUserInput(BaseModel):
     email: str
     totalGB: float
     expiryTime: int
+    flow: str = ""
 
 
 class UpdateUserInput(BaseModel):

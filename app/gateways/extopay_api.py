@@ -18,7 +18,7 @@ EXTOPAY_CALLBACK_URL = str(os.getenv("EXTOPAY_CALLBACK_URL"))
 
 class ExtopayApi:
     def __init__(self):
-        self.base_url = "https://dgpaneltr.sbs/zirgozar/api"
+        self.base_url = " https://api.digiarvan.org"
         self.headers = {"Content-Type": "application/json"}
 
     async def make_payment_url(
@@ -33,13 +33,10 @@ class ExtopayApi:
         """
         try:
             key = await payment_setting_query.get_extopay_key(db)
-            url = f"{self.base_url}/index.php"
+            url = f"{self.base_url}/payment/request?key={key['key']}"
             data = {
-                "key": key["key"],
-                "action": "web_pay",
                 "amount": amount,
-                "order_id": order_id,
-                "callback_url": EXTOPAY_CALLBACK_URL,
+                "description": str(order_id),
             }
 
             response = requests.post(url=url, json=data, headers=self.headers)
@@ -50,16 +47,10 @@ class ExtopayApi:
                 logger.error(f"Invalid response format: {response_data}")
                 return None
 
-            if not response_data.get("result"):
-                logger.error(f"Payment failed. Response: {response_data}")
-                return None
-
-            if response_data.get("result"):
+            if response_data.get("payment_url"):
                 return {
-                    "result": response_data["result"],
-                    "code": response_data["code"],
-                    "token": response_data["token"],
-                    "link": response_data["link"],
+                    "link": response_data["payment_url"],
+                    "authority": response_data["authority"],
                 }
             else:
                 logger.error(f"Payment URL generation failed: {response_data}")
@@ -69,31 +60,29 @@ class ExtopayApi:
             logger.error(f"Error in make_payment_url: {e}")
             return None
 
-    async def check_payment_status(self, token: str) -> Optional[Dict[str, Any]]:
+    async def check_payment_status(self, Authority: str, db: Session) -> Optional[Dict[str, Any]]:
         """
         Check payment status using token
         """
         try:
-            key = await payment_setting_query.get_extopay_key()
-            url = f"{self.base_url}/index.php"
-            data = {"key": key["key"], "action": "web_pay_status", "token": token}
+            key = await payment_setting_query.get_extopay_key(db)
+            url = f"{self.base_url}/verify?key={key['key']}&Authority={Authority}"
 
-            response = requests.post(url=url, json=data, headers=self.headers)
+            response = requests.get(url=url, headers=self.headers)
             response_data = response.json()
             logger.info(f"Payment status check response: {response_data}")
 
-            if not response_data.get("result"):
+            if not response_data.get("card_pan"):
                 logger.error(f"Payment status check failed. Response: {response_data}")
                 return None
 
             return {
-                "result": response_data["result"],
-                "token": response_data["token"],
-                "pay_id": response_data["pay_id"],
-                "payer_mobile": response_data.get("payer_mobile"),
-                "payer_card": response_data.get("payer_card"),
-                "amount": response_data["amount"],
-                "status": response_data["status"],
+                "result": True,
+                "message": response_data["message"],
+                "card_pan": response_data["card_pan"],
+                "ref_id": response_data["ref_id"],
+                "fee": response_data["fee"],
+                "shaparak_fee": response_data["shaparak_fee"],
                 "order_id": response_data["order_id"],
             }
 

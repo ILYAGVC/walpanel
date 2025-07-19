@@ -9,10 +9,10 @@ router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
 @router.get("/all", response_model=AdminsListOutout)
-def get_all_admins(
+async def get_all_admins(
     db: Session = Depends(get_db), username: str = Depends(mainadmin_required)
 ):
-    admins = admin_operations.get_all_admins(db)
+    admins = await admin_operations.get_all_admins(db)
     return {"admins": admins}
 
 
