@@ -185,8 +185,8 @@ class AdminOperations:
                 return False
         except Exception as e:
             db.rollback()
-            logger.error(f"Error in aproval_payment_with_image: {e}")
-            return False
+            logger.error(f"Error in aproval_payment_: {e}")
+            return None
         
 
 

@@ -13,6 +13,7 @@ from app.log.logger_config import logger
 
 router = APIRouter(prefix="/payment", tags=["payment"])
 
+waiting_payments = {}
 
 @router.get("/Extopay/")
 async def payment_request(
@@ -28,10 +29,12 @@ async def payment_request(
         logger.info(
             f"Received payment request: amount={amount}, order_id={order_id}"
         )
-        link = await extopay_api.make_payment_url(order_id, amount, db)
+        res = await extopay_api.make_payment_url(order_id, amount, db)
+        waiting_payments[res["authority"]] = {order_id}
         return {
             "status": True,
-            "link": link["link"]
+            "link": res["link"],
+            "authority": res["authority"]
             }
     
     except HTTPException as e:
@@ -41,28 +44,21 @@ async def payment_request(
 
 @router.get("/callback/")
 async def payment_callback(
-    token: str = Query(..., description="Payment token from gateway"),
-    result: str = Query(..., description="Payment result (OK or NOK)"),
-    order_id: str = Query(..., description="Order ID from our system"),
+    Authority: str = Query(..., description="Authority"),
+    status: str = Query(..., description="Payment result (OK or NOK)"),
     db: Session = Depends(get_db),
 ):
     try:
         logger.info(
-            f"Received payment callback: token={token}, result={result}, order_id={order_id}"
+            f"Received payment callback: Authority={Authority}, status={status}"
         )
 
-        username, plan_id, timestamp, rand_num = (
-            order_id.split("_")
-        )
-        # Convert string timestamp to date object
-        purchase_date = datetime.strptime(timestamp, "%Y%m%d").date()
-
-        if result == "OK":
-            payment_status = await extopay_api.check_payment_status(token)
+        if status == "OK" and Authority in waiting_payments:
+            payment_status = await extopay_api.check_payment_status(Authority)
             logger.info(f"Payment status from gateway: {payment_status}")
 
             if not payment_status:
-                logger.error(f"Failed to get payment status for token: {token}")
+                logger.error(f"Failed to get payment status for Authority: {Authority}")
                 raise HTTPException(
                     status_code=400, detail="Failed to verify payment status"
                 )
@@ -74,7 +70,13 @@ async def payment_callback(
                     status_code=400, detail="Payment verification failed"
                 )
             
-            await admin_operations.aproval_payment_(db, username, plan_id)
+            order_id = waiting_payments[{Authority}]
+            username, plan_id, timestamp, rand_num = (order_id.split("_"))
+            # Convert string timestamp to date object
+            purchase_date = datetime.strptime(timestamp, "%Y%m%d").date()
+                
+            if await admin_operations.aproval_payment_(db, username, plan_id):
+                waiting_payments.pop(Authority)
 
         else:  # result is NOK
             logger.info(f"Payment was cancelled or failed for order_id: {order_id}")
