@@ -97,6 +97,7 @@ class PanelAPI:
         email,
         totalGB,
         expiryTime,
+        flow
     ):
 
         url = f"https://{panel}/panel/inbound/addClient"
@@ -106,7 +107,7 @@ class PanelAPI:
                     "id": _uuid,
                     "enable": True,
                     "security": "auto",
-                    "flow": "xtls-rprx-vision",
+                    "flow": flow,
                     "email": email,
                     "imitIp": 0,
                     "totalGB": totalGB,

@@ -163,6 +163,7 @@ class Task:
                 request.email,
                 int(request.totalGB * (1024**3)),
                 request.expiryTime,
+                request.flow
             )
 
             if result["success"] is True:
