@@ -114,10 +114,10 @@ class Task:
             }
         
     async def total_users_in_inbound(self, db, username: str) -> int:
+        client_count = 0
+        admin = admin_operations.get_admin_data(db, username)
+        panel = panel_operations.panel_data(db, admin.panel_id)
         try:
-            client_count = 0
-            admin = admin_operations.get_admin_data(db, username)
-            panel = panel_operations.panel_data(db, admin.panel_id)
             result = panels_api.show_users(
                 panel.url, panel.username, panel.password, admin.inbound_id
             )
@@ -126,18 +126,19 @@ class Task:
                 panels_api.login_with_out_savekey(
                     panel.url, panel.username, panel.password
                 )
-                self.user_list(db, username)
-            
+                self.total_users_in_inbound(db, username)
+
             settings_str = result["obj"]["settings"]
             settings_json = json.loads(settings_str)
             clients = settings_json.get("clients", [])
             for c in clients:
                 client_count += 1
-            return client_count
-
         except Exception as e:
             logger.error(f"Error fetching user list: {e}")
             return {"error": "Failed to fetch user list, try again."}
+        finally:
+            return client_count
+
 
     def create_user(self, db, username: str, request: CreateUserInput):
         if not self.check_admin_traffic(db, username, request.totalGB):
@@ -178,10 +179,15 @@ class Task:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def delete_client(self, db, username: str, user_id: str):
+    def delete_client(self, db, username: str, user_id: str, name: str):
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
+
+            user = panels_api.user_obj(panel.url, name)
+            user = user['obj']
+            remining_traffic = (user['total'] - (user['down'] + user['up'])) / 1024**3
+            admin_operations.Increased_traffic(db, admin.username, remining_traffic)
 
             result = panels_api.delete_client(
                 panel.url,

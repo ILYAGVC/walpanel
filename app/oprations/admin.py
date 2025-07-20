@@ -62,7 +62,6 @@ class AdminOperations:
 
         for admin in admins:
             get_clients = await admin_task.total_users_in_inbound(db, admin.username)
-
             admin_data = {
                 "id": admin.id,
                 "username": admin.username,
@@ -79,7 +78,7 @@ class AdminOperations:
                 ),
                 "is_active": admin.is_active,
                 "is_banned": admin.is_banned,
-                "total_clients": get_clients
+                "total_clients": get_clients,
             }
             result.append(admin_data)
 
@@ -148,6 +147,18 @@ class AdminOperations:
         db.commit()
         db.refresh(admin)
         return admin
+    
+    def Increased_traffic(self, db: Session, username: str, traffic):
+        try:
+            admin = db.query(Admin).filter(Admin.username == username).first()
+            admin.traffic += traffic
+            db.commit()
+            db.refresh(admin)
+            return True
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error in Increased_traffic: {e}")
+            return None
 
     def pre_opration_check(self, db: Session, username: str):
         admin = db.query(Admin).filter(Admin.username == username).first()

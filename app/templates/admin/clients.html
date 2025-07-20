@@ -345,7 +345,7 @@
                             <button class="action-btn reset" data-id="${client.id}" data-email="${client.email}" title="Reset Usage">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
-                            <button class="action-btn delete" data-id="${client.id}" title="Delete">
+                            <button class="action-btn delete" data-id="${client.id}" data-email="${client.email}" title="Delete">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -391,7 +391,8 @@
             document.querySelectorAll('.action-btn.delete').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const clientId = e.currentTarget.getAttribute('data-id');
-                    deleteClient(clientId);
+                    const clientEmail = e.currentTarget.getAttribute('data-email');
+                    deleteClient(clientId, clientEmail);
                 });
             });
         }
@@ -558,13 +559,13 @@
             }
         });
 
-        async function deleteClient(clientId) {
+        async function deleteClient(clientId, clientEmail) {
             if (!confirm('Are you sure you want to delete this client?')) {
                 return;
             }
 
             try {
-                const response = await fetch(`/admin/DeleteClient/${clientId}`, {
+                const response = await fetch(`/admin/DeleteClient/${clientId}/${clientEmail}`, {
                     method: 'POST',
                     credentials: 'include'
                 });

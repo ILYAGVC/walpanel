@@ -20,13 +20,14 @@ async def create_suer(
         return admin_task.create_user(db, username["username"], request)
 
 
-@router.post("/DeleteClient/{user_id}")
+@router.post("/DeleteClient/{user_id}/{name}")
 async def delete_client(
     user_id: str,
+    name: str,
     db: Session = Depends(get_db),
     username: dict = Depends(get_current_user),
 ):
-    return admin_task.delete_client(db, username["username"], user_id)
+    return admin_task.delete_client(db, username["username"], user_id, name)
 
 
 @router.post("/UpdateClient/{user_id}")
