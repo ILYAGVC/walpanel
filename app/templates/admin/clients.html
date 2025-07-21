@@ -587,6 +587,8 @@
 
         // Show copy config modal
         function showCopyConfigModal(clientId, subId) {
+            configContent.textContent = 'Loading configuration...';
+            
             if (!sublink || !subId) {
                 configContent.textContent = 'Error: Configuration not available';
                 configContent.style.display = 'none';
@@ -596,7 +598,20 @@
             }
 
             const fullLink = `${sublink}/${subId}`;
-            configContent.textContent = fullLink;
+
+            try {
+                const response = await fetch(fullLink);
+                if (!response.ok) throw new Error();
+                const config = await response.text();
+                configContent.textContent = config;
+            } catch {
+                configContent.textContent = 'Error: Unable to get config';
+                configContent.style.display = 'none';
+                copyConfigModal.style.display = 'flex';
+                document.getElementById('qrCanvas').style.display = 'none';
+                return;
+            }
+            
             configContent.style.display = 'none';
             copyConfigModal.style.display = 'flex';
 
@@ -605,7 +620,7 @@
             qrCanvas.style.display = 'block';
             new QRious({
                 element: qrCanvas,
-                value: fullLink,
+                value: config,
                 size: 180
             });
         }
