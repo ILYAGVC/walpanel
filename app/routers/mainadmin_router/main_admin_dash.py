@@ -37,6 +37,20 @@ async def dashboard(
         {"request": request, "user": user, "panels": panels, "admins": admins, "plans": plans['plans'], "logs": logs},
     )
 
+# this api not use in frontend for now
+@router.get("/data")
+async def dashboard_data(
+    request: Request,
+    user: str=Depends(mainadmin_required),
+    db: Session = Depends(get_db)
+):
+    panels = panel_operations.get_panels(db)
+    admins = await admin_operations.get_all_admins(db)
+    users = sum(admin.get("total_clients", 0) for admin in admins)
+    plans = await plans_query.get_plans(db)
+    logs = get_10_logs()
+    purchases = await plans_query.purchase_history(db)
+    return {"purchases": purchases, "panels": len(panels), "admins": admins, "users": users, "plans": len(plans['plans']), "logs": logs}
 
 @router.get("/logout/")
 async def logout(response: Response):

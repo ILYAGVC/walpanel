@@ -1,13 +1,13 @@
 from fastapi.exceptions import HTTPException
 from fastapi import status
 from datetime import datetime, timedelta, date
-
+from sqlalchemy.orm import Session, joinedload
 
 from app.schema._input import CreateAdminInput, UpdateAdminInput
 from app.db.models import Admin, Plans
 from app.db.engine import get_db
 from app.log.logger_config import logger
-from sqlalchemy.orm import Session, joinedload
+from app.oprations.utility import purchase_hisory
 
 
 class AdminOperations:
@@ -180,7 +180,7 @@ class AdminOperations:
 
         return True
     
-    async def aproval_payment_(self, db: Session, dealer_name: str, plan_id: int):
+    async def aproval_payment_(self, db: Session, dealer_name: str, plan_id: int, price: int, purchase_date):
         admin = db.query(Admin).filter(Admin.username == dealer_name).first()
         plan = db.query(Plans).filter(Plans.id == plan_id).first()
 
@@ -191,6 +191,8 @@ class AdminOperations:
                 admin.traffic += plan.traffic
                 db.commit()
                 db.refresh(admin)
+
+                await purchase_hisory(db, price, purchase_date, dealer_name, "done")
                 return True
             else:
                 return False

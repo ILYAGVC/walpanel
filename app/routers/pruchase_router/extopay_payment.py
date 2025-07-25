@@ -23,9 +23,8 @@ async def payment_request(
     username: str = Depends(get_current_user)
 ):
     try:
-        order_time = datetime.now().strftime('%Y%m%d')
-        rand_num = random.randint(1,85)
-        order_id = f"{username['username']}_{plan_id}_{order_time}_{rand_num}"
+        order_time = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        order_id = f"{username['username']}_{plan_id}_{order_time}_{amount}_"
         logger.info(
             f"Received payment request: amount={amount}, order_id={order_id}"
         )
@@ -71,11 +70,11 @@ async def payment_callback(
                 )
             
             order_id = waiting_payments[Authority]
-            username, plan_id, timestamp, rand_num = (order_id.split("_"))
+            username, plan_id, timestamp, price, _ = (order_id.split("_"))
             # Convert string timestamp to date object
-            purchase_date = datetime.strptime(timestamp, "%Y%m%d").date()
+            purchase_date = datetime.strptime(timestamp, "%Y-%m-%d-%H-%M-%S").date()
             
-            result = await admin_operations.aproval_payment_(db, username, plan_id)
+            result = await admin_operations.aproval_payment_(db, username, int(plan_id), int(price), purchase_date)
             if result:
                 waiting_payments.pop(Authority)
                 logger.info(f"Payment successful: username={username}, plan_id={plan_id}")

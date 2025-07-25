@@ -134,7 +134,7 @@ class Task:
             for c in clients:
                 client_count += 1
         except Exception as e:
-            logger.error(f"Error fetching user list: {e}")
+            logger.error(f"Errorrrrrr fetching user list: {e}")
             return {"error": "Failed to fetch user list, try again."}
         finally:
             return client_count
