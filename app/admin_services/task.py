@@ -126,7 +126,7 @@ class Task:
                 panels_api.login_with_out_savekey(
                     panel.url, panel.username, panel.password
                 )
-                self.total_users_in_inbound(db, username)
+                await self.total_users_in_inbound(db, username)
 
             settings_str = result["obj"]["settings"]
             settings_json = json.loads(settings_str)
@@ -134,7 +134,7 @@ class Task:
             for c in clients:
                 client_count += 1
         except Exception as e:
-            logger.error(f"Errorrrrrr fetching user list: {e}")
+            logger.error(f"fetching user list: {e}")
             return {"error": "Failed to fetch user list, try again."}
         finally:
             return client_count
@@ -213,6 +213,11 @@ class Task:
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
+            user = panels_api.user_obj(panel.url, request.email)
+            user = user['obj']
+
+            remining_traffic = (user['total'] - (user['down'] + user['up'])) / 1024**3
+            admin_operations.Increased_traffic(db, admin.username, remining_traffic)
 
             updated_client = {
                 "id": user_id,
