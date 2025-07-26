@@ -24,20 +24,14 @@ async def dashboard(
     user: str = Depends(mainadmin_required),
     db: Session = Depends(get_db),
 ):
-    panels = panel_operations.get_panels(db)
-    admins = await admin_operations.get_all_admins(db)
-    plans = await plans_query.get_plans(db)
-    logs = get_10_logs()
-
-
     if user is None:
         raise HTTPException(status_code=401, detail="Unauthorized")
     return templates.TemplateResponse(
         "dashboard.html",
-        {"request": request, "user": user, "panels": panels, "admins": admins, "plans": plans['plans'], "logs": logs},
+        {"request": request, "user": user},
     )
 
-# this api not use in frontend for now
+
 @router.get("/data")
 async def dashboard_data(
     request: Request,

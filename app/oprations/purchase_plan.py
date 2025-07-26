@@ -137,6 +137,7 @@ class PlansQuery:
                 "count": count_history,
                 "purchases": [
                     {
+                        "payer": purchase.payer,
                         "date": purchase.purchase_date,
                         "amount": purchase.amount,
                         "status": purchase.status
