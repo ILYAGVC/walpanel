@@ -230,6 +230,14 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="addAdminFlow" class="form-label">Inbound Flow</label>
+                    <select id="addAdminFlow" class="form-control">
+                        <option value="">Default (Empty)</option>
+                        <option value="xtls-rprx-vision">xtls-rprx-vision</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label for="addAdminTraffic" class="form-label">Initial Traffic (GB)*</label>
                     <input type="number" id="addAdminTraffic" class="form-control" min="0" value="0" required>
                 </div>
@@ -480,6 +488,7 @@
                 password: document.getElementById('addAdminPassword').value.trim(),
                 panel_id: parseInt(document.getElementById('addAdminPanel').value),
                 inbound_id: parseInt(document.getElementById('addAdminInbound').value),
+                inbound_flow: document.getElementById('addAdminFlow').value,
                 traffic: parseInt(document.getElementById('addAdminTraffic').value),
                 days_remaining: parseInt(document.getElementById('addAdminDays').value),
                 is_active: document.getElementById('addAdminActive').value === "true",

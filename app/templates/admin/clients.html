@@ -126,13 +126,6 @@
                     <label for="clientExpiryDays" class="form-label">Expiry Days</label>
                     <input type="number" id="clientExpiryDays" class="form-input" min="1" required>
                 </div>
-                <div class="form-group">
-                    <label for="clientFlow" class="form-label">Flow</label>
-                    <select id="clientFlow" class="form-input">
-                        <option value="">Select</option>
-                        <option value="xtls-rprx-vision">xtls-rprx-vision</option>
-                    </select>
-                </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" id="cancelAddClient">Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Client</button>
@@ -680,7 +673,6 @@
             const email = document.getElementById('clientEmail').value;
             const dataLimitGB = parseFloat(document.getElementById('clientDataLimit').value);
             const expiryDays = parseInt(document.getElementById('clientExpiryDays').value);
-            const flow = document.getElementById('clientFlow').value;
 
             if (!email || isNaN(dataLimitGB) || isNaN(expiryDays)) {
                 alert('Please fill all fields correctly');
@@ -700,9 +692,6 @@
                     totalGB: dataLimitGB,
                     expiryTime: expiryTimestamp
                 };
-                if (flow === "xtls-rprx-vision") {
-                    body.flow = flow;
-                }
 
                 const response = await fetch('/admin/CreateClient', {
                     method: 'POST',

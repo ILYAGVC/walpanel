@@ -19,6 +19,7 @@ class CreateAdminInput(BaseModel):
     password: str
     panel_id: int = 1
     inbound_id: int = 1
+    inbound_flow: str = ""
     traffic: int = 0
     days_remaining: int = 0
     is_active: bool = True
@@ -39,7 +40,6 @@ class CreateUserInput(BaseModel):
     email: str
     totalGB: float
     expiryTime: int
-    flow: str = ""
 
 
 class UpdateUserInput(BaseModel):

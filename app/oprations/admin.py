@@ -30,6 +30,7 @@ class AdminOperations:
                 password=request.password,
                 panel_id=request.panel_id,
                 inbound_id=request.inbound_id,
+                inbound_flow=request.inbound_flow,
                 traffic=request.traffic,
                 expiry_time=expiry_datetime,
                 is_active=request.is_active,

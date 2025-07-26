@@ -148,8 +148,8 @@ class Task:
             )
 
         try:
-            data = admin_operations.get_admin_data(db, username)
-            panel = panel_operations.panel_data(db, data.panel_id)
+            admin = admin_operations.get_admin_data(db, username)
+            panel = panel_operations.panel_data(db, admin.panel_id)
 
             _uuid = str(uuid4())
             subid = generate_secure_random_text(16)
@@ -158,13 +158,13 @@ class Task:
                 panel.url,
                 panel.username,
                 panel.password,
-                data.inbound_id,
+                admin.inbound_id,
                 _uuid,
                 subid,
                 request.email,
                 int(request.totalGB * (1024**3)),
                 request.expiryTime,
-                request.flow
+                admin.inbound_flow
             )
 
             if result["success"] is True:
