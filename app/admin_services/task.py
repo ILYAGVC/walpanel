@@ -183,7 +183,8 @@ class Task:
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
-
+            
+            # returned remining traffic to the admin
             user = panels_api.user_obj(panel.url, name)
             user = user['obj']
             remining_traffic = (user['total'] - (user['down'] + user['up'])) / 1024**3
@@ -213,9 +214,10 @@ class Task:
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
+
+            # returned remining traffic to the admin
             user = panels_api.user_obj(panel.url, request.email)
             user = user['obj']
-
             remining_traffic = (user['total'] - (user['down'] + user['up'])) / 1024**3
             admin_operations.Increased_traffic(db, admin.username, remining_traffic)
 
@@ -225,7 +227,7 @@ class Task:
                 "totalGB": int(request.totalGB * (1024**3)),
                 "expiryTime": request.expiryTime,
                 "enable": True,
-                "flow": "",
+                "flow": admin.inbound_flow,
                 "limitIp": 0,
                 "tgId": "",
                 "subId": request.subid,
@@ -263,6 +265,12 @@ class Task:
         admin = admin_operations.get_admin_data(db, username)
         panel = panel_operations.panel_data(db, admin.panel_id)
         client = panels_api.user_obj(panel.url, email)
+
+        # returned remining traffic to the admin
+        user = client['obj']
+        remining_traffic = (user['total'] - (user['down'] + user['up'])) / 1024**3
+        admin_operations.Increased_traffic(db, admin.username, remining_traffic)
+        
         _traffic = int(client["obj"]["total"] / (1024 ** 3))
 
         if not self.check_admin_traffic(db, username, _traffic):
