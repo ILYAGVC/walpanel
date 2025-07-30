@@ -6,6 +6,7 @@ from app.log.logger_config import logger
 from app.schema._input import AddNewCardNumber, AddNewExtopayKey
 from app.db.engine import get_db
 from app.oprations.payment_settings import payment_setting_query
+from app.oprations.purchase_plan import plans_query
 from app.auth.auth_controller import mainadmin_required, get_current_user
 import time
 
@@ -44,8 +45,9 @@ async def upload_receipt_image(
             "message": "No image uploaded.",
         }
     try:
-        now = time.strftime("%Y-%m-%d-%H-%M-%S")
-        image_path = f"data/receipts/{username['username']}_{now}_{plan_id}.jpg"
+        plan = await plans_query.get_a_plan_by_id(db, plan_id)
+        order_time = time.strftime("%Y-%m-%d-%H-%M-%S")
+        image_path = f"data/receipts/{username['username']}_{order_time}_{plan_id}_{plan['price']}_.jpg"
         with open(image_path, "wb") as f:
             f.write(image)
         return {

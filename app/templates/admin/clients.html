@@ -126,13 +126,6 @@
                     <label for="clientExpiryDays" class="form-label">Expiry Days</label>
                     <input type="number" id="clientExpiryDays" class="form-input" min="1" required>
                 </div>
-                <div class="form-group">
-                    <label for="clientFlow" class="form-label">Flow</label>
-                    <select id="clientFlow" class="form-input">
-                        <option value="">Select</option>
-                        <option value="xtls-rprx-vision">xtls-rprx-vision</option>
-                    </select>
-                </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" id="cancelAddClient">Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Client</button>
@@ -345,7 +338,7 @@
                             <button class="action-btn reset" data-id="${client.id}" data-email="${client.email}" title="Reset Usage">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
-                            <button class="action-btn delete" data-id="${client.id}" title="Delete">
+                            <button class="action-btn delete" data-id="${client.id}" data-email="${client.email}" title="Delete">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -391,7 +384,8 @@
             document.querySelectorAll('.action-btn.delete').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const clientId = e.currentTarget.getAttribute('data-id');
-                    deleteClient(clientId);
+                    const clientEmail = e.currentTarget.getAttribute('data-email');
+                    deleteClient(clientId, clientEmail);
                 });
             });
         }
@@ -558,13 +552,13 @@
             }
         });
 
-        async function deleteClient(clientId) {
+        async function deleteClient(clientId, clientEmail) {
             if (!confirm('Are you sure you want to delete this client?')) {
                 return;
             }
 
             try {
-                const response = await fetch(`/admin/DeleteClient/${clientId}`, {
+                const response = await fetch(`/admin/DeleteClient/${clientId}/${clientEmail}`, {
                     method: 'POST',
                     credentials: 'include'
                 });
@@ -679,7 +673,6 @@
             const email = document.getElementById('clientEmail').value;
             const dataLimitGB = parseFloat(document.getElementById('clientDataLimit').value);
             const expiryDays = parseInt(document.getElementById('clientExpiryDays').value);
-            const flow = document.getElementById('clientFlow').value;
 
             if (!email || isNaN(dataLimitGB) || isNaN(expiryDays)) {
                 alert('Please fill all fields correctly');
@@ -699,9 +692,6 @@
                     totalGB: dataLimitGB,
                     expiryTime: expiryTimestamp
                 };
-                if (flow === "xtls-rprx-vision") {
-                    body.flow = flow;
-                }
 
                 const response = await fetch('/admin/CreateClient', {
                     method: 'POST',

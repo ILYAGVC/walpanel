@@ -25,6 +25,7 @@ class Admin(Base):
     password = Column(String, nullable=False)
     panel_id = Column(Integer, ForeignKey("panels.id"), nullable=False)
     inbound_id = Column(Integer, default=1)
+    inbound_flow = Column(String, nullable=True)
     traffic = Column(Integer, default=0)
     expiry_time = Column(Date, nullable=True)
     is_active = Column(Boolean, default=True)
@@ -72,35 +73,11 @@ class PaymentGatewaykeys(Base):
     Intermediary_gateway_key = Column(String, nullable=True)
 
 
-class HelpMessage(Base):
-    __tablename__ = "help_message"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    message = Column(String, nullable=False)
-
-
-class RegisteringMessage(Base):
-    __tablename__ = "registering_message"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    message = Column(String, nullable=False)
-
-
-class BotSettings(Base):
-    __tablename__ = "bot_settings"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    start_notif = Column("start_notif", Boolean, default=True)
-    create_notif = Column("create_notif", Boolean, default=True)
-    delete_notif = Column("delete_notif", Boolean, default=True)
-
-
 class PurchaseHistory(Base):
     __tablename__ = "purchase_history"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     amount = Column(Integer, nullable=False)
-    order_id = Column(String, nullable=False, unique=True)
-    chat_id = Column(Integer, nullable=False)
+    payer = Column(String, nullable=False)
     purchase_date = Column(Date, nullable=False)
     status = Column(String, nullable=False, default="pending")

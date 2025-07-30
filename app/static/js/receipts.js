@@ -131,7 +131,7 @@ function openImageModal(imageUrl, fileName) {
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="this.closest('.modal').remove()">Cancel</button>
-                <button class="btn btn-danger" onclick="modalDeleteReceipt('${fileName}', this)">Delete</button>
+                <button class="btn btn-danger" onclick="modalDeleteReceipt('${fileName}', this)">Reject</button>
                 <button class="btn btn-success" onclick="modalApproveReceipt('${fileName}', this)">Approve</button>
             </div>
         </div>
@@ -275,12 +275,11 @@ async function approveReceipt(fileName) {
     }
 }
 
-// Modal Approve/Delete functions
+// Modal Approve functions
 async function modalApproveReceipt(fileName, btn) {
     btn.disabled = true;
-    const imageName = getImageNameWithoutExtension(fileName);
     try {
-        const response = await fetch(`/payment/aproval-payment/${imageName}`, {
+        const response = await fetch(`/payment/aproval-payment/${fileName}`, {
             method: 'GET',
             credentials: 'include'
         });
@@ -294,11 +293,7 @@ async function modalApproveReceipt(fileName, btn) {
         const result = await response.json();
         showToast(result.message, result.status ? 'success' : 'error');
         if (result.status) {
-            setTimeout(async () => {
-                await fetch(`/payment/delete-receipt-image/${fileName}`, {
-                    method: 'GET',
-                    credentials: 'include'
-                });
+            setTimeout(() => {
                 loadReceipts();
             }, 1000);
         }

@@ -1,13 +1,13 @@
 from fastapi.exceptions import HTTPException
 from fastapi import status
 from datetime import datetime, timedelta, date
-
+from sqlalchemy.orm import Session, joinedload
 
 from app.schema._input import CreateAdminInput, UpdateAdminInput
 from app.db.models import Admin, Plans
 from app.db.engine import get_db
 from app.log.logger_config import logger
-from sqlalchemy.orm import Session, joinedload
+from app.oprations.utility import purchase_hisory
 
 
 class AdminOperations:
@@ -30,6 +30,7 @@ class AdminOperations:
                 password=request.password,
                 panel_id=request.panel_id,
                 inbound_id=request.inbound_id,
+                inbound_flow=request.inbound_flow,
                 traffic=request.traffic,
                 expiry_time=expiry_datetime,
                 is_active=request.is_active,
@@ -61,8 +62,10 @@ class AdminOperations:
         result = []
 
         for admin in admins:
-            get_clients = await admin_task.total_users_in_inbound(db, admin.username)
-
+            try:
+                get_clients = await admin_task.total_users_in_inbound(db, admin.username)
+            except:
+                get_clients = 0
             admin_data = {
                 "id": admin.id,
                 "username": admin.username,
@@ -79,7 +82,7 @@ class AdminOperations:
                 ),
                 "is_active": admin.is_active,
                 "is_banned": admin.is_banned,
-                "total_clients": get_clients
+                "total_clients": get_clients,
             }
             result.append(admin_data)
 
@@ -97,6 +100,7 @@ class AdminOperations:
 
             admin.panel_id = request.panel_id
             admin.inbound_id = request.inbound_id
+            admin.inbound_flow = request.inbound_flow
             admin.traffic = request.traffic
             admin.expiry_time = expiry_datetime
             admin.is_active = request.is_active
@@ -148,6 +152,18 @@ class AdminOperations:
         db.commit()
         db.refresh(admin)
         return admin
+    
+    def Increased_traffic(self, db: Session, username: str, traffic):
+        try:
+            admin = db.query(Admin).filter(Admin.username == username).first()
+            admin.traffic += traffic
+            db.commit()
+            db.refresh(admin)
+            return True
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error in Increased_traffic: {e}")
+            return None
 
     def pre_opration_check(self, db: Session, username: str):
         admin = db.query(Admin).filter(Admin.username == username).first()
@@ -169,7 +185,7 @@ class AdminOperations:
 
         return True
     
-    async def aproval_payment_(self, db: Session, dealer_name: str, plan_id: int):
+    async def aproval_payment_(self, db: Session, dealer_name: str, plan_id: int, price: int, purchase_date):
         admin = db.query(Admin).filter(Admin.username == dealer_name).first()
         plan = db.query(Plans).filter(Plans.id == plan_id).first()
 
@@ -180,6 +196,8 @@ class AdminOperations:
                 admin.traffic += plan.traffic
                 db.commit()
                 db.refresh(admin)
+
+                await purchase_hisory(db, price, purchase_date, dealer_name, "done")
                 return True
             else:
                 return False

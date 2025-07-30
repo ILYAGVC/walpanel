@@ -113,31 +113,38 @@ class Task:
                 "error": "Failed to fetch user list, try again.",
             }
         
-    async def total_users_in_inbound(self, db, username: str) -> int:
+    async def total_users_in_inbound(self, db, username: str, retry: int = 0) -> int:
+        client_count = 0
+        admin = admin_operations.get_admin_data(db, username)
+        panel = panel_operations.panel_data(db, admin.panel_id)
         try:
-            client_count = 0
-            admin = admin_operations.get_admin_data(db, username)
-            panel = panel_operations.panel_data(db, admin.panel_id)
             result = panels_api.show_users(
                 panel.url, panel.username, panel.password, admin.inbound_id
             )
-            if not result or "obj" not in result or "settings" not in result["obj"]:
+
+            if (
+                not result
+                or not isinstance(result.get("obj"), dict)
+                or "settings" not in result["obj"]
+            ):
                 logger.error("Result or settings not found in panel response")
-                panels_api.login_with_out_savekey(
-                    panel.url, panel.username, panel.password
-                )
-                self.user_list(db, username)
-            
+                if retry < 1:
+                    panels_api.login_with_out_savekey(panel.url, panel.username, panel.password)
+                    return await self.total_users_in_inbound(db, username, retry + 1)
+                else:
+                    logger.error("Max retries exceeded for fetching users")
+
             settings_str = result["obj"]["settings"]
             settings_json = json.loads(settings_str)
             clients = settings_json.get("clients", [])
-            for c in clients:
-                client_count += 1
-            return client_count
+            client_count = len(clients)
 
         except Exception as e:
-            logger.error(f"Error fetching user list: {e}")
-            return {"error": "Failed to fetch user list, try again."}
+            logger.error(f"fetching user list: {e} and returned 0")
+            return 0
+        
+        return client_count
+
 
     def create_user(self, db, username: str, request: CreateUserInput):
         if not self.check_admin_traffic(db, username, request.totalGB):
@@ -147,8 +154,8 @@ class Task:
             )
 
         try:
-            data = admin_operations.get_admin_data(db, username)
-            panel = panel_operations.panel_data(db, data.panel_id)
+            admin = admin_operations.get_admin_data(db, username)
+            panel = panel_operations.panel_data(db, admin.panel_id)
 
             _uuid = str(uuid4())
             subid = generate_secure_random_text(16)
@@ -157,13 +164,13 @@ class Task:
                 panel.url,
                 panel.username,
                 panel.password,
-                data.inbound_id,
+                admin.inbound_id,
                 _uuid,
                 subid,
                 request.email,
                 int(request.totalGB * (1024**3)),
                 request.expiryTime,
-                request.flow
+                admin.inbound_flow
             )
 
             if result["success"] is True:
@@ -178,10 +185,16 @@ class Task:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-    def delete_client(self, db, username: str, user_id: str):
+    def delete_client(self, db, username: str, user_id: str, name: str):
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
+            
+            # returned remining traffic to the admin
+            user = panels_api.user_obj(panel.url, name)
+            user = user['obj']
+            remining_traffic = (user['total'] - (user['down'] + user['up'])) / 1024**3
+            admin_operations.Increased_traffic(db, admin.username, remining_traffic)
 
             result = panels_api.delete_client(
                 panel.url,
@@ -208,13 +221,19 @@ class Task:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
 
+            # returned remining traffic to the admin
+            user = panels_api.user_obj(panel.url, request.email)
+            user = user['obj']
+            remining_traffic = (user['total'] - (user['down'] + user['up'])) / 1024**3
+            admin_operations.Increased_traffic(db, admin.username, remining_traffic)
+
             updated_client = {
                 "id": user_id,
                 "email": request.email,
                 "totalGB": int(request.totalGB * (1024**3)),
                 "expiryTime": request.expiryTime,
                 "enable": True,
-                "flow": "",
+                "flow": admin.inbound_flow,
                 "limitIp": 0,
                 "tgId": "",
                 "subId": request.subid,
@@ -252,6 +271,12 @@ class Task:
         admin = admin_operations.get_admin_data(db, username)
         panel = panel_operations.panel_data(db, admin.panel_id)
         client = panels_api.user_obj(panel.url, email)
+
+        # returned remining traffic to the admin
+        user = client['obj']
+        remining_traffic = (user['total'] - (user['down'] + user['up'])) / 1024**3
+        admin_operations.Increased_traffic(db, admin.username, remining_traffic)
+        
         _traffic = int(client["obj"]["total"] / (1024 ** 3))
 
         if not self.check_admin_traffic(db, username, _traffic):

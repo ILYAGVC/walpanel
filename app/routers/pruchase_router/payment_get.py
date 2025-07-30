@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-
+from datetime import datetime
 
 from app.db.engine import get_db
 from app.oprations.payment_settings import payment_setting_query
 from app.oprations.admin import admin_operations
 from app.auth.auth_controller import mainadmin_required, get_current_user
+from app.oprations.utility import purchase_hisory
 
 import os
 
@@ -67,14 +68,18 @@ async def get_receipt_image(
     return {"images": image_urls}
 
 
-@router.get("/delete-receipt-image/{img_name}")
+@router.get("/delete-receipt-image/{image_name}")
 async def delete_receipt_image(
-    img_name: str,
+    image_name: str,
     db: Session = Depends(get_db),
     username: str = Depends(mainadmin_required),
 ):
     images_path = "data/receipts/"
-    file_path = os.path.join(images_path, img_name)
+
+    file_path = os.path.join(images_path, image_name)
+    dealer_name, timestamp, plan_id, price, _ = image_name.split('_')
+    purchase_date = datetime.strptime(timestamp, "%Y-%m-%d-%H-%M-%S").date()
+    await purchase_hisory(db, price, purchase_date, dealer_name, "not-done")
 
     if os.path.exists(file_path):
         os.remove(file_path)
@@ -96,11 +101,16 @@ async def aproval_payment(
     '''
     this function is aproval payment with receipt image
     '''
-    dealer_name = image_name.split('_')[0]
-    plan_id = image_name.split('_')[2]
+    dealer_name, timestamp, plan_id, price, _ = image_name.split('_')
+    purchase_date = datetime.strptime(timestamp, "%Y-%m-%d-%H-%M-%S").date()
 
-    update_dealer = await admin_operations.aproval_payment_(db, dealer_name, int(plan_id))
+    update_dealer = await admin_operations.aproval_payment_(db, dealer_name, plan_id, price, purchase_date)
     if update_dealer:
+        images_path = "data/receipts/"
+
+        file_path = os.path.join(images_path, image_name)
+        os.remove(file_path)
+        
         return {
             "status": True,
             "message": "Payment approved successfully"

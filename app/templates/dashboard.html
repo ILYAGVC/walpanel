@@ -71,228 +71,137 @@
                     </div>
                 </div>
             </div>
-            <div class="dashboard-row-modern">
-                <div class="stat-card-modern">
-                    <div class="stat-icon stat-icon-blue"><i class="fas fa-server"></i></div>
-                    <div class="stat-info">
-                        <div class="stat-value">{{ panels|length }}</div>
-                        <div class="stat-label">Total Panels</div>
+            <div class="card-wrapper">
+                <div class="top-card-label top-label-glass">System Overview</div>
+                <div class="unified-stats-card">
+                    <div class="unified-stat-item">
+                        <div class="unified-stat-icon stat-icon-blue"><i class="fas fa-server"></i></div>
+                        <div class="unified-stat-info">
+                            <div class="unified-stat-value" id="panels-count">0</div>
+                            <div class="unified-stat-label">Panels</div>
+                        </div>
+                    </div>
+                <div class="unified-stat-divider"></div>
+                <div class="unified-stat-item">
+                    <div class="unified-stat-icon stat-icon-green"><i class="fas fa-users-cog"></i></div>
+                    <div class="unified-stat-info">
+                        <div class="unified-stat-value" id="admins-count">0</div>
+                        <div class="unified-stat-label">Admins</div>
                     </div>
                 </div>
-                <div class="stat-card-modern">
-                    <div class="stat-icon stat-icon-green"><i class="fas fa-users-cog"></i></div>
-                    <div class="stat-info">
-                        <div class="stat-value">{{ admins|length }}</div>
-                        <div class="stat-label">Total Admins</div>
+                <div class="unified-stat-divider"></div>
+                <div class="unified-stat-item">
+                    <div class="unified-stat-icon stat-icon-purple"><i class="fas fa-user-friends"></i></div>
+                    <div class="unified-stat-info">
+                        <div class="unified-stat-value" id="users-count">0</div>
+                        <div class="unified-stat-label">Users</div>
                     </div>
                 </div>
-                <div class="stat-card-modern">
-                    <div class="stat-icon stat-icon-purple"><i class="fas fa-user-friends"></i></div>
-                    <div class="stat-info">
-                        <div class="stat-value">{{ admins | sum(attribute='total_clients') }}</div>
-                        <div class="stat-label">Total Users</div>
+                <div class="unified-stat-divider"></div>
+                <div class="unified-stat-item">
+                    <div class="unified-stat-icon stat-icon-orange"><i class="fas fa-shopping-cart"></i></div>
+                    <div class="unified-stat-info">
+                        <div class="unified-stat-value" id="plans-count">0</div>
+                        <div class="unified-stat-label">Plans</div>
                     </div>
                 </div>
-                <div class="stat-card-modern">
-                    <div class="stat-icon stat-icon-orange"><i class="fas fa-shopping-cart"></i></div>
-                    <div class="stat-info">
-                        <div class="stat-value">{{ plans|length }}</div>
-                        <div class="stat-label">Total Purchase Plans</div>
-                    </div>
                 </div>
             </div>
-            <div class="dashboard-row-bottom">
-                <div class="dashboard-card dashboard-sponsor-card">
-                    <div class="sponsor-ad-card">
-                        <div class="ad-card-content">
-                            <div class="ad-card-text">
-                                <h2>
-                                    <span class="ad-card-icon"><i class="fas fa-ad"></i></span>
-                                    جایگاه آگهی شما
-                                </h2>
-                                <p>کسب‌وکار خود را به بقیه افراد معرفی کنید! اینجا می‌توانید تبلیغ ویژه خود را قرار دهید و بازدید بیشتری جذب کنید.</p>
-                                <a href="https://t.me/primezdev" class="ad-card-btn" target="_blank">رزرو تبلیغ</a>
+
+            <div class="dashboard-row-charts">
+                <div class="card-wrapper dashboard-card-large">
+                    <div class="top-card-label top-label-success">Purchase Analytics</div>
+                    <div class="dashboard-card dashboard-purchase-card">
+                        <div class="chart-container">
+                            <canvas id="purchaseChart"></canvas>
+                        </div>
+                    <div class="purchase-stats" id="purchaseStats">
+                        <div class="purchase-stat">
+                            <div class="stat-icon stat-icon-success">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-value" id="successfulPurchases">0</span>
+                                <span class="stat-label">Successful</span>
+                            </div>
+                        </div>
+                        <div class="purchase-stat">
+                            <div class="stat-icon stat-icon-failed">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-value" id="failedPurchases">0</span>
+                                <span class="stat-label">Failed</span>
+                            </div>
+                        </div>
+                        <div class="purchase-stat">
+                            <div class="stat-icon stat-icon-revenue">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <div class="stat-content">
+                                <span class="stat-value" id="totalRevenue">0 $/T</span>
+                                <span class="stat-label">Revenue</span>
                             </div>
                         </div>
                     </div>
+                    </div>
                 </div>
-                <div class="dashboard-card dashboard-chart-card">
-                    <div class="chart-center-label">Number of users your admins have</div>
-                    <canvas id="adminsPieChart"></canvas>
+                <div class="card-wrapper dashboard-card-small">
+                    <div class="top-card-label top-label-warning">Admin Distribution</div>
+                    <div class="dashboard-card dashboard-chart-card">
+                        <div class="chart-center-label">(You can hover for more information)</div>
+                        <canvas id="adminsPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
 
-                </div>
-                <div class="dashboard-card dashboard-history-card">
-                    <div class="history-center-text">
-                        <div class="history-title-main">PAYMENT HISTORY</div>
-                        <div class="history-title-sub">COMING SOON</div>
-                    </div>
-                </div>
-                <div class="dashboard-card log-card log-card-wide" style="min-width: 340px;">
-                    <div class="log-center-wrapper" id="logCenterWrapper">
-                        <button class="card-btn" id="showLogsBtn" type="button" style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fas fa-eye"></i>
-                            Show Logs
-                        </button>
-                        <div class="logs-hint" style="margin-top: 0.5rem; color: #aaa; font-size: 0.9rem;">Click the eye icon to display the last 10 logs.</div>
-                    </div>
+            <div class="dashboard-row-charts">
+                <div class="card-wrapper dashboard-card-large">
+                    <div class="top-card-label top-label-danger">System Logs</div>
+                    <div class="dashboard-card log-card">
+                        <div class="log-center-wrapper" id="logCenterWrapper">
+                            <button class="card-btn" id="showLogsBtn" type="button">
+                                <i class="fas fa-eye"></i>
+                                Show Logs
+                            </button>
+                            <div class="logs-hint">Click to display the last 10 system logs.</div>
+                        </div>
                     <div class="logs-blur" id="logsBlur">
                         {% for log in logs %}
                         <div class="log-line">{{ log }}</div>
                         {% endfor %}
                     </div>
+                    </div>
+                </div>
+                <div class="card-wrapper dashboard-card-small">
+                    <div class="top-card-label top-label-info">Advertisement</div>
+                    <div class="dashboard-card dashboard-sponsor-card">
+                        <div class="sponsor-ad-card">
+                            <div class="ad-card-content">
+                                <div class="ad-card-text">
+                                    <h2>
+                                        <span class="ad-card-icon"><i class="fas fa-ad"></i></span>
+                                        <span id="ad-title"></span>
+                                    </h2>
+                                    <p id="ad-text"></p>
+                                    <a id="ad-link" href="#" class="ad-card-btn" target="_blank"></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
 
-        <script>
-            // Mobile menu functionality
-            const sidebar = document.getElementById('sidebar');
-            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-            const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-            // Toggle sidebar on mobile
-            mobileMenuToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('active');
-                sidebarOverlay.classList.toggle('active');
-            });
 
-            // Close sidebar when clicking overlay
-            sidebarOverlay.addEventListener('click', () => {
-                sidebar.classList.remove('active');
-                sidebarOverlay.classList.remove('active');
-            });
-
-            // Close sidebar when window is resized to desktop size
-            window.addEventListener('resize', () => {
-                if (window.innerWidth > 1024) {
-                    sidebar.classList.remove('active');
-                    sidebarOverlay.classList.remove('active');
-                }
-            });
-            const contents = document.querySelectorAll('.sponsor-content');
-            const controls = document.querySelectorAll('.control-btn');
-            let currentIndex = 0;
-
-            function showContent(index) {
-                contents.forEach(content => content.classList.remove('active'));
-                controls.forEach(btn => btn.classList.remove('active'));
-
-                contents[index].classList.add('active');
-                controls[index].classList.add('active');
-                currentIndex = index;
-            }
-
-            setInterval(() => {
-                const nextIndex = (currentIndex + 1) % contents.length;
-                showContent(nextIndex);
-            }, 5000);
-
-            controls.forEach((btn, index) => {
-                btn.addEventListener('click', () => {
-                    showContent(index);
-                });
-            });
-        </script>
-        <!-- Admins Data for Chart.js -->
-        <script type="application/json" id="admins-data">
-            {{ admins|default([])|tojson|safe }}
-        </script>
+        <!-- Chart.js Libraries -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-        <script>
-            window.addEventListener('DOMContentLoaded', function() {
-                var adminsData = JSON.parse(document.getElementById('admins-data').textContent);
-                if (Array.isArray(adminsData) && adminsData.length > 0) {
-                    var adminNames = adminsData.map(function(a) { return a.username; });
-                    var adminClients = adminsData.map(function(a) { return a.total_clients; });
-                    var pieColors = [
-                        '#4e79a7', '#76b7b2', '#59a14f', '#edc949', '#f28e2b', '#e15759', '#af7aa1', '#ff9da7', '#9c755f', '#bab0ab'
-                    ];
-                    var ctx = document.getElementById('adminsPieChart').getContext('2d');
-                    var selectedIndex = null;
-                    // Custom plugin to draw admin names with their color in the center
-                    var centerTextPlugin = {
-                        id: 'centerTextPlugin',
-                        afterDraw: function(chart) {
-                            var ctx = chart.ctx;
-                            var width = chart.width;
-                            var height = chart.height;
-                            var names = adminNames;
-                            var colors = pieColors;
-                            ctx.save();
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            var fontSize = Math.max(12, Math.min(16, Math.floor(height / (names.length + 2))));
-                            ctx.font = 'bold ' + fontSize + 'px Vazir, Arial, sans-serif';
-                            var centerY = height / 2;
-                            var startY = centerY - ((names.length - 1) * fontSize) / 2;
-                            names.forEach(function(name, i) {
-                                ctx.fillStyle = colors[i % colors.length];
-                                ctx.fillText(name, width / 2, startY + i * fontSize);
-                            });
-                            ctx.restore();
-                        }
-                    };
-                    var chart = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: adminNames,
-                            datasets: [{
-                                data: adminClients,
-                                backgroundColor: pieColors,
-                                borderWidth: 2
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            cutout: '85%', // thinner ring
-                            plugins: {
-                                legend: {
-                                    display: false
-                                },
-                                datalabels: {
-                                    display: false // hide labels on chart
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            var label = context.label || '';
-                                            var value = context.parsed;
-                                            return 'total users: ' + value;
-                                        }
-                                    }
-                                }
-                            },
-                            onClick: function(evt, elements) {
-                                if (elements.length > 0) {
-                                    selectedIndex = elements[0].index;
-                                    chart.update();
-                                }
-                            }
-                        },
-                        plugins: [centerTextPlugin, ChartDataLabels]
-                    });
-                }
-            });
-        </script>
-        <!-- GitHub Stars Fetcher -->
-        <script>
-        fetch('https://api.github.com/repos/primeZdev/walpanel')
-          .then(response => response.json())
-          .then(data => {
-            document.getElementById('github-stars').textContent = data.stargazers_count || 0;
-          });
-        </script>
-        <script>
-    document.getElementById('showLogsBtn').addEventListener('click', function() {
-        const logsBlur = document.getElementById('logsBlur');
-        logsBlur.classList.add('active');
-        this.style.display = 'none';
-        document.getElementById('logCenterWrapper').style.display = 'none';
-    });
-</script>
+
+        <!-- Dashboard JavaScript -->
+        <script src="/static/js/dashboard.js"></script>
     </div>
 </body>
 
-</html></html>
-
+</html>

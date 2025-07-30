@@ -7,6 +7,9 @@
     <title>Admin Dashboard | Control Panel</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/admin-news.css">
+    <script src="/static/js/admin-news.js"></script>
+    <script src="/static/js/admin-dashboard.js"></script>
 
 </head>
 
@@ -75,104 +78,24 @@
             </div>
 
             <!-- News Section -->
-            <div class="news-section" style="margin-top: 2rem;">
-                <h2 style="font-size: 1.3rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #fff;">
-                    <i class="fas fa-newspaper"></i>
-                    News
-                </h2>
-                <div id="newsList" style="display: flex; flex-direction: column; gap: 1rem;"></div>
+            <div class="news-section">
+                <div class="news-header">
+                    <div class="news-title">
+                        <i class="fas fa-newspaper news-icon"></i>
+                        <h2>Latest News</h2>
+                    </div>
+                    <div class="news-controls">
+                        <div class="news-badge">
+                            <span id="newsCount">0</span>
+                        </div>
+                        <button class="news-toggle-btn" aria-expanded="true" title="Toggle news visibility">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="newsList" class="news-container"></div>
             </div>
         </main>
     </div>
-
-    <script>
-        // Mobile menu functionality
-        const sidebar = document.getElementById('sidebar');
-        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-        // Toggle sidebar on mobile
-        mobileMenuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-            sidebarOverlay.classList.toggle('active');
-        });
-
-        // Close sidebar when clicking overlay
-        sidebarOverlay.addEventListener('click', () => {
-            sidebar.classList.remove('active');
-            sidebarOverlay.classList.remove('active');
-        });
-
-        // Close sidebar when window is resized to desktop size
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 1024) {
-                sidebar.classList.remove('active');
-                sidebarOverlay.classList.remove('active');
-            }
-        });
-
-        // Fetch dashboard data
-        async function fetchDashboardData() {
-            try {
-                // فقط یک fetch به dashboard-data
-                const dashboardResponse = await fetch('/admin-dashboard/dashboard-data', {
-                    credentials: 'include'
-                });
-
-                if (!dashboardResponse.ok) {
-                    if (dashboardResponse.status === 401) {
-                        window.location.href = '/login';
-                        return;
-                    }
-                    throw new Error('Failed to fetch dashboard data');
-                }
-
-                const dashboardData = await dashboardResponse.json();
-
-                // Update stats
-                document.getElementById('totalUsers').textContent = dashboardData.totalClients || 0;
-                document.getElementById('availableData').textContent = dashboardData.availableDataGB || 0;
-                document.getElementById('daysRemaining').textContent = dashboardData.daysRemaining || 0;
-
-            } catch (error) {
-                console.error('Error:', error);
-                alert('Failed to load dashboard data');
-            }
-        }
-
-        // Fetch and display news for admins
-        async function fetchAdminNews() {
-            const newsList = document.getElementById('newsList');
-            if (!newsList) return;
-            newsList.innerHTML = '<div class="loading" style="color: #fff;">Loading news...</div>';
-            try {
-                const response = await fetch('/admin-dashboard/news', { credentials: 'include' });
-                if (!response.ok) throw new Error('Failed to fetch news');
-                const news = await response.json();
-                if (!news || news.length === 0) {
-                    newsList.innerHTML = '<div class="empty-state" style="color: #fff;">No news found</div>';
-                    return;
-                }
-                newsList.innerHTML = news.map(item => `
-                    <div class="news-item" style="background: rgba(0,0,0,0.08); border-radius: 0.5rem; padding: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                            <i class='fas fa-bullhorn' style='color: #1ecb81;'></i>
-                            <span style="font-weight: bold; color: #fff;">New Announcement</span>
-                        </div>
-                        <p style="margin: 0; color: #fff; line-height: 1.6;">${item.message}</p>
-                    </div>
-                `).join('');
-            } catch (error) {
-                newsList.innerHTML = `<div class="error" style="color: #fff;">${error.message}</div>`;
-            }
-        }
-
-        // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', function() {
-            fetchDashboardData();
-            fetchAdminNews();
-        });
-    </script>
 </body>
-
 </html>
