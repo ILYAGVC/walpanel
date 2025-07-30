@@ -75,7 +75,7 @@ def get_clients_data(
     sublink = admin_task.get_sublinks(db, username["username"])
     return {"data": data, "sublink": sublink}
 
-@router.get("/plans")
+@router.get("/plans/")
 def get_plans(
     request: Request,
     db: Session = Depends(get_db),
