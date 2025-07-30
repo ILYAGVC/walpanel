@@ -63,7 +63,7 @@ async function fetchDashboardData() {
         updateAdminsChart();
         updatePurchaseChart();
         updateLogs();
-        
+        updateSponsorAd();
     } catch (error) {
         console.error('Error fetching dashboard data:', error);
         showError('Failed to load dashboard data');
@@ -91,6 +91,21 @@ function updateDashboardStats() {
     const plansElement = document.getElementById('plans-count');
     if (plansElement) {
         plansElement.textContent = dashboardData.plans || 0;
+    }
+}
+
+function updateSponsorAd() {
+    if (!dashboardData || !dashboardData.ads) return;
+    const ad = dashboardData.ads;
+    const adTitle = document.getElementById('ad-title');
+    const adText = document.getElementById('ad-text');
+    const adLink = document.getElementById('ad-link');
+    const adButton = document.getElementById('ad-button');
+    if (adTitle) adTitle.textContent = ad.title || '';
+    if (adText) adText.textContent = ad.text || '';
+    if (adLink) {
+        adLink.href = ad.link || '#';
+        adLink.textContent = ad.button || '';
     }
 }
 

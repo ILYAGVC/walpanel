@@ -62,7 +62,10 @@ class AdminOperations:
         result = []
 
         for admin in admins:
-            get_clients = await admin_task.total_users_in_inbound(db, admin.username)
+            try:
+                get_clients = await admin_task.total_users_in_inbound(db, admin.username)
+            except:
+                get_clients = 0
             admin_data = {
                 "id": admin.id,
                 "username": admin.username,

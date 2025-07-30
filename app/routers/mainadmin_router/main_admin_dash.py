@@ -10,6 +10,7 @@ from app.oprations.panel import panel_operations
 from app. oprations.purchase_plan import plans_query
 from app.oprations.admin import admin_operations
 from app.log.logger_config import get_10_logs
+from app.oprations.get_ads import get_ads
 
 
 
@@ -44,7 +45,8 @@ async def dashboard_data(
     plans = await plans_query.get_plans(db)
     logs = get_10_logs()
     purchases = await plans_query.purchase_history(db)
-    return {"purchases": purchases, "panels": len(panels), "admins": admins, "users": users, "plans": len(plans['plans']), "logs": logs}
+    ads = await get_ads()
+    return {"purchases": purchases, "panels": len(panels), "admins": admins, "users": users, "plans": len(plans['plans']), "logs": logs, "ads": ads}
 
 @router.get("/logout/")
 async def logout(response: Response):

@@ -859,17 +859,11 @@ body {
 
 /* --- Sponsor Ad Card (Yellow, Square, Left) --- */
 .sponsor-ad-card {
-    background: #232323;
-    border-radius: 1rem;
-    box-shadow: 0 4px 32px 0 #ffe60033, 0 1.5px 8px 0 #0002;
-    padding: 2.5rem 2rem;
-    margin: 36px 0 0 0;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    height: 100%;
     justify-content: flex-start;
-    max-width: 600px;
-    margin-left: 0;
-    margin-right: auto;
+    min-height: 260px;
 }
 @media (max-width: 900px) {
     .sponsor-ad-card {
@@ -880,34 +874,43 @@ body {
 }
 .ad-card-content {
     display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: 100%;
+    justify-content: flex-start;
     align-items: center;
-    gap: 1.2rem;
+    padding-top: 0.5rem;
 }
+
 .ad-card-icon {
-    display: inline-flex;
-    align-items: center;
+    margin-bottom: 0.5rem;
+    margin-top: 0;
+    align-self: center;
+    display: flex;
     justify-content: center;
-    background: linear-gradient(135deg, #f28e2b 60%, #f9d29d 100%);
-    color: #fff;
-    border-radius: 12px;
-    width: 56px;
-    height: 56px;
-    font-size: 2.1rem;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 8px 0 rgba(60, 72, 100, 0.10);
+    align-items: center;
 }
-.ad-card-text {
+
+.ad-card-text h2 {
+    width: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-}
-.ad-card-text h2 {
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.2rem;
     color: #fff;
     font-size: 1.2rem;
     margin-bottom: 0.4rem;
+    font-family: 'Vazir', Arial, sans-serif;
+}
+
+.ad-card-text {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.7rem;
+    gap: 0.5rem;
+    flex: 1 1 auto;
+    width: 100%;
 }
 .ad-card-text p {
     color: #e0e0e0;
@@ -1011,7 +1014,12 @@ body {
     line-height: 1.45;
 }
 .ad-card-btn {
-    display: inline-block;
+    margin-top: auto;
+    align-self: center;
+    text-align: center;
+    width: 100%;
+    max-width: 220px;
+    display: block;
     padding: 8px 22px;
     background: linear-gradient(135deg, #4e79a7 60%, #76b7b2 100%);
     color: #fff;
@@ -1021,6 +1029,10 @@ body {
     text-decoration: none;
     transition: background 0.18s;
     font-family: 'Vazir', Arial, sans-serif;
+    box-shadow: 0 2px 8px #0001;
+    border: none;
+    outline: none;
+    cursor: pointer;
 }
 .ad-card-btn:hover {
     background: linear-gradient(135deg, #59a14f 60%, #b6e3b6 100%);
@@ -1708,9 +1720,6 @@ body {
     display: none;
 }
 
-.sponsor-ad-card .ad-card-icon {
-    box-shadow: 0 0 16px 0 #f28e2b88, 0 2px 8px 0 #f28e2b44;
-}
 
 .card-wrapper {
     position: relative;

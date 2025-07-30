@@ -113,7 +113,7 @@ class Task:
                 "error": "Failed to fetch user list, try again.",
             }
         
-    async def total_users_in_inbound(self, db, username: str) -> int:
+    async def total_users_in_inbound(self, db, username: str, retry: int = 0) -> int:
         client_count = 0
         admin = admin_operations.get_admin_data(db, username)
         panel = panel_operations.panel_data(db, admin.panel_id)
@@ -121,23 +121,29 @@ class Task:
             result = panels_api.show_users(
                 panel.url, panel.username, panel.password, admin.inbound_id
             )
-            if not result or "obj" not in result or "settings" not in result["obj"]:
+
+            if (
+                not result
+                or not isinstance(result.get("obj"), dict)
+                or "settings" not in result["obj"]
+            ):
                 logger.error("Result or settings not found in panel response")
-                panels_api.login_with_out_savekey(
-                    panel.url, panel.username, panel.password
-                )
-                await self.total_users_in_inbound(db, username)
+                if retry < 1:
+                    panels_api.login_with_out_savekey(panel.url, panel.username, panel.password)
+                    return await self.total_users_in_inbound(db, username, retry + 1)
+                else:
+                    logger.error("Max retries exceeded for fetching users")
 
             settings_str = result["obj"]["settings"]
             settings_json = json.loads(settings_str)
             clients = settings_json.get("clients", [])
-            for c in clients:
-                client_count += 1
+            client_count = len(clients)
+
         except Exception as e:
-            logger.error(f"fetching user list: {e}")
-            return {"error": "Failed to fetch user list, try again."}
-        finally:
-            return client_count
+            logger.error(f"fetching user list: {e} and returned 0")
+            return 0
+        
+        return client_count
 
 
     def create_user(self, db, username: str, request: CreateUserInput):
