@@ -100,6 +100,7 @@ class AdminOperations:
 
             admin.panel_id = request.panel_id
             admin.inbound_id = request.inbound_id
+            admin.inbound_flow = request.inbound_flow
             admin.traffic = request.traffic
             admin.expiry_time = expiry_datetime
             admin.is_active = request.is_active

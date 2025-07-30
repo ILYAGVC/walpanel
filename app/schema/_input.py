@@ -30,6 +30,7 @@ class UpdateAdminInput(BaseModel):
     id: int
     panel_id: int
     inbound_id: int
+    inbound_flow: str = ""
     traffic: int
     days_remaining: int
     is_active: bool = True

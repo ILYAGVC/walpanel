@@ -296,6 +296,14 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="editAdminFlow" class="form-label">Inbound Flow</label>
+                    <select id="editAdminFlow" class="form-control">
+                        <option value="">Default (Empty)</option>
+                        <option value="xtls-rprx-vision">xtls-rprx-vision</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label for="editAdminTraffic" class="form-label">Traffic (GB)*</label>
                     <input type="number" id="editAdminTraffic" class="form-control" min="0" required>
                 </div>
@@ -539,6 +547,7 @@
                 id: document.getElementById('editAdminId').value,
                 panel_id: parseInt(document.getElementById('editAdminPanel').value),
                 inbound_id: parseInt(document.getElementById('editAdminInbound').value),
+                inbound_flow: document.getElementById('editAdminFlow').value,
                 traffic: parseInt(document.getElementById('editAdminTraffic').value),
                 days_remaining: parseInt(document.getElementById('editAdminDays').value),
                 is_active: document.getElementById('editAdminActive').value === "true",
