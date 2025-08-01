@@ -128,8 +128,7 @@ class Task:
                 or "settings" not in result["obj"]
             ):
                 logger.error("Result or settings not found in panel response")
-                if retry < 1:
-                    panels_api.login_with_out_savekey(panel.url, panel.username, panel.password)
+                if retry < 2:
                     return await self.total_users_in_inbound(db, username, retry + 1)
                 else:
                     logger.error("Max retries exceeded for fetching users")
@@ -140,6 +139,7 @@ class Task:
             client_count = len(clients)
 
         except Exception as e:
+            panels_api.login_with_out_savekey(panel.url, panel.username, panel.password)
             logger.error(f"fetching user list: {e} and returned 0")
             return 0
         
@@ -226,7 +226,6 @@ class Task:
             user = user['obj']
             remining_traffic = (user['total'] - (user['down'] + user['up'])) / 1024**3
             admin_operations.Increased_traffic(db, admin.username, remining_traffic)
-
             updated_client = {
                 "id": user_id,
                 "email": request.email,
@@ -273,11 +272,9 @@ class Task:
         client = panels_api.user_obj(panel.url, email)
 
         # returned remining traffic to the admin
-        user = client['obj']
-        remining_traffic = (user['total'] - (user['down'] + user['up'])) / 1024**3
-        admin_operations.Increased_traffic(db, admin.username, remining_traffic)
-        
-        _traffic = int(client["obj"]["total"] / (1024 ** 3))
+        client_traffic = client["obj"]["total"] / (1024 ** 3)
+        _traffic = round(client_traffic, 1)
+        admin_operations.Increased_traffic(db, admin.username, _traffic)
 
         if not self.check_admin_traffic(db, username, _traffic):
             return JSONResponse(

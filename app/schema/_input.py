@@ -47,7 +47,7 @@ class UpdateUserInput(BaseModel):
     email: str
     expiryTime: int
     subid: str
-    totalGB: int
+    totalGB: float
 
 
 class CreateNews(BaseModel):
