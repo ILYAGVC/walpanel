@@ -222,10 +222,10 @@ class Task:
             panel = panel_operations.panel_data(db, admin.panel_id)
 
             # returned remining traffic to the admin
-            user = panels_api.user_obj(panel.url, request.email)
-            user = user['obj']
-            remining_traffic = (user['total'] - (user['down'] + user['up'])) / 1024**3
-            admin_operations.Increased_traffic(db, admin.username, remining_traffic)
+            client = panels_api.user_obj(panel.url, request.email)
+            client_traffic = client["obj"]["total"] / (1024 ** 3)
+            _traffic = round(client_traffic, 1)
+            admin_operations.Increased_traffic(db, admin.username, _traffic)
             updated_client = {
                 "id": user_id,
                 "email": request.email,
