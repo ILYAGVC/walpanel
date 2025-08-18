@@ -52,3 +52,10 @@ class AdminsListOutout(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class ServerInfo(BaseModel):
+    cpu: float
+    memory_total: int
+    memory_used: int
+    memory_percent: float

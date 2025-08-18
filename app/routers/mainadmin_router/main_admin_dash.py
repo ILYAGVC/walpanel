@@ -7,10 +7,12 @@ from sqlalchemy.orm import Session
 from app.auth.auth_controller import mainadmin_required
 from app.db.engine import get_db
 from app.oprations.panel import panel_operations
-from app. oprations.purchase_plan import plans_query
+from app.oprations.purchase_plan import plans_query
 from app.oprations.admin import admin_operations
 from app.log.logger_config import get_10_logs
 from app.oprations.get_ads import get_ads
+from app.oprations.server_info import get_server_info
+from app.schema.output import ServerInfo
 
 
 
@@ -47,6 +49,15 @@ async def dashboard_data(
     purchases = await plans_query.purchase_history(db)
     ads = await get_ads()
     return {"purchases": purchases, "panels": len(panels), "admins": admins, "users": users, "plans": len(plans['plans']), "logs": logs, "ads": ads}
+
+
+@router.get("/server/info", response_model=ServerInfo)
+async def server_information(
+    user: str=Depends(mainadmin_required)
+):
+    data = await get_server_info()
+    return data 
+
 
 @router.get("/logout/")
 async def logout(response: Response):
