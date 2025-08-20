@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 
 from app.schema._input import CreatePlan, Edit_Plan
 from app.db.models import Plans, PurchaseHistory
-from app.admin_services.api import panels_api
 from app.log.logger_config import logger
 
 
@@ -15,7 +14,12 @@ class PlansQuery:
             plans = db.query(Plans).all()
             plans_count = len(plans)
             if not plans:
-                return {"status": False, "count": plans_count, "message": "No plans found", "plans": []}
+                return {
+                    "status": False,
+                    "count": plans_count,
+                    "message": "No plans found",
+                    "plans": [],
+                }
             return {
                 "status": True,
                 "count": plans_count,
@@ -124,14 +128,19 @@ class PlansQuery:
                 "message": "Error in get_a_plan_by_id",
                 "error": str(e),
             }
-        
+
     async def purchase_history(self, db: Session):
         try:
             p_history = db.query(PurchaseHistory).all()
             count_history = len(p_history)
             if not p_history:
-                return {"status": False, "count": count_history, "message": "No history found", "purchases": []}
-            
+                return {
+                    "status": False,
+                    "count": count_history,
+                    "message": "No history found",
+                    "purchases": [],
+                }
+
             return {
                 "status": True,
                 "count": count_history,
@@ -140,12 +149,13 @@ class PlansQuery:
                         "payer": purchase.payer,
                         "date": purchase.purchase_date,
                         "amount": purchase.amount,
-                        "status": purchase.status
+                        "status": purchase.status,
                     }
                     for purchase in p_history
-                ]
+                ],
             }
         except Exception as e:
             logger.error(f"Error in get purchases history from database: {e}")
+
 
 plans_query = PlansQuery()

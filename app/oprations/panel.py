@@ -3,7 +3,7 @@ from app.schema._input import CreatePanelInput, CreateNews
 from app.db.models import Panel, News
 from fastapi.exceptions import HTTPException
 from fastapi import status
-from app.admin_services.api import panels_api
+from app.admin_services.api import PanelAPI
 from app.log.logger_config import logger
 
 
@@ -18,7 +18,7 @@ class PanelOperations:
                 detail="Panel with this URL already exists.",
             )
 
-        if not panels_api.login(request.url, request.username, request.password):
+        if not PanelAPI(request.url, request.username, request.password):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Login failed.",
@@ -81,9 +81,9 @@ class PanelOperations:
         statuses = []
         if panels:
             for panel in panels:
-                panel_status = await panels_api.server_status(
+                panel_status = PanelAPI(
                     panel.url, panel.username, panel.password
-                )
+                ).server_status()
                 statuses.append({"panel_id": panel.id, "status": panel_status})
         return statuses
 

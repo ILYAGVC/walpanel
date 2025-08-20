@@ -58,12 +58,15 @@ class AdminOperations:
 
     async def get_all_admins(self, db: Session):
         from app.admin_services.task import admin_task
+
         admins = db.query(Admin).options(joinedload(Admin.panel)).all()
         result = []
 
         for admin in admins:
             try:
-                get_clients = await admin_task.total_users_in_inbound(db, admin.username)
+                get_clients = await admin_task.total_users_in_inbound(
+                    db, admin.username
+                )
             except:
                 get_clients = 0
             admin_data = {
@@ -152,7 +155,7 @@ class AdminOperations:
         db.commit()
         db.refresh(admin)
         return admin
-    
+
     def Increased_traffic(self, db: Session, username: str, traffic):
         try:
             admin = db.query(Admin).filter(Admin.username == username).first()
@@ -184,14 +187,20 @@ class AdminOperations:
             )
 
         return True
-    
-    async def aproval_payment_(self, db: Session, dealer_name: str, plan_id: int, price: int, purchase_date):
+
+    async def aproval_payment_(
+        self, db: Session, dealer_name: str, plan_id: int, price: int, purchase_date
+    ):
         admin = db.query(Admin).filter(Admin.username == dealer_name).first()
         plan = db.query(Plans).filter(Plans.id == plan_id).first()
 
         try:
             if admin:
-                base_date = max(admin.expiry_time, date.today()) if admin.expiry_time else date.today()
+                base_date = (
+                    max(admin.expiry_time, date.today())
+                    if admin.expiry_time
+                    else date.today()
+                )
                 admin.expiry_time = base_date + timedelta(days=plan.days)
                 admin.traffic += plan.traffic
                 db.commit()
@@ -205,7 +214,6 @@ class AdminOperations:
             db.rollback()
             logger.error(f"Error in aproval_payment_: {e}")
             return None
-        
 
 
 admin_operations = AdminOperations()

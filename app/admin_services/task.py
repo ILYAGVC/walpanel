@@ -1,4 +1,4 @@
-from app.admin_services.api import panels_api
+from app.admin_services.api import PanelAPI
 from app.oprations.panel import panel_operations
 from app.oprations.admin import admin_operations
 from app.schema._input import CreateUserInput, UpdateUserInput
@@ -49,102 +49,52 @@ class Task:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
 
-            result = panels_api.show_users(
-                panel.url, panel.username, panel.password, admin.inbound_id
+            result = PanelAPI(panel.url, panel.username, panel.password).show_users(
+                admin.inbound_id
             )
-            if not result or "obj" not in result or "settings" not in result["obj"]:
-                logger.error("Result or settings not found in panel response")
-                panels_api.login_with_out_savekey(
-                    panel.url, panel.username, panel.password
-                )
-                self.get_users(db, username)  # Retry
 
-            settings_str = result["obj"]["settings"]
-            if not settings_str:
-                logger.error("Settings string is empty")
-                return {"clients": [], "error": "Settings data is empty"}
-
-            try:
-                settings_json = json.loads(settings_str)
-            except json.JSONDecodeError as e:
-                logger.error(f"JSON decode error: {e}")
-                return {"clients": [], "error": "Invalid settings JSON from panel"}
-
-            clients = settings_json.get("clients", [])
-
-            clients_status = panels_api.user_status(panel.url)
-            online_emails = clients_status.get("obj") or []
-
-            for c in clients:
+            for client in result:
                 try:
-                    client_obj = panels_api.user_obj(panel.url, c["email"])
-                    upload = client_obj["obj"].get("up", 0)
-                    download = client_obj["obj"].get("down", 0)
-                    total_usage = (upload + download) / (1024**3)
-
+                    total_usage = (client.up + client.down) / (1024**3)
                     client_list.append(
                         {
-                            "email": c["email"],
-                            "online": c["email"] in online_emails,
-                            "id": c["id"],
-                            "totalGB": c["totalGB"] / (1024**3),
+                            "email": client.email,
+                            "online": False,
+                            "id": client.id,
+                            "totalGB": client.total_gb / (1024**3),
                             "totalUsage": total_usage,
                             "expiryTime": datetime.fromtimestamp(
-                                c["expiryTime"] / 1000
+                                client.expiry_time / 1000
                             ).strftime("%Y-%m-%d"),
-                            "enable": c["enable"],
-                            "subId": c["subId"],
+                            "enable": client.enable,
+                            "subId": client.sub_id,
                         }
                     )
-                except Exception as client_error:
-                    logger.warning(
-                        f"Failed to process client {c['email']}: {client_error}"
-                    )
-
-            return {"clients": client_list}
-
+                except Exception as e:
+                    logger.warning(f"Failed to process client {client.email}: {e}")
         except Exception as e:
             logger.error(f"Error fetching user list: {e}")
-            panels_api.login_with_out_savekey(
-                panel.url, panel.username, panel.password
-            )
             return {
                 "clients": client_list,
                 "error": "Failed to fetch user list, try again.",
             }
-        
+        return {"clients": client_list}
+
     async def total_users_in_inbound(self, db, username: str, retry: int = 0) -> int:
         client_count = 0
         admin = admin_operations.get_admin_data(db, username)
         panel = panel_operations.panel_data(db, admin.panel_id)
         try:
-            result = panels_api.show_users(
-                panel.url, panel.username, panel.password, admin.inbound_id
+            result = PanelAPI(panel.url, panel.username, panel.password).show_users(
+                admin.inbound_id
             )
 
-            if (
-                not result
-                or not isinstance(result.get("obj"), dict)
-                or "settings" not in result["obj"]
-            ):
-                logger.error("Result or settings not found in panel response")
-                if retry < 2:
-                    return await self.total_users_in_inbound(db, username, retry + 1)
-                else:
-                    logger.error("Max retries exceeded for fetching users")
-
-            settings_str = result["obj"]["settings"]
-            settings_json = json.loads(settings_str)
-            clients = settings_json.get("clients", [])
-            client_count = len(clients)
-
+            client_count = len(result)
         except Exception as e:
-            panels_api.login_with_out_savekey(panel.url, panel.username, panel.password)
             logger.error(f"fetching user list: {e} and returned 0")
-            return 0
-        
-        return client_count
 
+        finally:
+            return client_count
 
     def create_user(self, db, username: str, request: CreateUserInput):
         if not self.check_admin_traffic(db, username, request.totalGB):
@@ -160,25 +110,19 @@ class Task:
             _uuid = str(uuid4())
             subid = generate_secure_random_text(16)
 
-            result = panels_api.add_user(
-                panel.url,
-                panel.username,
-                panel.password,
+            result = PanelAPI(panel.url, panel.username, panel.password).add_user(
                 admin.inbound_id,
                 _uuid,
                 subid,
                 request.email,
-                int(request.totalGB * (1024**3)),
+                int(request.totalGB * (1024**3)),  # coverted to byte
                 request.expiryTime,
-                admin.inbound_flow
+                admin.inbound_flow,
             )
-
-            if result["success"] is True:
-                self.reduce_admin_traffic(db, username, request.totalGB)
-
-            return JSONResponse(
-                content={"result": result}, status_code=status.HTTP_201_CREATED
-            )
+            if result:
+                _traffic = round(request.totalGB, 1)
+                print(_traffic, request.totalGB)
+                self.reduce_admin_traffic(db, username, _traffic)
         except Exception as e:
             return JSONResponse(
                 content={"error": f"Create user failed: {str(e)}"},
@@ -189,22 +133,18 @@ class Task:
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
-            
-            # returned remining traffic to the admin
-            client = panels_api.user_obj(panel.url, name)
-            client_traffic = client["obj"]["total"] / (1024 ** 3)
-            _traffic = round(client_traffic, 1)
-            admin_operations.Increased_traffic(db, admin.username, _traffic)
 
-            result = panels_api.delete_client(
-                panel.url,
-                panel.username,
-                panel.password,
+            # returned remining traffic to the admin
+            client = PanelAPI(panel.url, panel.username, panel.password).get_user(name)
+            client_usage_traffic = client.up + client.down
+            client_traffic = client.total / (1024**3)
+            _traffic = round((client_traffic - client_usage_traffic), 1)
+
+            result = PanelAPI(panel.url, panel.username, panel.password).delete_client(
                 admin.inbound_id,
                 user_id,
             )
-
-            return JSONResponse(content=result.json(), status_code=status.HTTP_200_OK)
+            admin_operations.Increased_traffic(db, admin.username, _traffic)
         except Exception as e:
             return JSONResponse(
                 content={"error": f"Delete client failed: {str(e)}"},
@@ -222,78 +162,73 @@ class Task:
             panel = panel_operations.panel_data(db, admin.panel_id)
 
             # returned remining traffic to the admin
-            client = panels_api.user_obj(panel.url, request.email)
-            client_traffic = client["obj"]["total"] / (1024 ** 3)
-            _traffic = round(client_traffic, 1)
+            client = PanelAPI(panel.url, panel.username, panel.password).get_user(
+                request.email
+            )
+            client_usage_traffic = client.up + client.down
+            client_traffic = client.total / (1024**3)
+            _traffic = round((client_traffic - client_usage_traffic), 1)
             admin_operations.Increased_traffic(db, admin.username, _traffic)
-            updated_client = {
-                "id": user_id,
-                "email": request.email,
-                "totalGB": int(request.totalGB * (1024**3)),
-                "expiryTime": request.expiryTime,
-                "enable": True,
-                "flow": admin.inbound_flow,
-                "limitIp": 0,
-                "tgId": "",
-                "subId": request.subid,
-                "comment": "",
-                "reset": "",
-            }
 
-            result = panels_api.update_client(
-                panel.url,
-                panel.username,
-                panel.password,
+            result = PanelAPI(panel.url, panel.username, panel.password).update_client(
                 admin.inbound_id,
                 user_id,
-                updated_client,
+                request.email,
+                int(request.totalGB * (1024**3)),
+                request.expiryTime,
+                admin.inbound_flow,
+                request.subid,
             )
-
-            if result.status_code == 200:
+            if result:
                 self.reduce_admin_traffic(db, username, request.totalGB)
-                panels_api.reset_traffic(
-                    panel.url,
-                    panel.username,
-                    panel.password,
+
+                # reset client traffic after update
+                PanelAPI(panel.url, panel.username, panel.password).reset_traffic(
                     admin.inbound_id,
                     request.email,
                 )
 
-            return JSONResponse(content=result.json(), status_code=status.HTTP_200_OK)
+                return JSONResponse(content=result, status_code=status.HTTP_200_OK)
         except Exception as e:
             return JSONResponse(
-                content={"error": f"Update client failed: {str(e)}"},
+                content={"error": f"Update client failed: {e}"},
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
     def reset_client_traffic(self, db, username: str, email: str):
         admin = admin_operations.get_admin_data(db, username)
         panel = panel_operations.panel_data(db, admin.panel_id)
-        client = panels_api.user_obj(panel.url, email)
-
-        # returned remining traffic to the admin
-        client_traffic = client["obj"]["total"] / (1024 ** 3)
-        _traffic = round(client_traffic, 1)
-        admin_operations.Increased_traffic(db, admin.username, _traffic)
-
+        client = PanelAPI(
+            panel.url,
+            panel.username,
+            panel.password,
+        ).get_user(email)
+        client_usage_traffic = client.up + client.down
+        client_traffic = client.total / (1024**3)
+        _traffic = round((client_traffic - client_usage_traffic), 1)
         if not self.check_admin_traffic(db, username, _traffic):
             return JSONResponse(
                 content={"error": "Traffic limit reached"},
                 status_code=status.HTTP_403_FORBIDDEN,
             )
+
         try:
-            result = panels_api.reset_traffic(
+            result = PanelAPI(
                 panel.url,
                 panel.username,
                 panel.password,
+            ).reset_traffic(
                 admin.inbound_id,
                 email,
             )
 
-            if result.status_code == 200:
+            if result:
+                # returned remining traffic to the admin
+                admin_operations.Increased_traffic(db, admin.username, _traffic)
+
                 self.reduce_admin_traffic(db, username, _traffic)
 
-            return JSONResponse(content=result.json(), status_code=status.HTTP_200_OK)
+            return JSONResponse(content=result, status_code=status.HTTP_200_OK)
         except Exception as e:
             return JSONResponse(
                 content={"error": f"Reset traffic failed: {str(e)}"},
