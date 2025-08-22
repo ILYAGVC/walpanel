@@ -8,18 +8,40 @@ logger = logging.getLogger(__name__)
 
 
 class PanelAPI:
+    _api_instance = None
+    _login_status = False
+
     def __init__(self, address: str, username: str, password: str):
-        self.api = Api(
-            host=f"https://{address}",
-            username=username,
-            password=password,
-        )
-        try:
-            self.api.login()
-            logger.info("Logged in successfully ✅")
-        except Exception as e:
-            logger.error(f"Login failed: {e}")
-            raise
+        self.address = address
+        self.username = username
+        self.password = password
+        self._get_api_instance()
+
+    def _get_api_instance(self):
+        """Get or create API instance"""
+        needs_login = PanelAPI._api_instance is None or not PanelAPI._login_status
+
+        if not needs_login:
+            try:
+                login_check = PanelAPI._api_instance.server.get_status()
+                if not hasattr(login_check, "xray"):
+                    logger.info("Session expired, re-logging in...")
+                    needs_login = True
+            except Exception as e:
+                logger.warning(f"Session check failed: {e}")
+                needs_login = True
+
+        if needs_login:
+            PanelAPI._api_instance = Api(
+                host=f"https://{self.address}",
+                username=self.username,
+                password=self.password,
+            )
+            PanelAPI._api_instance.login()
+            PanelAPI._login_status = True
+            logger.info("Logged in successfully!")
+
+        self.api = PanelAPI._api_instance
 
     def add_user(self, inb_id, _uuid, subid, email, totalGB, expiryTime, flow):
         try:
