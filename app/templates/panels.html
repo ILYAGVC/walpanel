@@ -8,17 +8,18 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
-    .panels-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.2rem;
-        margin-top: 1.2rem;
-    }
-    @media (max-width: 600px) {
         .panels-grid {
-            grid-template-columns: 1fr;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem;
+            margin-top: 1.2rem;
         }
-    }
+
+        @media (max-width: 600px) {
+            .panels-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 
 
@@ -410,14 +411,16 @@
                 data.forEach(panel => {
                     const panelCard = document.querySelector(`.panel-card[data-panel-id="${panel.panel_id}"]`);
                     if (panelCard) {
-                        const cpuUsage = panel.status.obj.cpu; // CPU usage percentage
-                        const ramUsage = (panel.status.obj.mem.current / panel.status.obj.mem.total) * 100; // RAM usage percentage
+                        // CPU usage
+                        const cpuUsage = panel.status.cpu;
+                        const cpuInfo = panelCard.querySelector('.info-item:nth-child(1) .info-value');
+                        cpuInfo.querySelector('.usage-fill').style.width = `${cpuUsage}%`;
+                        cpuInfo.querySelector('span').textContent = `${cpuUsage.toFixed(2)}%`;
 
-                        // Update the panel card with CPU and RAM usage
-                        panelCard.querySelector('.info-value .usage-fill').style.width = `${cpuUsage}%`;
-                        panelCard.querySelector('.info-value span').textContent = `${cpuUsage.toFixed(2)}%`;
-
-                        // Assuming you want to show RAM usage in a similar way
+                        // RAM usage
+                        const memCurrent = panel.status.mem.current;
+                        const memTotal = panel.status.mem.total;
+                        const ramUsage = memTotal ? (memCurrent / memTotal) * 100 : 0;
                         const ramInfo = panelCard.querySelector('.info-item:nth-child(2) .info-value');
                         ramInfo.querySelector('.usage-fill').style.width = `${ramUsage}%`;
                         ramInfo.querySelector('span').textContent = `${ramUsage.toFixed(2)}%`;
