@@ -7,7 +7,6 @@ from fastapi.responses import JSONResponse
 from fastapi import status
 from datetime import datetime
 from uuid import uuid4
-import json
 import string
 import secrets
 
@@ -43,7 +42,25 @@ class Task:
             return False
 
     def get_users(self, db, username):
+        """This function retrieves the list of users for a specific admin.
+        Example return value:
+        {
+            "clients": [
+                {
+                    "email": "primeZ",
+                    "online": True,
+                    "id": "b32a3afb-7604-44ec-8a48-65d284f7bd84",
+                    "totalGB": 10,
+                    "totalUsage": 5,
+                    "expiryTime": "2026-12-31",
+                    "enable": True,
+                    "subId": "mld0xo12ktdu0ni0"
+                }
+            ]
+        }
+        """
         client_list = []
+        _online_users = []
 
         try:
             admin = admin_operations.get_admin_data(db, username)
@@ -52,14 +69,20 @@ class Task:
             result = PanelAPI(panel.url, panel.username, panel.password).show_users(
                 admin.inbound_id
             )
+            _online_users = PanelAPI(
+                panel.url, panel.username, panel.password
+            ).online_users()
 
             for client in result:
                 try:
                     total_usage = (client.up + client.down) / (1024**3)
+                    client_online = (
+                        client.email in _online_users
+                    )  # Check if client is online
                     client_list.append(
                         {
                             "email": client.email,
-                            "online": False,
+                            "online": client_online,
                             "id": client.id,
                             "totalGB": client.total_gb / (1024**3),
                             "totalUsage": total_usage,

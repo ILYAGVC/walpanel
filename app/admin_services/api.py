@@ -127,3 +127,10 @@ class PanelAPI:
         except Exception as e:
             logger.error(f"Server status failed: {e}")
             return None
+
+    def online_users(self) -> list:
+        try:
+            return self.api.client.online()
+        except Exception as e:
+            logger.error(f"Online users fetch failed: {e}")
+            return None
