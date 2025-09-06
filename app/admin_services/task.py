@@ -144,7 +144,6 @@ class Task:
             )
             if result:
                 _traffic = round(request.totalGB, 1)
-                print(_traffic, request.totalGB)
                 self.reduce_admin_traffic(db, username, _traffic)
         except Exception as e:
             return JSONResponse(
@@ -191,7 +190,6 @@ class Task:
             client_usage_traffic = client.up + client.down
             client_traffic = client.total / (1024**3)
             _traffic = round((client_traffic - client_usage_traffic), 1)
-            print(_traffic)
             admin_operations.Increased_traffic(db, admin.username, _traffic)
 
             result = PanelAPI(panel.url, panel.username, panel.password).update_client(
