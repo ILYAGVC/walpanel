@@ -191,6 +191,7 @@ class Task:
             client_usage_traffic = client.up + client.down
             client_traffic = client.total / (1024**3)
             _traffic = round((client_traffic - client_usage_traffic), 1)
+            print(_traffic)
             admin_operations.Increased_traffic(db, admin.username, _traffic)
 
             result = PanelAPI(panel.url, panel.username, panel.password).update_client(
@@ -205,13 +206,7 @@ class Task:
             if result:
                 self.reduce_admin_traffic(db, username, request.totalGB)
 
-                # reset client traffic after update
-                PanelAPI(panel.url, panel.username, panel.password).reset_traffic(
-                    admin.inbound_id,
-                    request.email,
-                )
-
-                return JSONResponse(content=result, status_code=status.HTTP_200_OK)
+            return JSONResponse(content=result, status_code=status.HTTP_200_OK)
         except Exception as e:
             return JSONResponse(
                 content={"error": f"Update client failed: {e}"},
