@@ -158,7 +158,7 @@ class Task:
 
             # returned remining traffic to the admin
             client = PanelAPI(panel.url, panel.username, panel.password).get_user(name)
-            client_usage_traffic = client.up + client.down
+            client_usage_traffic = (client.up + client.down) / (1024**3)
             client_traffic = client.total / (1024**3)
             _traffic = round((client_traffic - client_usage_traffic), 1)
 
@@ -187,9 +187,9 @@ class Task:
             client = PanelAPI(panel.url, panel.username, panel.password).get_user(
                 request.email
             )
-            client_usage_traffic = client.up + client.down
+            client_usage_traffic = (client.up + client.down) / (1024**3)
             client_traffic = client.total / (1024**3)
-            _traffic = round((client_traffic - client_usage_traffic), 1)
+            _traffic = round(client_traffic - client_usage_traffic, 1)
             admin_operations.Increased_traffic(db, admin.username, _traffic)
 
             result = PanelAPI(panel.url, panel.username, panel.password).update_client(
@@ -219,7 +219,7 @@ class Task:
             panel.username,
             panel.password,
         ).get_user(email)
-        client_usage_traffic = client.up + client.down
+        client_usage_traffic = (client.up + client.down) / (1024**3)
         client_traffic = client.total / (1024**3)
         _traffic = round((client_traffic - client_usage_traffic), 1)
         if not self.check_admin_traffic(db, username, _traffic):
