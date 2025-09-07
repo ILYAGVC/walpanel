@@ -2,6 +2,7 @@ from fastapi.exceptions import HTTPException
 from fastapi import status
 from datetime import datetime, timedelta, date
 from sqlalchemy.orm import Session, joinedload
+from decimal import Decimal
 
 from app.schema._input import CreateAdminInput, UpdateAdminInput
 from app.db.models import Admin, Plans
@@ -145,21 +146,29 @@ class AdminOperations:
             )
         return admin
 
-    def reduce_traffic(self, db: Session, username: str, traffic_gb: int):
+    def reduce_traffic(self, db: Session, username: str, traffic_gb: float):
         admin = db.query(Admin).filter(Admin.username == username).first()
         if not admin:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="Admin with this username"
             )
-        admin.traffic -= traffic_gb
+
+        current_traffic = Decimal(str(admin.traffic))
+        reduction = Decimal(str(traffic_gb))
+        admin.traffic = float(current_traffic - reduction)
+
         db.commit()
         db.refresh(admin)
         return admin
 
-    def Increased_traffic(self, db: Session, username: str, traffic):
+    def Increased_traffic(self, db: Session, username: str, traffic: float):
         try:
             admin = db.query(Admin).filter(Admin.username == username).first()
-            admin.traffic += traffic
+
+            current_traffic = Decimal(str(admin.traffic))
+            increase = Decimal(str(traffic))
+            admin.traffic = float(current_traffic + increase)
+
             db.commit()
             db.refresh(admin)
             return True

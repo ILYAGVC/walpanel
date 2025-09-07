@@ -63,11 +63,29 @@ class PanelAPI:
 
     def show_users(self, inb_id):
         try:
-            inb = self.api.inbound.get_by_id(inb_id)
-            users = inb.settings.clients
-            return users
+            all_inbounds = self.api.inbound.get_list()
+            inb = next((i for i in all_inbounds if i.id == inb_id), None)
+
+            if not inb:
+                logger.error(f"Inbound with ID {inb_id} not found.")
+                return None
+            if not inb.client_stats:
+                logger.warning(
+                    f"client_stats is missing for inbound {inb_id}. Returning users without traffic stats."
+                )
+                return inb.settings.clients
+
+            stats_map = {stat.email: stat for stat in inb.client_stats}
+            clients_with_config = inb.settings.clients
+            for client_config in clients_with_config:
+                client_stat = stats_map.get(client_config.email)
+                if client_stat:
+                    client_config.up = client_stat.up
+                    client_config.down = client_stat.down
+                    client_config.enable = client_stat.enable
+            return clients_with_config
         except Exception as e:
-            logger.error(f"Failed to fetch users: {e}")
+            logger.error(f"Failed to fetch users for inbound {inb_id}: {e}")
             return None
 
     def get_user(self, email):

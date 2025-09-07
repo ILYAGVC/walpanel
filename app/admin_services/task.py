@@ -69,10 +69,16 @@ class Task:
             result = PanelAPI(panel.url, panel.username, panel.password).show_users(
                 admin.inbound_id
             )
+
+            if result is None:
+                logger.warning(
+                    f"show_users returned None for inbound {admin.inbound_id}. User list will be empty."
+                )
+                result = []
+
             _online_users = PanelAPI(
                 panel.url, panel.username, panel.password
             ).online_users()
-
             for client in result:
                 try:
                     total_usage = (client.up + client.down) / (1024**3)
@@ -212,23 +218,25 @@ class Task:
             )
 
     def reset_client_traffic(self, db, username: str, email: str):
-        admin = admin_operations.get_admin_data(db, username)
-        panel = panel_operations.panel_data(db, admin.panel_id)
-        client = PanelAPI(
-            panel.url,
-            panel.username,
-            panel.password,
-        ).get_user(email)
-        client_usage_traffic = (client.up + client.down) / (1024**3)
-        client_traffic = client.total / (1024**3)
-        _traffic = round((client_traffic - client_usage_traffic), 1)
-        if not self.check_admin_traffic(db, username, _traffic):
-            return JSONResponse(
-                content={"error": "Traffic limit reached"},
-                status_code=status.HTTP_403_FORBIDDEN,
-            )
-
         try:
+            admin = admin_operations.get_admin_data(db, username)
+            panel = panel_operations.panel_data(db, admin.panel_id)
+
+            client = PanelAPI(
+                panel.url,
+                panel.username,
+                panel.password,
+            ).get_user(email)
+
+            used_traffic = (client.up + client.down) / (1024**3)
+            _traffic_to_charge = round(used_traffic, 1)
+
+            if not self.check_admin_traffic(db, username, _traffic_to_charge):
+                return JSONResponse(
+                    content={"error": "Your traffic is not enough to reset this user."},
+                    status_code=status.HTTP_403_FORBIDDEN,
+                )
+
             result = PanelAPI(
                 panel.url,
                 panel.username,
@@ -239,10 +247,7 @@ class Task:
             )
 
             if result:
-                # returned remining traffic to the admin
-                admin_operations.Increased_traffic(db, admin.username, _traffic)
-
-                self.reduce_admin_traffic(db, username, _traffic)
+                self.reduce_admin_traffic(db, username, _traffic_to_charge)
 
             return JSONResponse(content=result, status_code=status.HTTP_200_OK)
         except Exception as e:
