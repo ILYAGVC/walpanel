@@ -180,25 +180,36 @@ class Task:
             )
 
     def update_client(self, db, username: str, user_id: str, request: UpdateUserInput):
-        if not self.check_admin_traffic(db, username, request.totalGB):
-            return JSONResponse(
-                content={"error": "Traffic limit reached"},
-                status_code=status.HTTP_403_FORBIDDEN,
-            )
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
+            panel_api = PanelAPI(panel.url, panel.username, panel.password)
 
-            # returned remining traffic to the admin
-            client = PanelAPI(panel.url, panel.username, panel.password).get_user(
-                request.email
-            )
-            client_usage_traffic = (client.up + client.down) / (1024**3)
-            client_traffic = client.total / (1024**3)
-            _traffic = round(client_traffic - client_usage_traffic, 1)
-            admin_operations.Increased_traffic(db, admin.username, _traffic)
+            client = panel_api.get_user(request.email)
+            if not client:
+                return JSONResponse(
+                    content={"error": f"User with email {request.email} not found."},
+                    status_code=status.HTTP_404_NOT_FOUND,
+                )
 
-            result = PanelAPI(panel.url, panel.username, panel.password).update_client(
+            # Calculate remaining traffic from the old plan
+            old_total_gb = client.total / (1024**3)
+            used_gb = (client.up + client.down) / (1024**3)
+            remaining_gb = max(0, round(old_total_gb - used_gb, 1))
+
+            net_traffic_cost = request.totalGB - remaining_gb
+
+            if net_traffic_cost > 0 and not self.check_admin_traffic(
+                db, username, net_traffic_cost
+            ):
+                return JSONResponse(
+                    content={
+                        "error": "Traffic limit reached. You don't have enough traffic for this update."
+                    },
+                    status_code=status.HTTP_403_FORBIDDEN,
+                )
+
+            result = panel_api.update_client(
                 admin.inbound_id,
                 user_id,
                 request.email,
@@ -208,12 +219,17 @@ class Task:
                 request.subid,
             )
             if result:
-                self.reduce_admin_traffic(db, username, request.totalGB)
+                panel_api.reset_traffic(admin.inbound_id, request.email)
+
+                # Update the admin's traffic balance
+                if net_traffic_cost != 0:
+                    self.reduce_admin_traffic(db, username, net_traffic_cost)
 
             return JSONResponse(content=result, status_code=status.HTTP_200_OK)
         except Exception as e:
+            logger.error(f"Update client failed for user {request.email}: {e}")
             return JSONResponse(
-                content={"error": f"Update client failed: {e}"},
+                content={"error": f"Update client failed: {str(e)}"},
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
