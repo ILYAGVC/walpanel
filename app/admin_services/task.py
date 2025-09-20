@@ -9,6 +9,7 @@ from datetime import datetime
 from uuid import uuid4
 import string
 import secrets
+import json
 
 
 class Task:
@@ -42,65 +43,63 @@ class Task:
             return False
 
     def get_users(self, db, username):
-        """This function retrieves the list of users for a specific admin.
-        Example return value:
-        {
-            "clients": [
-                {
-                    "email": "primeZ",
-                    "online": True,
-                    "id": "b32a3afb-7604-44ec-8a48-65d284f7bd84",
-                    "totalGB": 10,
-                    "totalUsage": 5,
-                    "expiryTime": "2026-12-31",
-                    "enable": True,
-                    "subId": "mld0xo12ktdu0ni0"
-                }
-            ]
-        }
-        """
         client_list = []
-        _online_users = []
-
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
 
-            result = PanelAPI(panel.url, panel.username, panel.password).show_users(
-                admin.inbound_id
+            all_inbounds = PanelAPI(
+                panel.url, panel.username, panel.password
+            ).get_all_inbounds()
+            inbounds_list = all_inbounds.get("obj", [])
+
+            inbound = next(
+                (i for i in inbounds_list if i.get("id") == admin.inbound_id), None
             )
+            if not inbound:
+                logger.warning(f"Inbound {admin.inbound_id} not found.")
+                return {"clients": []}
 
-            if result is None:
-                logger.warning(
-                    f"show_users returned None for inbound {admin.inbound_id}. User list will be empty."
-                )
-                result = []
+            client_stats = inbound.get("clientStats", [])
+            settings = inbound.get("settings")
+            clients_info = []
+            if settings:
+                try:
+                    settings_json = (
+                        json.loads(settings) if isinstance(settings, str) else settings
+                    )
+                    clients_info = settings_json.get("clients", [])
+                except Exception as e:
+                    logger.warning(f"Failed to parse settings: {e}")
 
-            _online_users = PanelAPI(
+            online_users = PanelAPI(
                 panel.url, panel.username, panel.password
             ).online_users()
-            for client in result:
-                try:
-                    total_usage = (client.up + client.down) / (1024**3)
-                    client_online = (
-                        client.email in _online_users
-                    )  # Check if client is online
-                    client_list.append(
-                        {
-                            "email": client.email,
-                            "online": client_online,
-                            "id": client.id,
-                            "totalGB": client.total_gb / (1024**3),
-                            "totalUsage": total_usage,
-                            "expiryTime": datetime.fromtimestamp(
-                                client.expiry_time / 1000
-                            ).strftime("%Y-%m-%d"),
-                            "enable": client.enable,
-                            "subId": client.sub_id,
-                        }
-                    )
-                except Exception as e:
-                    logger.warning(f"Failed to process client {client.email}: {e}")
+            if online_users is None:
+                online_users = []
+
+            for stat in client_stats:
+                info = next(
+                    (c for c in clients_info if c.get("email") == stat.get("email")),
+                    {},
+                )
+                total_usage = (stat.get("up", 0) + stat.get("down", 0)) / (1024**3)
+                client_online = stat.get("email") in online_users
+
+                client_list.append(
+                    {
+                        "email": stat.get("email"),
+                        "online": client_online,
+                        "id": info.get("id"),
+                        "totalGB": stat.get("total", 0) / (1024**3),
+                        "totalUsage": total_usage,
+                        "expiryTime": datetime.fromtimestamp(
+                            stat.get("expiryTime", 0) / 1000
+                        ).strftime("%Y-%m-%d"),
+                        "enable": stat.get("enable", False),
+                        "subId": info.get("subId", None),
+                    }
+                )
         except Exception as e:
             logger.error(f"Error fetching user list: {e}")
             return {
@@ -164,15 +163,18 @@ class Task:
 
             # returned remining traffic to the admin
             client = PanelAPI(panel.url, panel.username, panel.password).get_user(name)
-            client_usage_traffic = (client.up + client.down) / (1024**3)
-            client_traffic = client.total / (1024**3)
+            client_usage_traffic = (client.get("up", 0) + client.get("down", 0)) / (
+                1024**3
+            )
+            client_traffic = client.get("total", 0) / (1024**3)
             _traffic = round((client_traffic - client_usage_traffic), 1)
 
             result = PanelAPI(panel.url, panel.username, panel.password).delete_client(
                 admin.inbound_id,
                 user_id,
             )
-            admin_operations.Increased_traffic(db, admin.username, _traffic)
+            if result:
+                admin_operations.Increased_traffic(db, admin.username, _traffic)
         except Exception as e:
             return JSONResponse(
                 content={"error": f"Delete client failed: {str(e)}"},
@@ -183,9 +185,10 @@ class Task:
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
-            panel_api = PanelAPI(panel.url, panel.username, panel.password)
 
-            client = panel_api.get_user(request.email)
+            client = PanelAPI(panel.url, panel.username, panel.password).get_user(
+                request.email
+            )
             if not client:
                 return JSONResponse(
                     content={"error": f"User with email {request.email} not found."},
@@ -193,8 +196,8 @@ class Task:
                 )
 
             # Calculate remaining traffic from the old plan
-            old_total_gb = client.total / (1024**3)
-            used_gb = (client.up + client.down) / (1024**3)
+            old_total_gb = client.get("total", 0) / (1024**3)
+            used_gb = (client.get("up", 0) + client.get("down", 0)) / (1024**3)
             remaining_gb = max(0, round(old_total_gb - used_gb, 1))
 
             net_traffic_cost = request.totalGB - remaining_gb
@@ -209,7 +212,7 @@ class Task:
                     status_code=status.HTTP_403_FORBIDDEN,
                 )
 
-            result = panel_api.update_client(
+            result = PanelAPI(panel.url, panel.username, panel.password).update_client(
                 admin.inbound_id,
                 user_id,
                 request.email,
@@ -219,7 +222,9 @@ class Task:
                 request.subid,
             )
             if result:
-                panel_api.reset_traffic(admin.inbound_id, request.email)
+                PanelAPI(panel.url, panel.username, panel.password).reset_traffic(
+                    admin.inbound_id, request.email
+                )
 
                 # Update the admin's traffic balance
                 if net_traffic_cost != 0:
@@ -244,7 +249,7 @@ class Task:
                 panel.password,
             ).get_user(email)
 
-            used_traffic = (client.up + client.down) / (1024**3)
+            used_traffic = (client.get("up", 0) + client.get("down", 0)) / (1024**3)
             _traffic_to_charge = round(used_traffic, 1)
 
             if not self.check_admin_traffic(db, username, _traffic_to_charge):

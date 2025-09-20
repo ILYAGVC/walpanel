@@ -18,7 +18,7 @@ class PanelOperations:
                 detail="Panel with this URL already exists.",
             )
 
-        if not PanelAPI(request.url, request.username, request.password):
+        if not PanelAPI(request.url, request.username, request.password).login_test():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Login failed.",
