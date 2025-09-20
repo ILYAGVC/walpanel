@@ -8,75 +8,113 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
-    .cards-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.2rem;
-        margin-top: 1.2rem;
-    }
-    @media (max-width: 600px) {
-        .cards-grid {
-            grid-template-columns: 1fr;
+        .modal-content {
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 12px;
         }
-    }
-    .card-header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1.2rem;
-    }
-    .card-header .card-avatar {
-        flex-shrink: 0;
-    }
-    .card-header .card-info-inline {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: flex-start;
-        gap: 0.2rem;
-        height: 100%;
-    }
-    .card-title {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #fff;
-        letter-spacing: 0.5px;
-        margin: 0;
-    }
-    .card-status-row {
-        display: flex;
-        align-items: center;
-        gap: 0.2rem;
-    }
-    .status-label {
-        font-size: 0.95rem;
-        font-weight: 600;
-        padding: 0.1rem 0.5rem;
-        border-radius: 0.4rem;
-        background: rgba(0,179,255,0.08);
-        color: #00b3ff;
-    }
-    .status-label.active {
-        background: rgba(30,203,129,0.12);
-        color: #1ecb81;
-    }
-    .status-label.inactive {
-        background: rgba(255,77,79,0.12);
-        color: #ff4d4f;
-    }
-    .panel-info span {
-        color: #8a97a8 !important;
-        font-weight: 400;
-    }
-    .panel-info strong, .panel-info p, .panel-info {
-        color: #fff;
-    }
-    .avatar-active {
-        background: var(--success) !important;
-    }
-    .avatar-inactive {
-        background: var(--danger) !important;
-    }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.35);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem;
+            margin-top: 1.2rem;
+        }
+
+        @media (max-width: 600px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .card-header .card-avatar {
+            flex-shrink: 0;
+        }
+
+        .card-header .card-info-inline {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 0.2rem;
+            height: 100%;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .card-status-row {
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
+
+        .status-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 0.1rem 0.5rem;
+            border-radius: 0.4rem;
+            background: rgba(0, 179, 255, 0.08);
+            color: #00b3ff;
+        }
+
+        .status-label.active {
+            background: rgba(30, 203, 129, 0.12);
+            color: #1ecb81;
+        }
+
+        .status-label.inactive {
+            background: rgba(255, 77, 79, 0.12);
+            color: #ff4d4f;
+        }
+
+        .panel-info span {
+            color: #8a97a8 !important;
+            font-weight: 400;
+        }
+
+        .panel-info strong,
+        .panel-info p,
+        .panel-info {
+            color: #fff;
+        }
+
+        .avatar-active {
+            background: var(--success) !important;
+        }
+
+        .avatar-inactive {
+            background: var(--danger) !important;
+        }
     </style>
 </head>
 
@@ -141,7 +179,8 @@
                 {% for admin in admins %}
                 <div class="card">
                     <div class="card-header">
-                        <div class="card-avatar {% if admin.is_active %}avatar-active{% else %}avatar-inactive{% endif %}">
+                        <div
+                            class="card-avatar {% if admin.is_active %}avatar-active{% else %}avatar-inactive{% endif %}">
                             <i class="fas fa-user-shield"></i>
                         </div>
                         <div class="card-info-inline">
