@@ -1,13 +1,13 @@
 import requests
 import logging
 import json
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
 
 class PanelAPI:
-    _session = None
-    _login_status = False
+    _sessions = {}
 
     def __init__(self, url: str, username: str, password: str):
         self.url = f"https://{url}"
@@ -17,7 +17,15 @@ class PanelAPI:
 
     def _get_session(self):
         """Get or create a logged-in session, retry once if session is invalid."""
-        if PanelAPI._session is None or not PanelAPI._login_status:
+        key = (self.url, self.username)
+        session_info = PanelAPI._sessions.get(key)
+        now = datetime.now()
+        if (
+            session_info is None
+            or not session_info["login_status"]
+            or session_info["last_login_attempt"] is None
+            or session_info["last_login_attempt"] < now - timedelta(minutes=50)
+        ):
             session = requests.Session()
             try:
                 response = session.post(
@@ -29,8 +37,11 @@ class PanelAPI:
                     response.status_code == 200
                     and response.json().get("success") is True
                 ):
-                    PanelAPI._session = session
-                    PanelAPI._login_status = True
+                    PanelAPI._sessions[key] = {
+                        "session": session,
+                        "login_status": True,
+                        "last_login_attempt": now,
+                    }
                     logger.info(f"Logged in successfully! | url: {self.url}")
                 else:
                     logger.error(f"Login failed: {response.text}")
@@ -38,40 +49,7 @@ class PanelAPI:
             except requests.RequestException as e:
                 logger.error(f"Login failed: {e}")
                 raise
-        else:
-            try:
-                status = self.get_status()
-            except Exception as e:
-                logger.error(f"Session status check failed: {e}")
-                status = False
-
-            if not status:
-                logger.warning("Session expired or invalid, retrying login...")
-                PanelAPI._session = None
-                PanelAPI._login_status = False
-                session = requests.Session()
-                try:
-                    response = session.post(
-                        f"{self.url}/login",
-                        json={"username": self.username, "password": self.password},
-                        timeout=10,
-                    )
-                    if (
-                        response.status_code == 200
-                        and response.json().get("success") is True
-                    ):
-                        PanelAPI._session = session
-                        PanelAPI._login_status = True
-                        logger.info(
-                            f"Logged in successfully after retry! | url: {self.url}"
-                        )
-                    else:
-                        logger.error(f"Retry login failed: {response.text}")
-                        raise Exception("Retry login failed")
-                except requests.RequestException as e:
-                    logger.error(f"Retry login failed: {e}")
-                    raise
-        self.session = PanelAPI._session
+        self.session = PanelAPI._sessions[key]["session"]
 
     def get_status(self) -> bool:
         data = self.session.get(f"{self.url}/panel/api/server/status").json()

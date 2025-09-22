@@ -28,10 +28,8 @@ class Task:
     def check_admin_traffic(self, db, username, _traffic):
         try:
             admin = admin_operations.get_admin_data(db, username)
-
             if admin.traffic < _traffic:
                 return False
-
             return True
         except Exception as e:
             return False
@@ -47,10 +45,9 @@ class Task:
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
+            panel_api = PanelAPI(panel.url, panel.username, panel.password)
 
-            all_inbounds = PanelAPI(
-                panel.url, panel.username, panel.password
-            ).get_all_inbounds()
+            all_inbounds = panel_api.get_all_inbounds()
             inbounds_list = all_inbounds.get("obj", [])
 
             inbound = next(
@@ -72,9 +69,7 @@ class Task:
                 except Exception as e:
                     logger.warning(f"Failed to parse settings: {e}")
 
-            online_users = PanelAPI(
-                panel.url, panel.username, panel.password
-            ).online_users()
+            online_users = panel_api.online_users()
             if online_users is None:
                 online_users = []
 
@@ -113,14 +108,11 @@ class Task:
         admin = admin_operations.get_admin_data(db, username)
         panel = panel_operations.panel_data(db, admin.panel_id)
         try:
-            result = PanelAPI(panel.url, panel.username, panel.password).show_users(
-                admin.inbound_id
-            )
-
+            panel_api = PanelAPI(panel.url, panel.username, panel.password)
+            result = panel_api.show_users(admin.inbound_id)
             client_count = len(result)
         except Exception as e:
             logger.error(f"fetching user list: {e} and returned 0")
-
         finally:
             return client_count
 
@@ -130,20 +122,20 @@ class Task:
                 content={"error": "Traffic limit reached"},
                 status_code=status.HTTP_403_FORBIDDEN,
             )
-
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
+            panel_api = PanelAPI(panel.url, panel.username, panel.password)
 
             _uuid = str(uuid4())
             subid = generate_secure_random_text(16)
 
-            result = PanelAPI(panel.url, panel.username, panel.password).add_user(
+            result = panel_api.add_user(
                 admin.inbound_id,
                 _uuid,
                 subid,
                 request.email,
-                int(request.totalGB * (1024**3)),  # coverted to byte
+                int(request.totalGB * (1024**3)),
                 request.expiryTime,
                 admin.inbound_flow,
             )
@@ -160,16 +152,16 @@ class Task:
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
+            panel_api = PanelAPI(panel.url, panel.username, panel.password)
 
-            # returned remining traffic to the admin
-            client = PanelAPI(panel.url, panel.username, panel.password).get_user(name)
+            client = panel_api.get_user(name)
             client_usage_traffic = (client.get("up", 0) + client.get("down", 0)) / (
                 1024**3
             )
             client_traffic = client.get("total", 0) / (1024**3)
             _traffic = round((client_traffic - client_usage_traffic), 1)
 
-            result = PanelAPI(panel.url, panel.username, panel.password).delete_client(
+            result = panel_api.delete_client(
                 admin.inbound_id,
                 user_id,
             )
@@ -185,21 +177,18 @@ class Task:
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
+            panel_api = PanelAPI(panel.url, panel.username, panel.password)
 
-            client = PanelAPI(panel.url, panel.username, panel.password).get_user(
-                request.email
-            )
+            client = panel_api.get_user(request.email)
             if not client:
                 return JSONResponse(
                     content={"error": f"User with email {request.email} not found."},
                     status_code=status.HTTP_404_NOT_FOUND,
                 )
 
-            # Calculate remaining traffic from the old plan
             old_total_gb = client.get("total", 0) / (1024**3)
             used_gb = (client.get("up", 0) + client.get("down", 0)) / (1024**3)
             remaining_gb = max(0, round(old_total_gb - used_gb, 1))
-
             net_traffic_cost = request.totalGB - remaining_gb
 
             if net_traffic_cost > 0 and not self.check_admin_traffic(
@@ -212,7 +201,7 @@ class Task:
                     status_code=status.HTTP_403_FORBIDDEN,
                 )
 
-            result = PanelAPI(panel.url, panel.username, panel.password).update_client(
+            result = panel_api.update_client(
                 admin.inbound_id,
                 user_id,
                 request.email,
@@ -222,11 +211,7 @@ class Task:
                 request.subid,
             )
             if result:
-                PanelAPI(panel.url, panel.username, panel.password).reset_traffic(
-                    admin.inbound_id, request.email
-                )
-
-                # Update the admin's traffic balance
+                panel_api.reset_traffic(admin.inbound_id, request.email)
                 if net_traffic_cost != 0:
                     self.reduce_admin_traffic(db, username, net_traffic_cost)
 
@@ -242,13 +227,9 @@ class Task:
         try:
             admin = admin_operations.get_admin_data(db, username)
             panel = panel_operations.panel_data(db, admin.panel_id)
+            panel_api = PanelAPI(panel.url, panel.username, panel.password)
 
-            client = PanelAPI(
-                panel.url,
-                panel.username,
-                panel.password,
-            ).get_user(email)
-
+            client = panel_api.get_user(email)
             used_traffic = (client.get("up", 0) + client.get("down", 0)) / (1024**3)
             _traffic_to_charge = round(used_traffic, 1)
 
@@ -258,15 +239,10 @@ class Task:
                     status_code=status.HTTP_403_FORBIDDEN,
                 )
 
-            result = PanelAPI(
-                panel.url,
-                panel.username,
-                panel.password,
-            ).reset_traffic(
+            result = panel_api.reset_traffic(
                 admin.inbound_id,
                 email,
             )
-
             if result:
                 self.reduce_admin_traffic(db, username, _traffic_to_charge)
 
