@@ -37,6 +37,7 @@ class AdminOutput(BaseModel):
     panel_id: int
     inbound_id: int
     traffic: int
+    return_traffic: bool
     days_remaining: int
     is_active: bool
     is_banned: bool

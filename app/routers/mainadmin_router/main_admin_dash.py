@@ -15,7 +15,6 @@ from app.oprations.server_info import get_server_info
 from app.schema.output import ServerInfo
 
 
-
 templates = Jinja2Templates(directory="templates")
 
 router = APIRouter(prefix="/dashboard", tags=["Main admin dashboard"])
@@ -38,25 +37,31 @@ async def dashboard(
 @router.get("/data")
 async def dashboard_data(
     request: Request,
-    user: str=Depends(mainadmin_required),
-    db: Session = Depends(get_db)
+    user: str = Depends(mainadmin_required),
+    db: Session = Depends(get_db),
 ):
     panels = panel_operations.get_panels(db)
     admins = await admin_operations.get_all_admins(db)
-    users = sum(admin.get("total_clients", 0) for admin in admins)
+    users = sum((admin.get("total_clients") or 0) for admin in admins)
     plans = await plans_query.get_plans(db)
     logs = get_10_logs()
     purchases = await plans_query.purchase_history(db)
     ads = await get_ads()
-    return {"purchases": purchases, "panels": len(panels), "admins": admins, "users": users, "plans": len(plans['plans']), "logs": logs, "ads": ads}
+    return {
+        "purchases": purchases,
+        "panels": len(panels),
+        "admins": admins,
+        "users": users,
+        "plans": len(plans["plans"]),
+        "logs": logs,
+        "ads": ads,
+    }
 
 
 @router.get("/server/info", response_model=ServerInfo)
-async def server_information(
-    user: str=Depends(mainadmin_required)
-):
+async def server_information(user: str = Depends(mainadmin_required)):
     data = await get_server_info()
-    return data 
+    return data
 
 
 @router.get("/logout/")

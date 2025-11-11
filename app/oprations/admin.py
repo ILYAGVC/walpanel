@@ -1,12 +1,11 @@
 from fastapi.exceptions import HTTPException
 from fastapi import status
-from datetime import datetime, timedelta, date
+from datetime import timedelta, date
 from sqlalchemy.orm import Session, joinedload
 from decimal import Decimal
 
 from app.schema._input import CreateAdminInput, UpdateAdminInput
 from app.db.models import Admin, Plans
-from app.db.engine import get_db
 from app.log.logger_config import logger
 from app.oprations.utility import purchase_hisory
 
@@ -33,6 +32,7 @@ class AdminOperations:
                 inbound_id=request.inbound_id,
                 inbound_flow=request.inbound_flow,
                 traffic=request.traffic,
+                return_traffic=request.return_traffic,
                 expiry_time=expiry_datetime,
                 is_active=request.is_active,
                 is_banned=request.is_banned,
@@ -79,6 +79,7 @@ class AdminOperations:
                 },
                 "inbound_id": admin.inbound_id,
                 "traffic": admin.traffic,
+                "return_traffic": admin.return_traffic,
                 "expiry_time": (
                     max((admin.expiry_time - date.today()).days, 0)
                     if admin.expiry_time
@@ -106,6 +107,7 @@ class AdminOperations:
             admin.inbound_id = request.inbound_id
             admin.inbound_flow = request.inbound_flow
             admin.traffic = request.traffic
+            admin.return_traffic = request.return_traffic
             admin.expiry_time = expiry_datetime
             admin.is_active = request.is_active
             admin.is_banned = request.is_banned

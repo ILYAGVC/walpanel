@@ -21,6 +21,7 @@ class CreateAdminInput(BaseModel):
     inbound_id: int = 1
     inbound_flow: str = ""
     traffic: int = 0
+    return_traffic: bool = False
     days_remaining: int = 0
     is_active: bool = True
     is_banned: bool = False
@@ -32,6 +33,7 @@ class UpdateAdminInput(BaseModel):
     inbound_id: int
     inbound_flow: str = ""
     traffic: int
+    return_traffic: bool = False
     days_remaining: int
     is_active: bool = True
     is_banned: bool = False
