@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Date
 from sqlalchemy.orm import relationship
-from app.db.engine import Base
+from .engine import Base
 
 
 class Panel(Base):
@@ -28,6 +28,7 @@ class Admin(Base):
     inbound_flow = Column(String, nullable=True)
     traffic = Column(Integer, default=0)
     expiry_time = Column(Date, nullable=True)
+    return_traffic = Column(Boolean, default=True)
     is_active = Column(Boolean, default=True)
     is_banned = Column(Boolean, default=False)
 

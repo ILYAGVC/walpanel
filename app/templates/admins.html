@@ -193,6 +193,8 @@
                             <p><strong>Panel:</strong> <span>{{ admin.panel.name }}</span></p>
                             <p><strong>Inbound id:</strong> <span>{{ admin.inbound_id }}</span></p>
                             <p><strong>Remaining Traffic:</strong> <span>{{ admin.traffic }} GB</span></p>
+                            <p><strong>Return Traffic:</strong> <span>{% if admin.return_traffic %}Yes{% else %}No{%
+                                    endif %}</span></p>
                             <p><strong>Remaining Days:</strong> <span>{{ admin.expiry_time }} D</span></p>
                             <p><strong>Status:</strong>
                                 <span class="{% if admin.is_active %}text-success{% else %}text-danger{% endif %}">
@@ -203,14 +205,8 @@
                         {% endif %}
                     </div>
                     <div class="card-actions">
-                        <button class="btn btn-outline edit-admin-btn" data-admin='{
-                            "id": "{{ admin.id }}",
-                            "panel_id": "{{ admin.panel_id }}",
-                            "inbound_id": "{{ admin.inbound_id }}",
-                            "traffic": "{{ admin.traffic }}",
-                            "days_remaining": "{{ admin.days_remaining }}",
-                            "is_active": "{{ admin.is_active }}"
-                        }'>
+                        <button class="btn btn-outline edit-admin-btn"
+                            data-admin='{"id":"{{ admin.id }}","panel_id":"{{ admin.panel_id }}","inbound_id":"{{ admin.inbound_id }}","traffic":"{{ admin.traffic }}","days_remaining":"{{ admin.days_remaining }}","return_traffic":"{{ admin.return_traffic }}","is_active":"{{ admin.is_active }}"}'>
                             <i class="fas fa-edit"></i>
                             Edit
                         </button>
@@ -294,6 +290,14 @@
                     </select>
                 </div>
 
+                <div class="form-group">
+                    <label for="addAdminReturnTraffic" class="form-label">Return Traffic</label>
+                    <select id="addAdminReturnTraffic" class="form-control">
+                        <option value="false">No</option>
+                        <option value="true">Yes</option>
+                    </select>
+                </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline" onclick="hideModal('addAdminModal')">
                         Cancel
@@ -357,6 +361,14 @@
                     <select id="editAdminActive" class="form-control" required>
                         <option value="true">Active</option>
                         <option value="false">Inactive</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editAdminReturnTraffic" class="form-label">Return Traffic</label>
+                    <select id="editAdminReturnTraffic" class="form-control">
+                        <option value="false">No</option>
+                        <option value="true">Yes</option>
                     </select>
                 </div>
 
@@ -519,6 +531,14 @@
                 // Set default status to Active
                 document.getElementById('editAdminActive').value = "true";
 
+                try {
+                    const rt = String(adminData.return_traffic).toLowerCase() === 'true' ? 'true' : 'false';
+                    const rtEl = document.getElementById('editAdminReturnTraffic');
+                    if (rtEl) rtEl.value = rt;
+                } catch (e) {
+                    console.warn('Could not parse return_traffic from admin data', e);
+                }
+
                 showModal('editAdminModal');
             } catch (error) {
                 console.error('Error opening edit modal:', error);
@@ -539,6 +559,7 @@
                 traffic: parseInt(document.getElementById('addAdminTraffic').value),
                 days_remaining: parseInt(document.getElementById('addAdminDays').value),
                 is_active: document.getElementById('addAdminActive').value === "true",
+                return_traffic: document.getElementById('addAdminReturnTraffic').value === "true",
                 is_banned: false
             };
 
@@ -590,6 +611,7 @@
                 traffic: parseInt(document.getElementById('editAdminTraffic').value),
                 days_remaining: parseInt(document.getElementById('editAdminDays').value),
                 is_active: document.getElementById('editAdminActive').value === "true",
+                return_traffic: document.getElementById('editAdminReturnTraffic').value === "true",
                 is_banned: false
             };
 
