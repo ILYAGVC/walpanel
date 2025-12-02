@@ -1,7 +1,6 @@
 .codegpt
 .env
 .venv
-.vscode
 __pycache__/
 *.pyc
 *.log

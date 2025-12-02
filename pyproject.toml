@@ -1,0 +1,19 @@
+[project]
+name = "walpanel"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic-settings==2.9.1",
+    "requests==2.32.3",
+    "SQLAlchemy==2.0.39",
+    "alembic==1.15.1",
+    "Dependencies",
+    "psutil",
+    "PyJWT==2.10.1",
+    "python-dotenv==1.1.0"
+
+]
