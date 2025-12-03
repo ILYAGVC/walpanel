@@ -4,12 +4,12 @@ from backend import app
 
 def main():
     uvicorn.run(
-        app,
+        app="backend.app:app",
         host=config.HOST,
         port=config.PORT,
-        log_level="debug" if config.DEBUG else "info",
         ssl_keyfile=config.SSL_KEYFILE,
         ssl_certfile=config.SSL_CERTFILE,
+        reload=True if config.DEBUG else False,
     )
     
 
