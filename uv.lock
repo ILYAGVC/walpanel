@@ -363,6 +363,34 @@ wheels = [
 ]
 
 [[package]]
+name = "httpcore"
+version = "1.0.9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "h11" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/06/94/82699a10bca87a5556c9c59b5963f2d039dbd239f25bc2a63907a05a14cb/httpcore-1.0.9.tar.gz", hash = "sha256:6e34463af53fd2ab5d807f399a9b45ea31c3dfa2276f15a2c3f00afff6e176e8", size = 85484, upload-time = "2025-04-24T22:06:22.219Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7e/f5/f66802a942d491edb555dd61e3a9961140fd64c90bce1eafd741609d334d/httpcore-1.0.9-py3-none-any.whl", hash = "sha256:2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55", size = 78784, upload-time = "2025-04-24T22:06:20.566Z" },
+]
+
+[[package]]
+name = "httpx"
+version = "0.28.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "certifi" },
+    { name = "httpcore" },
+    { name = "idna" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01324ee087459e112ebb7224f646c0b5023f5e79e9956/httpx-0.28.1.tar.gz", hash = "sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc", size = 141406, upload-time = "2024-12-06T15:37:23.222Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl", hash = "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad", size = 73517, upload-time = "2024-12-06T15:37:21.509Z" },
+]
+
+[[package]]
 name = "idna"
 version = "3.11"
 source = { registry = "https://pypi.org/simple" }
@@ -484,6 +512,20 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e0/95/992c8816a74016eb095e73585d747e0a8ea21a061ed3689474fabb29a395/psutil-7.1.3-cp36-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:56d974e02ca2c8eb4812c3f76c30e28836fffc311d55d979f1465c1feeb2b68b", size = 264635, upload-time = "2025-11-02T12:26:31.74Z" },
     { url = "https://files.pythonhosted.org/packages/55/4c/c3ed1a622b6ae2fd3c945a366e64eb35247a31e4db16cf5095e269e8eb3c/psutil-7.1.3-cp37-abi3-win_amd64.whl", hash = "sha256:f39c2c19fe824b47484b96f9692932248a54c43799a84282cfe58d05a6449efd", size = 247633, upload-time = "2025-11-02T12:26:33.887Z" },
     { url = "https://files.pythonhosted.org/packages/c9/ad/33b2ccec09bf96c2b2ef3f9a6f66baac8253d7565d8839e024a6b905d45d/psutil-7.1.3-cp37-abi3-win_arm64.whl", hash = "sha256:bd0d69cee829226a761e92f28140bec9a5ee9d5b4fb4b0cc589068dbfff559b1", size = 244608, upload-time = "2025-11-02T12:26:36.136Z" },
+]
+
+[[package]]
+name = "py3xui"
+version = "0.5.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3f/49/591e35eb9c8e2fd04bf9191b5b53ba139852c320cad061b581c0634fde20/py3xui-0.5.4.tar.gz", hash = "sha256:29923efe909a79a84797b1a7e26a9a5fc78c099ff420c580fe89c57d21ed284e", size = 36518, upload-time = "2025-11-26T07:53:53.663Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/64/39/a6fe6abdb7070bffca662421d6f6c878b0da5f14fb9f789aa544e4e3a3a3/py3xui-0.5.4-py3-none-any.whl", hash = "sha256:bc4dff8bc78736d76c510f50fb25a4a7a374846cfad6430952c483a1d506b670", size = 42206, upload-time = "2025-11-26T07:53:52.275Z" },
 ]
 
 [[package]]
@@ -791,6 +833,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "passlib", extra = ["bcrypt"] },
     { name = "psutil" },
+    { name = "py3xui" },
     { name = "pydantic-settings" },
     { name = "pyjwt" },
     { name = "python-dotenv" },
@@ -809,6 +852,7 @@ requires-dist = [
     { name = "fastapi" },
     { name = "passlib", extras = ["bcrypt"] },
     { name = "psutil" },
+    { name = "py3xui" },
     { name = "pydantic-settings", specifier = "==2.9.1" },
     { name = "pyjwt", specifier = "==2.10.1" },
     { name = "python-dotenv", specifier = "==1.1.0" },
