@@ -24,5 +24,5 @@ class Panels(Base):
     name = Column(String, unique=True, index=True, nullable=False)
     url = Column(String, nullable=False)
     username = Column(String, nullable=False)
-    hashed_password = Column(String, nullable=False)
+    password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)

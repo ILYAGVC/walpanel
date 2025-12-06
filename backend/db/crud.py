@@ -73,22 +73,17 @@ def get_all_panels(db: Session):
     return db.query(Panels).all()
 
 
-def get_panel_by_name(db: Session, name: str):
+def get_panel_by_name(db: Session, name: str) -> Panels | None:
     return db.query(Panels).filter(Panels.name == name).first()
 
 
 def add_panel(db: Session, panel_input: PanelInput) -> None:
-    try:
-        hashed_pwd = hash_password(password=panel_input.password)
-    except Exception as e:
-        raise e
-
     panel = Panels(
         panel_type=panel_input.panel_type,
         name=panel_input.name,
         url=panel_input.url,
         username=panel_input.username,
-        hashed_password=hashed_pwd,
+        password=panel_input.password,
         is_active=panel_input.is_active,
     )
     db.add(panel)
