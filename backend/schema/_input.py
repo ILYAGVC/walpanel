@@ -28,6 +28,7 @@ class PanelInput(BaseModel):
     panel_type: str = "3x-ui"
     name: str
     url: str
+    sub_url: str | None = None
     username: str
     password: str
     is_active: bool = True

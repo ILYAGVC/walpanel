@@ -82,6 +82,7 @@ def add_panel(db: Session, panel_input: PanelInput) -> None:
         panel_type=panel_input.panel_type,
         name=panel_input.name,
         url=panel_input.url,
+        sub_url=panel_input.sub_url,
         username=panel_input.username,
         password=panel_input.password,
         is_active=panel_input.is_active,
@@ -97,9 +98,9 @@ def update_panel_values(db: Session, panel_id: int, panel_input: PanelInput) -> 
         panel.panel_type = panel_input.panel_type
         panel.name = panel_input.name
         panel.url = panel_input.url
+        panel.sub_url = panel_input.sub_url
         panel.username = panel_input.username
-        panel.hashed_password = hash_password(password=panel_input.password)
-        panel.is_active = panel_input.is_active
+        panel.password = panel_input.password
         db.commit()
         return True
     return False

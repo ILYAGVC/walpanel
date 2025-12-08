@@ -23,6 +23,7 @@ class Panels(Base):
     panel_type = Column(String, nullable=False)
     name = Column(String, unique=True, index=True, nullable=False)
     url = Column(String, nullable=False)
+    sub_url = Column(String, nullable=True)
     username = Column(String, nullable=False)
     password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
