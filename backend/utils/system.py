@@ -12,6 +12,3 @@ def get_system_info() -> dict:
         "disk_total": disk_usage.total,
         "disk_used": disk_usage.used,
     }
-
-
-print(get_system_info())
