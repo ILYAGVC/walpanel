@@ -32,3 +32,22 @@ class PanelInput(BaseModel):
     username: str
     password: str
     is_active: bool = True
+
+
+class ClientInput(BaseModel):
+    email: str
+    id: str  # UUID
+    enable: bool = True
+    expiry_time: int
+    total: float = 0.0
+    sub_id: str
+    flow: str = ""
+
+
+class ClientUpdateInput(BaseModel):
+    email: str
+    enable: bool
+    expiry_time: int
+    total: float
+    sub_id: str
+    flow: str = ""

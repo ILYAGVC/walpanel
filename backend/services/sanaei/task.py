@@ -1,0 +1,69 @@
+from typing import Any
+from sqlalchemy.orm import Session
+from py3xui.client.client import Client
+
+from backend.schema._input import ClientInput, ClientUpdateInput
+from backend.services.sanaei import APIService
+from backend.db import crud
+
+
+class AdminTaskService:
+    def __init__(self, admin_username: str, db: Session):
+        self.admin_username = admin_username
+        self.db = db
+        self.admin = crud.get_admin_by_username(db, username=admin_username)
+        panel = crud.get_panel_by_name(db, name=self.admin.panel)
+        self.api_service = APIService(
+            url=panel.url, username=panel.username, password=panel.password
+        )
+
+    async def get_all_users(self) -> Any:
+        try:
+            inbounds = await self.api_service.get_all_inbounds()
+            inbound = next((i for i in inbounds if i.id == self.admin.inbound_id), None)
+            if not inbound:
+                return []
+
+            clients = inbound.client_stats
+            online_clients = await self.api_service.get_all_online_clients()
+
+            result = []
+            for c in clients:
+                client_dict = c.__dict__.copy()
+                client_dict["is_online"] = c.email in online_clients
+                result.append(client_dict)
+            return result
+        except Exception as e:
+            raise e
+
+    async def get_client_by_email(self, email: str) -> Client | bool:
+        try:
+            client = await self.api_service.get_client_by_email(email)
+            return client
+        except Exception:
+            return False
+
+    async def add_client_to_panel(self, client: ClientInput) -> bool:
+        try:
+            await self.api_service.add_client(self.admin.inbound_id, client)
+            return True
+        except Exception as e:
+            return False
+
+    async def update_client_in_panel(
+        self, uuid: str, client_data: ClientUpdateInput
+    ) -> bool:
+        try:
+            await self.api_service.update_client(
+                uuid, self.admin.inbound_id, client_data
+            )
+            return True
+        except Exception as e:
+            return False
+
+    async def delete_client_from_panel(self, uuid: str) -> bool:
+        try:
+            await self.api_service.delete_client(self.admin.inbound_id, uuid)
+            return True
+        except Exception as e:
+            return False

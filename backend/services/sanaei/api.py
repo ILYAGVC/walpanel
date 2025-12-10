@@ -1,0 +1,80 @@
+from datetime import datetime
+from py3xui import AsyncApi
+from py3xui.inbound.inbound import Inbound
+from py3xui.client.client import Client
+
+from backend.schema._input import ClientInput, ClientUpdateInput
+
+
+class APIService:
+    _last_login_time = None
+    _last_url = None
+    _api_instance = None
+
+    def __init__(self, url: str, username: str, password: str):
+        if APIService._api_instance is None or APIService._last_url != url:
+            APIService._api_instance = AsyncApi(url, username, password)
+            APIService._last_url = url
+        self.api = APIService._api_instance
+        self.username = username
+        self.password = password
+        self.url = url
+
+    async def ensure_login(self):
+        if (
+            APIService._last_login_time is None
+            or (datetime.now() - APIService._last_login_time).total_seconds() > 3500
+        ):
+            await self.api.login()
+            APIService._last_login_time = datetime.now()
+
+    async def get_inbound(self, inbound_id: int) -> Inbound:
+        await self.ensure_login()
+        inbound = await self.api.inbound.get_by_id(inbound_id)
+        return inbound
+
+    async def get_all_inbounds(self) -> list[Inbound]:
+        await self.ensure_login()
+        inbounds = await self.api.inbound.get_list()
+        return inbounds
+
+    async def get_all_online_clients(self) -> list[str]:
+        clients = await self.api.client.online()
+        return clients
+
+    async def add_client(self, inbound_id: int, client: ClientInput):
+        await self.ensure_login()
+        data = Client(
+            email=client.email,
+            id=client.id,
+            enable=client.enable,
+            expiry_time=client.expiry_time,
+            totalGB=client.total,
+            flow=client.flow,
+            sub_id=client.sub_id,
+        )
+        await self.api.client.add(inbound_id, [data])
+
+    async def get_client_by_email(self, email: str) -> list[Client]:
+        clients = await self.api.client.get_by_email(email)
+        return clients
+
+    async def update_client(
+        self, uuid: str, inbound_id: int, client: ClientUpdateInput
+    ):
+        await self.ensure_login()
+        data = Client(
+            email=client.email,
+            id=uuid,
+            uuid=uuid,
+            enable=client.enable,
+            expiry_time=client.expiry_time,
+            totalGB=client.total,
+            flow=client.flow,
+            sub_id=client.sub_id,
+            inbound_id=inbound_id,
+        )
+        await self.api.client.update(uuid, data)
+
+    async def delete_client(self, inbound_id: int, uuid: str):
+        await self.api.client.delete(inbound_id, uuid)
