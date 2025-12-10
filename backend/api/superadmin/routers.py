@@ -104,7 +104,7 @@ async def create_panel(panel_input: PanelInput, db: Session = Depends(get_db)):
 async def update_panel(
     panel_id: int, panel_input: PanelInput, db: Session = Depends(get_db)
 ):
-    if not crud.get_panel_by_name(db, panel_input.name):
+    if not crud.get_panel_by_id(db, panel_id):
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content={

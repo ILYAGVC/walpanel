@@ -6,6 +6,7 @@ from backend.db import crud
 from backend.db.engin import get_db
 from backend.auth import get_current_admin
 from backend.schema.output import AdminOutput, ResponseModel, PanelOutput
+from backend.services.sanaei import AdminTaskService
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
@@ -26,7 +27,20 @@ async def read_dashboard_data(
             },
         )
 
-        ...
-
     if current_admin["role"] == "admin":
-        ...
+        admin_data = crud.get_admin_by_username(db, current_admin["username"])
+        panel_data = crud.get_panel_by_name(db, admin_data.panel)
+        users = await AdminTaskService(
+            admin_username=current_admin["username"], db=db
+        ).get_all_users()
+
+        return ResponseModel(
+            success=True,
+            message="Data retrieved successfully",
+            data={
+                "remaining_traffic": admin_data.traffic,
+                "expiry_time": admin_data.expiry_date,
+                "sub_url": panel_data.sub_url,
+                "users": users,
+            },
+        )

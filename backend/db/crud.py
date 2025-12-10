@@ -49,6 +49,7 @@ def update_admin_values(
     admin = db.query(Admins).filter(Admins.id == admin_id).first()
     if admin:
         admin.username = admin_input.username
+        admin.hashed_password = hash_password(admin_input.password)
         admin.is_active = admin_input.is_active
         admin.panel = admin_input.panel
         admin.inbound_id = admin_input.inbound_id
