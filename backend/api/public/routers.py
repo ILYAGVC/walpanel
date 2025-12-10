@@ -7,6 +7,7 @@ from backend.db.engin import get_db
 from backend.auth import get_current_admin
 from backend.schema.output import AdminOutput, ResponseModel, PanelOutput
 from backend.services.sanaei import AdminTaskService
+from backend.utils import get_system_info, get_ads_from_github
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
@@ -18,12 +19,16 @@ async def read_dashboard_data(
     if current_admin["role"] == "superadmin":
         all_admins = crud.get_all_admins(db)
         all_panels = crud.get_all_panels(db)
+        system = get_system_info()
+        ads = get_ads_from_github()
         return ResponseModel(
             success=True,
             message="Data retrieved successfully",
             data={
                 "admins": [AdminOutput.from_orm(admin) for admin in all_admins],
                 "panels": [PanelOutput.from_orm(panel) for panel in all_panels],
+                "system": system,
+                "ads": ads,
             },
         )
 
