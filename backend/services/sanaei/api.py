@@ -2,6 +2,7 @@ from datetime import datetime
 from py3xui import AsyncApi
 from py3xui.inbound.inbound import Inbound
 from py3xui.client.client import Client
+from py3xui.server.server import Server
 
 from backend.schema._input import ClientInput, ClientUpdateInput
 
@@ -27,6 +28,17 @@ class APIService:
         ):
             await self.api.login()
             APIService._last_login_time = datetime.now()
+
+    async def test_connection(self) -> Server:
+        try:
+            api = AsyncApi(self.url, self.username, self.password)
+            await api.login()
+            info = await api.server.get_status()
+            return info
+
+        except Exception as e:
+            print(f"Connection test failed: {str(e)}")
+            return None
 
     async def get_inbound(self, inbound_id: int) -> Inbound:
         await self.ensure_login()

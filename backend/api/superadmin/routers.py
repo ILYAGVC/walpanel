@@ -6,6 +6,7 @@ from backend.schema.output import ResponseModel, AdminOutput
 from backend.schema._input import AdminInput, AdminUpdateInput, PanelInput
 from backend.db import crud
 from backend.db.engin import get_db
+from backend.services import create_new_panel, update_a_panel
 
 router = APIRouter(prefix="/superadmin", tags=["superadmin"])
 
@@ -93,6 +94,16 @@ async def create_panel(panel_input: PanelInput, db: Session = Depends(get_db)):
             },
         )
 
+    connection = await create_new_panel(db, panel_input)
+    if not connection:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "success": False,
+                "message": "Failed to connect to the panel with provided credentials",
+            },
+        )
+
     crud.add_panel(db, panel_input)
     return ResponseModel(
         success=True,
@@ -112,12 +123,21 @@ async def update_panel(
                 "message": "Panel not found",
             },
         )
-    update_panel = crud.update_panel_values(db, panel_id, panel_input)
-    if update_panel:
-        return ResponseModel(
-            success=True,
-            message="Panel updated successfully",
+    connection = await update_a_panel(db, panel_input)
+    if not connection:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "success": False,
+                "message": "Failed to connect to the panel with provided credentials",
+            },
         )
+
+    crud.update_panel_values(db, panel_id, panel_input)
+    return ResponseModel(
+        success=True,
+        message="Panel updated successfully",
+    )
 
 
 @router.delete("/panel/{panel_id}", response_model=ResponseModel)
