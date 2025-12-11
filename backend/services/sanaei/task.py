@@ -71,10 +71,11 @@ class AdminTaskService:
             await self.api_service.update_client(
                 uuid, self.admin.inbound_id, client_data
             )
+            return True
 
         except Exception as e:
             logger.error(
-                f"Failed to update client {uuid} by admin {self.admin_username}: {str(e)}"
+                f"Failed to update client {client_data.email} by admin {self.admin_username}: {str(e)}"
             )
             return False
 

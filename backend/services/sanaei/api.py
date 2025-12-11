@@ -89,4 +89,5 @@ class APIService:
         await self.api.client.update(uuid, data)
 
     async def delete_client(self, inbound_id: int, uuid: str):
+        await self.ensure_login()
         await self.api.client.delete(inbound_id, uuid)

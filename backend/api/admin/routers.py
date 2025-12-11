@@ -5,10 +5,13 @@ from sqlalchemy.orm import Session
 
 from backend.db.engin import get_db
 from backend.auth import get_current_admin
-from backend.schema.output import ResponseModel
 from backend.schema._input import ClientInput, ClientUpdateInput
-from backend.services.sanaei import AdminTaskService
-from backend.utils.logger import logger
+from backend.services import (
+    add_new_user,
+    update_a_user,
+    delete_a_user,
+    get_all_users_from_panel,
+)
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -23,23 +26,10 @@ async def get_all_users(
             content={"detail": "Not authorized to access this resource."},
         )
 
-    clients = await AdminTaskService(
+    result = await get_all_users_from_panel(
         admin_username=current_admin["username"], db=db
-    ).get_all_users()
-
-    if clients is None:
-        return JSONResponse(
-            status_code=status.HTTP_404_NOT_FOUND,
-            content={
-                "success": False,
-                "message": "No users found",
-            },
-        )
-    return ResponseModel(
-        success=True,
-        message="Users retrieved successfully",
-        data=clients,
     )
+    return result
 
 
 @router.post("/user", description="Add a new user")
@@ -54,41 +44,10 @@ async def add_user(
             content={"detail": "Not authorized to access this resource."},
         )
 
-    admin_task = AdminTaskService(admin_username=current_admin["username"], db=db)
-    check_duplicate = await admin_task.get_client_by_email(user_input.email)
-
-    if check_duplicate:
-        logger.warning(
-            f"Attempt to add user with duplicate email: {user_input.email} by admin: {current_admin['username']}"
-        )
-        return JSONResponse(
-            status_code=status.HTTP_409_CONFLICT,
-            content={
-                "success": False,
-                "message": "This email is reserved by another admins",
-            },
-        )
-
-    new_client = await admin_task.add_client_to_panel(user_input)
-
-    if not new_client:
-        logger.error(
-            f"Failed to add user {user_input.email} by admin {current_admin['username']}: {new_client}"
-        )
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={
-                "success": False,
-                "message": f"{new_client}",
-            },
-        )
-    logger.info(
-        f"New user added: {user_input.email} by admin {current_admin['username']}"
+    result = await add_new_user(
+        admin_username=current_admin["username"], user_input=user_input, db=db
     )
-    return ResponseModel(
-        success=True,
-        message="User added successfully",
-    )
+    return result
 
 
 @router.put("/user/{uuid}", description="Update an existing user")
@@ -104,25 +63,13 @@ async def update_user(
             content={"detail": "Not authorized to access this resource."},
         )
 
-    update_user = await AdminTaskService(
-        admin_username=current_admin["username"], db=db
-    ).update_client_in_panel(uuid, user_input)
-    if not update_user:
-        logger.error(
-            f"Failed to update user {uuid} by admin {current_admin['username']}"
-        )
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={
-                "success": False,
-                "message": "Failed to update user",
-            },
-        )
-    logger.info(f"User updated: {uuid} by admin {current_admin['username']}")
-    return ResponseModel(
-        success=True,
-        message="User updated successfully",
+    result = await update_a_user(
+        admin_username=current_admin["username"],
+        uuid=uuid,
+        user_input=user_input,
+        db=db,
     )
+    return result
 
 
 @router.delete("/user/{uuid}", description="Delete a user")
@@ -137,22 +84,7 @@ async def delete_user(
             content={"detail": "Not authorized to access this resource."},
         )
 
-    delete_user = await AdminTaskService(
-        admin_username=current_admin["username"], db=db
-    ).delete_client_from_panel(uuid)
-    if not delete_user:
-        logger.error(
-            f"Failed to delete user {uuid} by admin {current_admin['username']}"
-        )
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={
-                "success": False,
-                "message": "Failed to delete user",
-            },
-        )
-    logger.info(f"User deleted: {uuid} by admin {current_admin['username']}")
-    return ResponseModel(
-        success=True,
-        message="User deleted successfully",
+    result = await delete_a_user(
+        admin_username=current_admin["username"], uuid=uuid, db=db
     )
+    return result
