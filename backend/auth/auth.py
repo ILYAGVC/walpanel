@@ -9,6 +9,7 @@ from backend.auth.hash import verify_password
 from backend.db.engin import get_db
 from backend.db import crud
 from backend.config import config
+from backend.utils.logger import logger
 
 router = APIRouter(tags=["Login"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/api/login")
@@ -53,6 +54,7 @@ async def login_for_access_token(
         form_data.username == config.ADMIN_USERNAME
         and form_data.password == config.ADMIN_PASSWORD
     ):
+        logger.info(f"SuperAdmin login successful: {form_data.username}")
         access_token = create_access_token(
             data={
                 "sub": form_data.username,
@@ -65,11 +67,13 @@ async def login_for_access_token(
     # Check for regular admin credentials
     admin = crud.get_admin_by_username(db, form_data.username)
     if not admin or not verify_password(form_data.password, admin.hashed_password):
+        logger.warning(f"Failed login attempt for username: {form_data.username}")
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content={"success": False, "message": "Incorrect username or password"},
         )
 
+    logger.info(f"Admin login successful: {admin.username}")
     access_token = create_access_token(
         data={"sub": admin.username, "role": "admin", "panel": admin.panel}
     )

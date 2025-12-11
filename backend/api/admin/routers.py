@@ -8,6 +8,7 @@ from backend.auth import get_current_admin
 from backend.schema.output import ResponseModel
 from backend.schema._input import ClientInput, ClientUpdateInput
 from backend.services.sanaei import AdminTaskService
+from backend.utils.logger import logger
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -57,6 +58,9 @@ async def add_user(
     check_duplicate = await admin_task.get_client_by_email(user_input.email)
 
     if check_duplicate:
+        logger.warning(
+            f"Attempt to add user with duplicate email: {user_input.email} by admin: {current_admin['username']}"
+        )
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
             content={
@@ -68,6 +72,9 @@ async def add_user(
     new_client = await admin_task.add_client_to_panel(user_input)
 
     if not new_client:
+        logger.error(
+            f"Failed to add user {user_input.email} by admin {current_admin['username']}: {new_client}"
+        )
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={
@@ -75,6 +82,9 @@ async def add_user(
                 "message": f"{new_client}",
             },
         )
+    logger.info(
+        f"New user added: {user_input.email} by admin {current_admin['username']}"
+    )
     return ResponseModel(
         success=True,
         message="User added successfully",
@@ -98,6 +108,9 @@ async def update_user(
         admin_username=current_admin["username"], db=db
     ).update_client_in_panel(uuid, user_input)
     if not update_user:
+        logger.error(
+            f"Failed to update user {uuid} by admin {current_admin['username']}"
+        )
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={
@@ -105,6 +118,7 @@ async def update_user(
                 "message": "Failed to update user",
             },
         )
+    logger.info(f"User updated: {uuid} by admin {current_admin['username']}")
     return ResponseModel(
         success=True,
         message="User updated successfully",
@@ -127,6 +141,9 @@ async def delete_user(
         admin_username=current_admin["username"], db=db
     ).delete_client_from_panel(uuid)
     if not delete_user:
+        logger.error(
+            f"Failed to delete user {uuid} by admin {current_admin['username']}"
+        )
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={
@@ -134,6 +151,7 @@ async def delete_user(
                 "message": "Failed to delete user",
             },
         )
+    logger.info(f"User deleted: {uuid} by admin {current_admin['username']}")
     return ResponseModel(
         success=True,
         message="User deleted successfully",

@@ -2,11 +2,12 @@ from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from backend.schema.output import ResponseModel, AdminOutput
+from backend.schema.output import ResponseModel
 from backend.schema._input import AdminInput, AdminUpdateInput, PanelInput
 from backend.db import crud
 from backend.db.engin import get_db
 from backend.services import create_new_panel, update_a_panel
+from backend.utils.logger import logger
 
 router = APIRouter(prefix="/superadmin", tags=["superadmin"])
 
@@ -14,6 +15,9 @@ router = APIRouter(prefix="/superadmin", tags=["superadmin"])
 @router.post("/admin", description="create a new admin", response_model=ResponseModel)
 async def create_admin(admin_input: AdminInput, db: Session = Depends(get_db)):
     if crud.get_admin_by_username(db, admin_input.username):
+        logger.warning(
+            f"Attempt to create admin with duplicate username: {admin_input.username}"
+        )
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
             content={
@@ -23,6 +27,7 @@ async def create_admin(admin_input: AdminInput, db: Session = Depends(get_db)):
         )
 
     crud.add_admin(db, admin_input)
+    logger.info(f"New admin created: {admin_input.username}")
     return ResponseModel(
         success=True,
         message="Admin created successfully",
@@ -53,6 +58,7 @@ async def update_admin(
 async def delete_admin(admin_id: int, db: Session = Depends(get_db)):
     remove_admin = crud.remove_admin(db, admin_id)
     if not remove_admin:
+        logger.warning(f"Attempt to delete non-existent admin with id: {admin_id}")
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content={
@@ -60,6 +66,7 @@ async def delete_admin(admin_id: int, db: Session = Depends(get_db)):
                 "message": "Admin not found",
             },
         )
+    logger.info(f"Admin deleted with id: {admin_id}")
     return ResponseModel(
         success=True,
         message="Admin deleted successfully",
@@ -86,6 +93,9 @@ async def toggle_admin_status(admin_id: int, db: Session = Depends(get_db)):
 @router.post("/panel", description="add a new panel", response_model=ResponseModel)
 async def create_panel(panel_input: PanelInput, db: Session = Depends(get_db)):
     if crud.get_panel_by_name(db, panel_input.name):
+        logger.warning(
+            f"Attempt to create panel with duplicate name: {panel_input.name}"
+        )
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
             content={
@@ -96,6 +106,9 @@ async def create_panel(panel_input: PanelInput, db: Session = Depends(get_db)):
 
     connection = await create_new_panel(db, panel_input)
     if not connection:
+        logger.error(
+            f"Failed to connect to panel: {panel_input.name} at {panel_input.url}"
+        )
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={
@@ -105,6 +118,7 @@ async def create_panel(panel_input: PanelInput, db: Session = Depends(get_db)):
         )
 
     crud.add_panel(db, panel_input)
+    logger.info(f"New panel created: {panel_input.name}")
     return ResponseModel(
         success=True,
         message="Panel created successfully",
@@ -116,6 +130,7 @@ async def update_panel(
     panel_id: int, panel_input: PanelInput, db: Session = Depends(get_db)
 ):
     if not crud.get_panel_by_id(db, panel_id):
+        logger.warning(f"Attempt to update non-existent panel with id: {panel_id}")
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content={
@@ -125,6 +140,9 @@ async def update_panel(
         )
     connection = await update_a_panel(db, panel_input)
     if not connection:
+        logger.error(
+            f"Failed to connect to panel: {panel_input.name} at {panel_input.url} during update"
+        )
         return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={
@@ -134,6 +152,7 @@ async def update_panel(
         )
 
     crud.update_panel_values(db, panel_id, panel_input)
+    logger.info(f"Panel updated with id: {panel_id} ({panel_input.name})")
     return ResponseModel(
         success=True,
         message="Panel updated successfully",
@@ -144,6 +163,7 @@ async def update_panel(
 async def delete_panel(panel_id: int, db: Session = Depends(get_db)):
     remove_panel = crud.remove_panel(db, panel_id)
     if not remove_panel:
+        logger.warning(f"Attempt to delete non-existent panel with id: {panel_id}")
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content={
@@ -151,6 +171,7 @@ async def delete_panel(panel_id: int, db: Session = Depends(get_db)):
                 "message": "Panel not found",
             },
         )
+    logger.info(f"Panel deleted with id: {panel_id}")
     return ResponseModel(
         success=True,
         message="Panel deleted successfully",
