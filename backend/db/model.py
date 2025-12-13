@@ -1,5 +1,5 @@
 from .engin import Base
-from sqlalchemy import Column, DateTime, Float, Integer, String, Boolean
+from sqlalchemy import Column, DateTime, Integer, String, Boolean, BigInteger
 
 
 class Admins(Base):
@@ -11,7 +11,7 @@ class Admins(Base):
     is_active = Column(Boolean, default=True)
     panel = Column(String, nullable=False)
     inbound_id = Column(Integer, nullable=True)
-    traffic = Column(Float, default=0.0)
+    traffic = Column(BigInteger, default=0)
     return_traffic = Column(Boolean, default=False)
     expiry_date = Column(DateTime, nullable=True)
 
