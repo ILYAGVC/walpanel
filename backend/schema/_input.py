@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class AdminInput(BaseModel):
@@ -39,7 +39,9 @@ class ClientInput(BaseModel):
     id: str  # UUID
     enable: bool = True
     expiry_time: int
-    total: float = 0.0
+    total: float = Field(
+        default=0.0, ge=104857600, description="Minimum 0.1 GB (100 MB)"
+    )
     sub_id: str
     flow: str = ""
 
@@ -48,6 +50,6 @@ class ClientUpdateInput(BaseModel):
     email: str
     enable: bool
     expiry_time: int
-    total: float
+    total: float = Field(ge=104857600, description="Minimum 0.1 GB (100 MB)")
     sub_id: str
     flow: str = ""

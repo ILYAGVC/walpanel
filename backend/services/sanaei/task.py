@@ -79,6 +79,16 @@ class AdminTaskService:
             )
             return False
 
+    async def reset_client_usage(self, email: str) -> bool:
+        try:
+            await self.api_service.reset_client_usage(self.admin.inbound_id, email)
+            return True
+        except Exception as e:
+            logger.error(
+                f"Failed to reset usage for client {email} by admin {self.admin_username}: {str(e)}"
+            )
+            return False
+
     async def delete_client_from_panel(self, uuid: str) -> bool:
         try:
             await self.api_service.delete_client(self.admin.inbound_id, uuid)

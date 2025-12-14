@@ -37,7 +37,6 @@ class APIService:
             return info
 
         except Exception as e:
-            print(f"Connection test failed: {str(e)}")
             return None
 
     async def get_inbound(self, inbound_id: int) -> Inbound:
@@ -87,6 +86,10 @@ class APIService:
             inbound_id=inbound_id,
         )
         await self.api.client.update(uuid, data)
+
+    async def reset_client_usage(self, inbound_id: int, email: str):
+        await self.ensure_login()
+        await self.api.client.reset_stats(inbound_id, email)
 
     async def delete_client(self, inbound_id: int, uuid: str):
         await self.ensure_login()

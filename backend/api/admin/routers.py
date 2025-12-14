@@ -11,6 +11,7 @@ from backend.services import (
     update_a_user,
     delete_a_user,
     get_all_users_from_panel,
+    reset_a_user_usage,
 )
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -68,6 +69,24 @@ async def update_user(
         uuid=uuid,
         user_input=user_input,
         db=db,
+    )
+    return result
+
+
+@router.put("/user/{email}/reset", description="Reset user usage statistics")
+async def reset_user_usage(
+    email: str,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    if current_admin["role"] != "admin":
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"detail": "Not authorized to access this resource."},
+        )
+
+    result = await reset_a_user_usage(
+        admin_username=current_admin["username"], email=email, db=db
     )
     return result
 
