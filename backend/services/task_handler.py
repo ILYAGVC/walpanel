@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import status
 from fastapi.responses import JSONResponse
 
+from .limit_handler import AdminLimiter
 from .sanaei import AdminTaskService
 from backend.schema.output import ResponseModel
 from backend.schema._input import PanelInput, ClientInput, ClientUpdateInput
@@ -88,6 +89,27 @@ async def add_new_user(
     panel = crud.get_panel_by_name(db, _admin.panel)
 
     if panel.panel_type == "3x-ui":
+        admin_check = AdminLimiter(admin_username=admin_username, db=db)
+        if not admin_check.admin_is_active():
+            logger.warning(f"Inactive admin attempted to add user: {admin_username}")
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": "Your admin account is inactive. Contact support.",
+                },
+            )
+        elif not admin_check.check_traffic_limit(user_input.total):
+            logger.warning(
+                f"Admin {admin_username} exceeded traffic limit when adding user: {user_input.email}"
+            )
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": f"Insufficient traffic to add this user, your limit: {round((_admin.traffic) / (1024 ** 3), 1)} GB",
+                },
+            )
 
         admin_task = AdminTaskService(admin_username=admin_username, db=db)
         check_duplicate = await admin_task.get_client_by_email(user_input.email)
@@ -114,6 +136,7 @@ async def add_new_user(
                     "message": f"{success}",
                 },
             )
+        admin_check.reduce_usage(user_input.total, user_input.total)
         return ResponseModel(
             success=True,
             message="User added successfully",
@@ -122,15 +145,45 @@ async def add_new_user(
 
 async def update_a_user(
     admin_username: str, uuid: str, user_input: ClientUpdateInput, db: Session
-) -> bool:
+) -> JSONResponse:
     """This function updates an existing user in the panel associated with the given admin."""
 
     _admin = crud.get_admin_by_username(db, admin_username)
     panel = crud.get_panel_by_name(db, _admin.panel)
 
     if panel.panel_type == "3x-ui":
+        admin_check = AdminLimiter(admin_username=admin_username, db=db)
+        if not admin_check.admin_is_active():
+            logger.warning(f"Inactive admin attempted to update user: {admin_username}")
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": "Your admin account is inactive. Contact support.",
+                },
+            )
+        elif not admin_check.check_traffic_limit(user_input.total):
+            logger.warning(
+                f"Admin {admin_username} exceeded traffic limit when updating user: {uuid}"
+            )
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": f"Insufficient traffic to update this user, your limit: {round((_admin.traffic) / (1024 ** 3), 1)} GB",
+                },
+            )
 
         admin_task = AdminTaskService(admin_username=admin_username, db=db)
+        user_info = await admin_task.get_client_by_email(user_input.email)
+        new_usage = user_info.total - (user_info.up + user_info.down)
+
+        extra_traffic = (
+            user_input.total - user_info.total
+            if user_input.total > user_info.total
+            else 0
+        )
+
         update_user = await admin_task.update_client_in_panel(uuid, user_input)
 
         if not update_user:
@@ -142,9 +195,60 @@ async def update_a_user(
                 },
             )
 
+        admin_check.reduce_usage(extra_traffic, extra_traffic)
         return ResponseModel(
             success=True,
             message="User updated successfully",
+        )
+
+
+async def reset_a_user_usage(
+    admin_username: str, email: str, db: Session
+) -> JSONResponse:
+    """This function resets a user's usage statistics in the panel associated with the given admin."""
+
+    _admin = crud.get_admin_by_username(db, admin_username)
+    panel = crud.get_panel_by_name(db, _admin.panel)
+
+    if panel.panel_type == "3x-ui":
+        admin_check = AdminLimiter(admin_username=admin_username, db=db)
+        if not admin_check.admin_is_active():
+            logger.warning(
+                f"Inactive admin attempted to reset user usage: {admin_username}"
+            )
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": "Your admin account is inactive. Contact support.",
+                },
+            )
+
+        admin_task = AdminTaskService(admin_username=admin_username, db=db)
+        user_info = await admin_task.get_client_by_email(email)
+        if not admin_check.check_traffic_limit(user_info.total):
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": f"Insufficient traffic to reset usage for this user, your limit: {round((_admin.traffic) / (1024 ** 3), 1)} GB",
+                },
+            )
+        usage_user_traffic = user_info.up + user_info.down
+        reset_usage = await admin_task.reset_client_usage(email)
+
+        if not reset_usage:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "Failed to reset user usage",
+                },
+            )
+        admin_check.reduce_usage(user_info.total, usage_user_traffic)
+        return ResponseModel(
+            success=True,
+            message="User usage reset successfully",
         )
 
 
@@ -155,11 +259,45 @@ async def delete_a_user(admin_username: str, uuid: str, db: Session) -> bool:
     panel = crud.get_panel_by_name(db, _admin.panel)
 
     if panel.panel_type == "3x-ui":
+        admin_check = AdminLimiter(admin_username=admin_username, db=db)
+        if not admin_check.admin_is_active():
+            logger.warning(f"Inactive admin attempted to delete user: {admin_username}")
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": "Your admin account is inactive. Contact support.",
+                },
+            )
 
         admin_task = AdminTaskService(admin_username=admin_username, db=db)
+        users = await admin_task.get_all_users()
+
+        # Find user
+        user_info = None
+        for user in users:
+            if user.get("uuid") == uuid:
+                user_info = user
+                break
+
+        if not user_info:
+            logger.warning(
+                f"User with uuid {uuid} not found for deletion by admin {admin_username}"
+            )
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "success": False,
+                    "message": "User not found",
+                },
+            )
+
+        traffic = user_info["total"] - (user_info["up"] + user_info["down"])
+
         delete_user = await admin_task.delete_client_from_panel(uuid)
 
         if not delete_user:
+            logger.error(f"Failed to delete user {uuid} by admin {admin_username}")
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 content={
@@ -167,6 +305,11 @@ async def delete_a_user(admin_username: str, uuid: str, db: Session) -> bool:
                     "message": "Failed to delete user",
                 },
             )
+
+        admin_check.increase_usage(traffic)
+        logger.info(
+            f"User {user_info['email']} deleted by admin {admin_username}, traffic returned: {round(traffic / (1024 ** 3), 2)} GB"
+        )
 
         return ResponseModel(
             success=True,
