@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 210 40% 96%;
+        --foreground: 210 40% 10%;
+        --card: 0 0% 100%;
+        --card-foreground: 210 40% 10%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 210 40% 10%;
+        --muted: 210 30% 92%;
+        --muted-foreground: 210 20% 45%;
+        --accent: 201 96% 32%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 210 30% 82%;
+        --input: 210 30% 85%;
+        --primary: 201 96% 32%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 210 30% 92%;
+        --secondary-foreground: 210 40% 10%;
+        --ring: 201 96% 32%;
+        --radius: 0.5rem;
+    }
+
+    .dark {
+        --background: 220 20% 4%;
+        --foreground: 210 40% 98%;
+        --card: 220 20% 7%;
+        --card-foreground: 210 40% 98%;
+        --popover: 220 20% 7%;
+        --popover-foreground: 210 40% 98%;
+        --muted: 220 20% 12%;
+        --muted-foreground: 210 20% 65%;
+        --accent: 201 96% 40%;
+        --accent-foreground: 0 0% 100%;
+        --destructive: 0 84% 60%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 220 20% 14%;
+        --input: 220 20% 14%;
+        --primary: 201 96% 40%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 220 20% 12%;
+        --secondary-foreground: 210 40% 98%;
+        --ring: 201 96% 40%;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    html,
+    body {
+        @apply bg-background text-foreground overflow-x-hidden;
+        max-width: 100vw;
+    }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-muted;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/80;
+}
+
+
+/* Marquee container */
+.marquee-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Marquee Animation - Subtitle style (Right to Left) */
+@keyframes marquee {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(300%);
+    }
+}
+
+.animate-marquee {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 15s linear infinite;
+}
+
+.marquee-container:hover .animate-marquee {
+    animation-play-state: paused;
+}

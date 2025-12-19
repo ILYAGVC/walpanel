@@ -1,0 +1,825 @@
+import { useEffect, useState } from 'react'
+import {
+    Zap,
+    Users,
+    HardDrive,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    Plus,
+    Edit2,
+    Trash2,
+    RotateCcw,
+    UserX,
+    ExternalLink,
+    Server,
+    Megaphone,
+    Clock,
+    Wifi,
+    Copy,
+    Link,
+} from 'lucide-react'
+import { dashboardAPI, userAPI } from '@/lib/api'
+import { bytesToGB, formatTraffic } from '@/lib/traffic-converter'
+import { formatDate, formatExpiryWithDays, cn } from '@/lib/utils'
+import { getUserRole } from '@/lib/auth'
+import { DashboardData, AdminUser } from '@/types'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { UserFormDialog } from './components/UserFormDialog'
+
+interface ExpandedRow {
+    [key: string]: boolean
+}
+
+export function DashboardPage() {
+    const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [expandedRows, setExpandedRows] = useState<ExpandedRow>({})
+    const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
+    const [showUserDialog, setShowUserDialog] = useState(false)
+    const [userToDelete, setUserToDelete] = useState<string | null>(null)
+    const [currentPage, setCurrentPage] = useState(1)
+    const usersPerPage = 5
+
+    const userRole = getUserRole()
+
+    useEffect(() => {
+        fetchDashboardData()
+    }, [])
+
+    const fetchDashboardData = async () => {
+        try {
+            setLoading(true)
+            const data = await dashboardAPI.getDashboardData()
+            setDashboardData(data)
+            setError(null)
+        } catch (err: any) {
+            console.error('Failed to fetch dashboard data:', err)
+            setError(err?.message || 'Failed to fetch dashboard data')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return
+
+        try {
+            await userAPI.deleteUser(userToDelete)
+            setUserToDelete(null)
+            fetchDashboardData()
+        } catch (err: any) {
+            console.error('Failed to delete user:', err)
+            alert(err?.message || 'Failed to delete user')
+        }
+    }
+
+    const handleResetUsage = async (email: string) => {
+        try {
+            await userAPI.resetUserUsage(email)
+            fetchDashboardData()
+        } catch (err: any) {
+            console.error('Failed to reset usage:', err)
+            alert(err?.message || 'Failed to reset usage')
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="space-y-6 p-4 md:p-6 max-w-full overflow-x-hidden">
+            {/* Page Title */}
+            <div>
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
+                <p className="text-muted-foreground">Welcome back!</p>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+                <div className="rounded-md bg-destructive/10 p-4 text-sm text-destructive border border-destructive/20">
+                    {error}
+                </div>
+            )}
+
+            {/* SuperAdmin Stats Row */}
+            {userRole === 'superadmin' && dashboardData && (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {/* Total Panels */}
+                    {dashboardData.panels && (
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Total Panels</CardTitle>
+                                <Server className="h-4 w-4 text-purple-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{dashboardData.panels.length}</div>
+                                <p className="text-xs text-muted-foreground">Configured panels</p>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Total Active Admins */}
+                    {dashboardData.admins && (
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Total Active Admins</CardTitle>
+                                <Users className="h-4 w-4 text-green-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">
+                                    {dashboardData.admins.filter(a => a.is_active).length}
+                                </div>
+                                <p className="text-xs text-muted-foreground">Active administrators</p>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Total Inactive Admins */}
+                    {dashboardData.admins && (
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Total Inactive Admins</CardTitle>
+                                <UserX className="h-4 w-4 text-red-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-destructive">
+                                    {dashboardData.admins.filter(a => !a.is_active).length}
+                                </div>
+                                <p className="text-xs text-muted-foreground">Inactive administrators</p>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+            )}
+
+            {/* System Stats Row */}
+            {dashboardData?.system && (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
+                            <HardDrive className="h-4 w-4 text-indigo-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                {(dashboardData.system.used_memory / 1024 / 1024 / 1024).toFixed(2)} GB
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Total: {(dashboardData.system.total_memory / 1024 / 1024 / 1024).toFixed(2)} GB
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Disk Usage</CardTitle>
+                            <HardDrive className="h-4 w-4 text-pink-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                {(dashboardData.system.disk_used / 1024 / 1024 / 1024).toFixed(2)} GB
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Total: {(dashboardData.system.disk_total / 1024 / 1024 / 1024).toFixed(2)} GB
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">CPU Usage</CardTitle>
+                            <Zap className="h-4 w-4 text-orange-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{dashboardData.system.cpu_percent.toFixed(1)}%</div>
+                            <p className="text-xs text-muted-foreground">Current usage</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
+            {/* Admin Stats Row - Only for admin role */}
+            {userRole === 'admin' && dashboardData && (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    {/* Remaining Traffic */}
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Remaining Traffic</CardTitle>
+                            <Zap className="h-4 w-4 text-yellow-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                {dashboardData.remaining_traffic !== undefined
+                                    ? `${bytesToGB(dashboardData.remaining_traffic).toFixed(2)} GB`
+                                    : 'N/A'}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                {dashboardData.remaining_traffic !== undefined
+                                    ? formatTraffic(dashboardData.remaining_traffic)
+                                    : 'No data'}
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    {/* Expiry Date */}
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Expiry Date</CardTitle>
+                            <Clock className="h-4 w-4 text-blue-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                {dashboardData.expiry_time
+                                    ? formatDate(dashboardData.expiry_time)
+                                    : 'No expiry'}
+                            </div>
+                            <p className="text-xs text-muted-foreground">Account expiration</p>
+                        </CardContent>
+                    </Card>
+
+                    {/* Total Users */}
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                            <Users className="h-4 w-4 text-green-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">
+                                {dashboardData.users?.length || 0}
+                            </div>
+                            <p className="text-xs text-muted-foreground">Registered users</p>
+                        </CardContent>
+                    </Card>
+
+                    {/* Online Users */}
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Online Users</CardTitle>
+                            <Wifi className="h-4 w-4 text-emerald-500" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-emerald-500">
+                                {dashboardData.users?.filter(u => u.is_online).length || 0}
+                            </div>
+                            <p className="text-xs text-muted-foreground">Currently connected</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
+            {/* Advertisement Banner - Subtle Marquee Style */}
+            {dashboardData?.ads && dashboardData.ads.text && (
+                <a
+                    href={dashboardData.ads.link || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block border-t border-b border-muted py-2 px-4 hover:bg-muted/30 transition-colors cursor-pointer"
+                >
+                    <div className="flex items-center gap-3">
+                        <Badge variant="outline" className="shrink-0 text-xs">
+                            <Megaphone className="h-3 w-3 mr-1" />
+                            Ads
+                        </Badge>
+                        <div className="flex-1 marquee-container">
+                            <span className="text-sm text-muted-foreground animate-marquee">
+                                {dashboardData.ads.title && (
+                                    <span className="font-medium text-foreground mr-2">{dashboardData.ads.title}:</span>
+                                )}
+                                {dashboardData.ads.text}
+                            </span>
+                        </div>
+                        <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                    </div>
+                </a>
+            )}
+
+            {/* Users Table */}
+            {dashboardData?.users && (
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                            <CardTitle>Your Users</CardTitle>
+                        </div>
+                        <Button
+                            size="sm"
+                            onClick={() => {
+                                setSelectedUser(null)
+                                setShowUserDialog(true)
+                            }}
+                        >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add User
+                        </Button>
+                    </CardHeader>
+
+                    <CardContent>
+                        {dashboardData.users.length === 0 ? (
+                            <div className="text-center py-8">
+                                <p className="text-muted-foreground">No users yet</p>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Mobile View - Cards */}
+                                <div className="md:hidden space-y-3">
+                                    {[...dashboardData.users]
+                                        .reverse()
+                                        .slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage)
+                                        .map((user) => (
+                                            <MobileUserCard
+                                                key={user.uuid}
+                                                user={user}
+                                                isExpanded={expandedRows[user.uuid] || false}
+                                                subUrl={dashboardData.sub_url}
+                                                onToggle={() => {
+                                                    setExpandedRows(prev => ({
+                                                        ...prev,
+                                                        [user.uuid]: !prev[user.uuid],
+                                                    }))
+                                                }}
+                                                onEdit={() => {
+                                                    setSelectedUser(user)
+                                                    setShowUserDialog(true)
+                                                }}
+                                                onDelete={() => setUserToDelete(user.uuid)}
+                                                onResetUsage={() => handleResetUsage(user.email)}
+                                            />
+                                        ))}
+                                </div>
+
+                                {/* Desktop View - Table */}
+                                <div className="hidden md:block overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="w-12"></TableHead>
+                                                <TableHead>Email</TableHead>
+                                                <TableHead>Traffic</TableHead>
+                                                <TableHead>Expiry</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead className="text-right">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {[...dashboardData.users]
+                                                .reverse()
+                                                .slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage)
+                                                .map((user) => (
+                                                    <DetailsRow
+                                                        key={user.uuid}
+                                                        user={user}
+                                                        isExpanded={expandedRows[user.uuid] || false}
+                                                        subUrl={dashboardData.sub_url}
+                                                        onToggle={() => {
+                                                            setExpandedRows(prev => ({
+                                                                ...prev,
+                                                                [user.uuid]: !prev[user.uuid],
+                                                            }))
+                                                        }}
+                                                        onEdit={() => {
+                                                            setSelectedUser(user)
+                                                            setShowUserDialog(true)
+                                                        }}
+                                                        onDelete={() => setUserToDelete(user.uuid)}
+                                                        onResetUsage={() => handleResetUsage(user.email)}
+                                                    />
+                                                ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+
+                                {/* Pagination */}
+                                {dashboardData.users.length > usersPerPage && (
+                                    <div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t mt-4 gap-3">
+                                        <p className="text-sm text-muted-foreground text-center sm:text-left">
+                                            Showing {((currentPage - 1) * usersPerPage) + 1} to {Math.min(currentPage * usersPerPage, dashboardData.users.length)} of {dashboardData.users.length}
+                                        </p>
+                                        <div className="flex items-center gap-1 sm:gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                disabled={currentPage === 1}
+                                            >
+                                                <ChevronLeft className="h-4 w-4" />
+                                                <span className="hidden sm:inline">Previous</span>
+                                            </Button>
+                                            <span className="text-sm text-muted-foreground px-1 sm:px-2">
+                                                {currentPage} / {Math.ceil((dashboardData.users?.length || 0) / usersPerPage)}
+                                            </span>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setCurrentPage(p => Math.min(Math.ceil((dashboardData.users?.length || 0) / usersPerPage), p + 1))}
+                                                disabled={currentPage >= Math.ceil((dashboardData.users?.length || 0) / usersPerPage)}
+                                            >
+                                                <span className="hidden sm:inline">Next</span>
+                                                <ChevronRight className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* User Form Dialog */}
+            <UserFormDialog
+                isOpen={showUserDialog}
+                onClose={() => {
+                    setShowUserDialog(false)
+                    setSelectedUser(null)
+                }}
+                onSuccess={() => {
+                    fetchDashboardData()
+                    setShowUserDialog(false)
+                    setSelectedUser(null)
+                }}
+                user={selectedUser}
+            />
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={!!userToDelete} onOpenChange={() => userToDelete && setUserToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete User</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this user? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="flex justify-end gap-3">
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive">
+                            Delete
+                        </AlertDialogAction>
+                    </div>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
+    )
+}
+
+interface DetailsRowProps {
+    user: AdminUser
+    isExpanded: boolean
+    subUrl?: string
+    onToggle: () => void
+    onEdit: () => void
+    onDelete: () => void
+    onResetUsage: () => void
+}
+
+function DetailsRow({
+    user,
+    isExpanded,
+    subUrl,
+    onToggle,
+    onEdit,
+    onDelete,
+    onResetUsage,
+}: DetailsRowProps) {
+    const trafficUsed = user.up + user.down
+    const trafficPercent = (trafficUsed / user.total) * 100
+
+    return (
+        <>
+            <TableRow>
+                <TableCell>
+                    <button
+                        onClick={onToggle}
+                        className="p-1 hover:bg-muted rounded"
+                    >
+                        <ChevronDown
+                            className={cn(
+                                'h-4 w-4 transition-transform',
+                                isExpanded && 'transform rotate-180'
+                            )}
+                        />
+                    </button>
+                </TableCell>
+                <TableCell className="font-mono text-sm">{user.email}</TableCell>
+                <TableCell>
+                    <div className="space-y-1">
+                        <div className="text-sm font-medium">
+                            {bytesToGB(trafficUsed).toFixed(2)} / {bytesToGB(user.total).toFixed(2)} GB
+                        </div>
+                        <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                                className={cn(
+                                    'h-full bg-primary transition-all',
+                                    trafficPercent > 80 && 'bg-destructive',
+                                    trafficPercent > 90 && 'bg-destructive'
+                                )}
+                                style={{ width: `${Math.min(trafficPercent, 100)}%` }}
+                            />
+                        </div>
+                    </div>
+                </TableCell>
+                <TableCell>
+                    {user.expiry_time ? (
+                        <div className="space-y-1">
+                            <div className="text-sm">{formatDate(user.expiry_time)}</div>
+                            <div className={cn(
+                                'text-xs',
+                                formatExpiryWithDays(user.expiry_time).isExpired
+                                    ? 'text-destructive'
+                                    : formatExpiryWithDays(user.expiry_time).daysLeft <= 7
+                                        ? 'text-yellow-500'
+                                        : 'text-muted-foreground'
+                            )}>
+                                {formatExpiryWithDays(user.expiry_time).text}
+                            </div>
+                        </div>
+                    ) : (
+                        <span className="text-muted-foreground">No expiry</span>
+                    )}
+                </TableCell>
+                <TableCell>
+                    <Badge variant={user.enable ? 'default' : 'destructive'}>
+                        {user.enable ? 'Active' : 'Inactive'}
+                    </Badge>
+                </TableCell>
+                <TableCell className="text-right space-x-2">
+                    <Button size="sm" variant="ghost" onClick={onEdit}>
+                        <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={onDelete}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                </TableCell>
+            </TableRow>
+
+            {isExpanded && (
+                <TableRow className="bg-muted/30">
+                    <TableCell colSpan={6}>
+                        <div className="py-4 space-y-3">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                <div>
+                                    <p className="text-muted-foreground">Upload</p>
+                                    <p className="font-mono font-semibold">{formatTraffic(user.up)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-muted-foreground">Download</p>
+                                    <p className="font-mono font-semibold">{formatTraffic(user.down)}</p>
+                                </div>
+                                <div>
+                                    <p className="text-muted-foreground">Inbound ID</p>
+                                    <p className="font-mono font-semibold">{user.inbound_id}</p>
+                                </div>
+                                <div>
+                                    <p className="text-muted-foreground">Flow</p>
+                                    <p className="font-mono font-semibold">{user.flow || '-'}</p>
+                                </div>
+                            </div>
+
+                            {/* Subscription URL */}
+                            {subUrl && user.sub_id && (
+                                <div className="space-y-2">
+                                    <p className="text-sm text-muted-foreground">Subscription URL</p>
+                                    <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md">
+                                        <Link className="h-4 w-4 text-muted-foreground shrink-0" />
+                                        <code className="text-xs font-mono flex-1 truncate">
+                                            {`${subUrl}/${user.sub_id}`}
+                                        </code>
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(`${subUrl}/${user.sub_id}`)
+                                            }}
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex flex-wrap gap-2 pt-2">
+                                <Button size="sm" variant="outline" onClick={onResetUsage}>
+                                    <RotateCcw className="h-4 w-4 mr-2" />
+                                    Reset Usage
+                                </Button>
+                                {subUrl && user.sub_id && (
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(`${subUrl}/${user.sub_id}`)
+                                        }}
+                                    >
+                                        <Copy className="h-4 w-4 mr-2" />
+                                        Copy Subscription
+                                    </Button>
+                                )}
+                                <Button size="sm" variant="outline" onClick={onEdit}>
+                                    <Edit2 className="h-4 w-4 mr-2" />
+                                    Edit
+                                </Button>
+                                <Button size="sm" variant="destructive" onClick={onDelete}>
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                </Button>
+                            </div>
+                        </div>
+                    </TableCell>
+                </TableRow>
+            )}
+        </>
+    )
+}
+
+// Mobile User Card Component
+interface MobileUserCardProps {
+    user: AdminUser
+    isExpanded: boolean
+    subUrl?: string
+    onToggle: () => void
+    onEdit: () => void
+    onDelete: () => void
+    onResetUsage: () => void
+}
+
+function MobileUserCard({
+    user,
+    isExpanded,
+    subUrl,
+    onToggle,
+    onEdit,
+    onDelete,
+    onResetUsage,
+}: MobileUserCardProps) {
+    const trafficUsed = user.up + user.down
+    const trafficPercent = (trafficUsed / user.total) * 100
+
+    return (
+        <div className="border rounded-lg overflow-hidden">
+            {/* Compact View - Always visible */}
+            <button
+                onClick={onToggle}
+                className="w-full p-3 flex items-center gap-3 hover:bg-muted/50 transition-colors text-left"
+            >
+                {/* Left: Name & Traffic */}
+                <div className="flex-1 min-w-0">
+                    <span className="font-medium text-sm truncate block">{user.email}</span>
+                    <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-muted-foreground">
+                            {bytesToGB(trafficUsed).toFixed(1)} / {bytesToGB(user.total).toFixed(1)} GB
+                        </span>
+                        <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div
+                                className={cn(
+                                    'h-full bg-primary transition-all',
+                                    trafficPercent > 80 && 'bg-destructive'
+                                )}
+                                style={{ width: `${Math.min(trafficPercent, 100)}%` }}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right: Status & Chevron */}
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                    <Badge variant={user.enable ? 'default' : 'destructive'} className="text-xs">
+                        {user.enable ? 'Active' : 'Inactive'}
+                    </Badge>
+                    <ChevronDown
+                        className={cn(
+                            'h-4 w-4 text-muted-foreground transition-transform',
+                            isExpanded && 'transform rotate-180'
+                        )}
+                    />
+                </div>
+            </button>
+
+            {/* Expanded View */}
+            {isExpanded && (
+                <div className="border-t p-3 space-y-3 bg-muted/30">
+                    {/* Traffic Details */}
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <p className="text-xs text-muted-foreground">Upload</p>
+                            <p className="font-mono font-medium">{formatTraffic(user.up)}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground">Download</p>
+                            <p className="font-mono font-medium">{formatTraffic(user.down)}</p>
+                        </div>
+                    </div>
+
+                    {/* Expiry */}
+                    <div className="text-sm">
+                        <p className="text-xs text-muted-foreground">Expiry Date</p>
+                        {user.expiry_time ? (
+                            <div className="flex items-center gap-2">
+                                <span className="font-medium">{formatDate(user.expiry_time)}</span>
+                                <span className={cn(
+                                    'text-xs',
+                                    formatExpiryWithDays(user.expiry_time).isExpired
+                                        ? 'text-destructive'
+                                        : formatExpiryWithDays(user.expiry_time).daysLeft <= 7
+                                            ? 'text-yellow-500'
+                                            : 'text-muted-foreground'
+                                )}>
+                                    ({formatExpiryWithDays(user.expiry_time).text})
+                                </span>
+                            </div>
+                        ) : (
+                            <span className="text-muted-foreground">No expiry</span>
+                        )}
+                    </div>
+
+                    {/* Subscription URL */}
+                    {subUrl && user.sub_id && (
+                        <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Subscription URL</p>
+                            <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md">
+                                <Link className="h-3 w-3 text-muted-foreground shrink-0" />
+                                <code className="text-xs font-mono flex-1 truncate">
+                                    {`${subUrl}/${user.sub_id}`}
+                                </code>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 w-7 p-0"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        navigator.clipboard.writeText(`${subUrl}/${user.sub_id}`)
+                                    }}
+                                >
+                                    <Copy className="h-3 w-3" />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-2 pt-1">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 min-w-[80px]"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onResetUsage()
+                            }}
+                        >
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            Reset
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 min-w-[80px]"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onEdit()
+                            }}
+                        >
+                            <Edit2 className="h-3 w-3 mr-1" />
+                            Edit
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="destructive"
+                            className="flex-1 min-w-[80px]"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onDelete()
+                            }}
+                        >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Delete
+                        </Button>
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
