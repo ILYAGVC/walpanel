@@ -17,11 +17,7 @@ class AdminLimiter:
             crud.change_admin_status(self.db, self.admin.id)
             return False
 
-        if not is_expired and not self.admin.is_active:
-            crud.change_admin_status(self.db, self.admin.id)
-            return True
-
-        return not is_expired
+        return self.admin.is_active
 
     def check_traffic_limit(self, required_traffic: int) -> bool:
         """Check if the admin has enough traffic to perform an operation."""

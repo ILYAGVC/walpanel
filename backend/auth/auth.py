@@ -62,7 +62,14 @@ async def login_for_access_token(
                 "panel": "main",
             }
         )
-        return {"access_token": access_token, "token_type": "bearer"}
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "Login successful",
+                "data": {"access_token": access_token, "token_type": "bearer"},
+            },
+        )
 
     # Check for regular admin credentials
     admin = crud.get_admin_by_username(db, form_data.username)
@@ -77,4 +84,11 @@ async def login_for_access_token(
     access_token = create_access_token(
         data={"sub": admin.username, "role": "admin", "panel": admin.panel}
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "success": True,
+            "message": "Login successful",
+            "data": {"access_token": access_token, "token_type": "bearer"},
+        },
+    )
