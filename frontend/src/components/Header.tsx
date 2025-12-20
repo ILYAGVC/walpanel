@@ -31,7 +31,7 @@ export function Header() {
                             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
                                 W
                             </div>
-                            <span className="hidden sm:inline">WalPanel</span>
+                            <span className="hidden sm:inline"></span>
                         </Link>
                     </div>
 
