@@ -68,11 +68,6 @@ export function LoginPage() {
 
             <Card className="w-full max-w-sm">
                 <CardHeader className="space-y-1">
-                    <div className="flex items-center justify-center mb-4">
-                        <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-xl">
-                            W
-                        </div>
-                    </div>
                     <CardTitle className="text-2xl text-center">whale panel</CardTitle>
                     <CardDescription className="text-center">
                         Login to your admin panel
