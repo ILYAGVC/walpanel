@@ -82,10 +82,8 @@ pull_and_run() {
     print_status "Starting Whale Panel..."
     docker compose up -d
     
-    docker compose logs -f
     trap 'show_info; exit 0' INT
-    trap - INT
-    show_info
+    docker compose logs -f
 }
 
 show_info() {
