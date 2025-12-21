@@ -48,10 +48,10 @@ configure_env() {
     print_status "Configuring environment..."
     echo ""
 
-    read -p "Enter admin username [admin]: " ADMIN_USER
+    read -p "Enter admin username: " ADMIN_USER
     ADMIN_USER=${ADMIN_USER:-admin}
 
-    read -sp "Enter admin password [admin]: " ADMIN_PASS
+    read -sp "Enter admin password: " ADMIN_PASS
     ADMIN_PASS=${ADMIN_PASS:-admin}
     echo ""
 
@@ -82,7 +82,10 @@ pull_and_run() {
     print_status "Starting Whale Panel..."
     docker compose up -d
     
-    print_success "Whale Panel is running!"
+    docker compose logs -f
+    trap 'show_info; exit 0' INT
+    trap - INT
+    show_info
 }
 
 show_info() {
@@ -95,7 +98,7 @@ show_info() {
     echo "   Installation Complete!"
     echo "========================================"
     echo ""
-    echo "  Panel URL: http://$IP:$PORT/$URLPATH/login"
+    echo -e "\033[32m  Panel URL: http://$IP:$PORT/$URLPATH/login\033[0m"
     echo ""
     echo "  Commands:"
     echo "    whale-panel update"
@@ -156,7 +159,6 @@ main() {
     configure_env
     install_command
     pull_and_run
-    show_info
 }
 
 main
