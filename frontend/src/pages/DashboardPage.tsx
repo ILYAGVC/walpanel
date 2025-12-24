@@ -17,7 +17,9 @@ import {
     Wifi,
     Copy,
     Link,
+    QrCode,
 } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { dashboardAPI, userAPI } from '@/lib/api'
 import { bytesToGB, formatTraffic } from '@/lib/traffic-converter'
 import { formatDate, formatExpiryWithDays, cn } from '@/lib/utils'
@@ -43,6 +45,13 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
 import { UserFormDialog } from './components/UserFormDialog'
 
 interface ExpandedRow {
@@ -57,6 +66,8 @@ export function DashboardPage() {
     const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
     const [showUserDialog, setShowUserDialog] = useState(false)
     const [userToDelete, setUserToDelete] = useState<string | null>(null)
+    const [showQrDialog, setShowQrDialog] = useState(false)
+    const [qrUser, setQrUser] = useState<AdminUser | null>(null)
     const [currentPage, setCurrentPage] = useState(1)
     const usersPerPage = 5
 
@@ -376,6 +387,10 @@ export function DashboardPage() {
                                                 }}
                                                 onDelete={() => setUserToDelete(user.uuid)}
                                                 onResetUsage={() => handleResetUsage(user.email)}
+                                                onShowQr={(user) => {
+                                                    setQrUser(user)
+                                                    setShowQrDialog(true)
+                                                }}
                                             />
                                         ))}
                                 </div>
@@ -415,6 +430,10 @@ export function DashboardPage() {
                                                         }}
                                                         onDelete={() => setUserToDelete(user.uuid)}
                                                         onResetUsage={() => handleResetUsage(user.email)}
+                                                        onShowQr={(user) => {
+                                                            setQrUser(user)
+                                                            setShowQrDialog(true)
+                                                        }}
                                                     />
                                                 ))}
                                         </TableBody>
@@ -490,6 +509,32 @@ export function DashboardPage() {
                     </div>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* QR Code Dialog */}
+            <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Subscription QR Code</DialogTitle>
+                        <DialogDescription>
+                            Scan this QR code.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col items-center space-y-4">
+                        {qrUser && dashboardData?.sub_url && (
+                            <div className="p-4 bg-white rounded-lg border">
+                                <QRCodeSVG
+                                    value={`${dashboardData.sub_url}/${qrUser.sub_id}`}
+                                    size={200}
+                                    level="M"
+                                />
+                            </div>
+                        )}
+                        <div className="text-sm text-muted-foreground text-center">
+                            <p><strong>User:</strong> {qrUser?.email}</p>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
@@ -502,6 +547,7 @@ interface DetailsRowProps {
     onEdit: () => void
     onDelete: () => void
     onResetUsage: () => void
+    onShowQr: (user: AdminUser) => void
 }
 
 function DetailsRow({
@@ -512,6 +558,7 @@ function DetailsRow({
     onEdit,
     onDelete,
     onResetUsage,
+    onShowQr,
 }: DetailsRowProps) {
     const trafficUsed = user.up + user.down
     const trafficPercent = (trafficUsed / user.total) * 100
@@ -646,6 +693,16 @@ function DetailsRow({
                                         Copy Subscription
                                     </Button>
                                 )}
+                                {subUrl && user.sub_id && (
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => onShowQr(user)}
+                                    >
+                                        <QrCode className="h-4 w-4 mr-2" />
+                                        QR Code
+                                    </Button>
+                                )}
                                 <Button size="sm" variant="outline" onClick={onEdit}>
                                     <Edit2 className="h-4 w-4 mr-2" />
                                     Edit
@@ -672,6 +729,7 @@ interface MobileUserCardProps {
     onEdit: () => void
     onDelete: () => void
     onResetUsage: () => void
+    onShowQr: (user: AdminUser) => void
 }
 
 function MobileUserCard({
@@ -682,6 +740,7 @@ function MobileUserCard({
     onEdit,
     onDelete,
     onResetUsage,
+    onShowQr,
 }: MobileUserCardProps) {
     const trafficUsed = user.up + user.down
     const trafficPercent = (trafficUsed / user.total) * 100
@@ -801,6 +860,20 @@ function MobileUserCard({
                             <RotateCcw className="h-3 w-3 mr-1" />
                             Reset
                         </Button>
+                        {subUrl && user.sub_id && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1 min-w-[80px]"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onShowQr(user)
+                                }}
+                            >
+                                <QrCode className="h-3 w-3 mr-1" />
+                                QR
+                            </Button>
+                        )}
                         <Button
                             size="sm"
                             variant="outline"
