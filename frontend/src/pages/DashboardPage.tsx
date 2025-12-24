@@ -13,7 +13,6 @@ import {
     UserX,
     ExternalLink,
     Server,
-    Megaphone,
     Clock,
     Wifi,
     Copy,
@@ -293,30 +292,39 @@ export function DashboardPage() {
                 </div>
             )}
 
-            {/* Advertisement Banner - Subtle Marquee Style */}
+            {/* Advertisement Card */}
             {dashboardData?.ads && dashboardData.ads.text && (
-                <a
-                    href={dashboardData.ads.link || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block border-t border-b border-muted py-2 px-4 hover:bg-muted/30 transition-colors cursor-pointer"
-                >
-                    <div className="flex items-center gap-3">
-                        <Badge variant="outline" className="shrink-0 text-xs">
-                            <Megaphone className="h-3 w-3 mr-1" />
-                            Ads
-                        </Badge>
-                        <div className="flex-1 marquee-container">
-                            <span className="text-sm text-muted-foreground animate-marquee">
-                                {dashboardData.ads.title && (
-                                    <span className="font-medium text-foreground mr-2">{dashboardData.ads.title}:</span>
-                                )}
-                                {dashboardData.ads.text}
-                            </span>
-                        </div>
-                        <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
-                    </div>
-                </a>
+                <Card className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 border-yellow-200 dark:border-yellow-800 relative">
+                    <CardContent className="p-4 pt-8">
+                        <a
+                            href={dashboardData.ads.link || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block group"
+                        >
+                            <div className="flex flex-col gap-2" dir="rtl">
+                                <div className="flex-1 min-w-0" dir="rtl">
+                                    {dashboardData.ads.title && (
+                                        <h3 className="font-bold text-yellow-900 dark:text-yellow-100 text-sm mb-1 group-hover:text-yellow-700 dark:group-hover:text-yellow-200 transition-colors" dir="rtl">
+                                            {dashboardData.ads.title}
+                                        </h3>
+                                    )}
+                                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors" dir="rtl">
+                                        {dashboardData.ads.text}
+                                    </p>
+                                    {dashboardData.ads.button && (
+                                        <div className="mt-3 flex justify-start">
+                                            <span className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white text-sm font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105" dir="rtl">
+                                                <ExternalLink className="h-4 w-4" />
+                                                {dashboardData.ads.button}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </a>
+                    </CardContent>
+                </Card>
             )}
 
             {/* Users Table */}
