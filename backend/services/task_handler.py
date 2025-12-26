@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 from .limit_handler import AdminLimiter
 from .sanaei import AdminTaskService
-from backend.schema.output import ResponseModel
+from backend.schema.output import ResponseModel, ClientsOutput
 from backend.schema._input import PanelInput, ClientInput, ClientUpdateInput
 from backend.services.sanaei import APIService
 from backend.db import crud
@@ -63,9 +63,9 @@ async def get_all_users_from_panel(admin_username: str, db: Session) -> JSONResp
 
     if panel.panel_type == "3x-ui":
         admin_task = AdminTaskService(admin_username=admin_username, db=db)
-        clients = await admin_task.get_all_users()
+        _clients = await admin_task.get_all_users()
 
-        if clients is None:
+        if _clients is None:
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
                 content={
@@ -73,10 +73,30 @@ async def get_all_users_from_panel(admin_username: str, db: Session) -> JSONResp
                     "message": "No users found",
                 },
             )
-        return ResponseModel(
-            success=True,
-            message="Users retrieved successfully",
-            data=clients,
+        clients = []
+        for client in _clients:
+            clients.append(
+                ClientsOutput(
+                    id=client.get("id"),
+                    uuid=client.get("uuid"),
+                    username=client.get("email"),
+                    status=client.get("enable"),
+                    is_online=client.get("is_online"),
+                    data_limit=client.get("total"),
+                    used_data=client.get("up") + client.get("down"),
+                    expiry_date=None,
+                    expiry_date_unix=client.get("expiry_time"),
+                    sub_id=client.get("sub_id"),
+                    flow=client.get("flow"),
+                )
+            )
+        return (
+            ResponseModel(
+                success=True,
+                message="Users retrieved successfully",
+                data=clients,
+            ),
+            clients,
         )
 
 

@@ -1,12 +1,11 @@
-from fastapi import APIRouter, Depends, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from backend.db import crud
 from backend.db.engin import get_db
 from backend.auth import get_current_admin
 from backend.schema.output import AdminOutput, ResponseModel, PanelOutput
-from backend.services.sanaei import AdminTaskService
+from backend.services import get_all_users_from_panel
 from backend.utils import get_system_info, get_ads_from_github
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
@@ -35,9 +34,9 @@ async def read_dashboard_data(
     if current_admin["role"] == "admin":
         admin_data = crud.get_admin_by_username(db, current_admin["username"])
         panel_data = crud.get_panel_by_name(db, admin_data.panel)
-        users = await AdminTaskService(
-            admin_username=current_admin["username"], db=db
-        ).get_all_users()
+        _, users = await get_all_users_from_panel(
+        admin_username=current_admin["username"], db=db
+    )
 
         return ResponseModel(
             success=True,

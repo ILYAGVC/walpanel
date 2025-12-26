@@ -33,3 +33,21 @@ class PanelOutput(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ClientsOutput(BaseModel):
+    id: int
+    uuid: str
+    username: str
+    email: Optional[str] = None
+    status: bool
+    is_online: bool
+    data_limit: int
+    used_data: int
+    expiry_date: Optional[datetime] = None
+    expiry_date_unix: Optional[int]
+    sub_id: Optional[str] = None
+    flow: Optional[str] = None
+
+    class Config:
+        from_attributes = True
