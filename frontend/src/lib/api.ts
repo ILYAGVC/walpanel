@@ -4,7 +4,7 @@ import {
     DashboardData,
     AdminOutput,
     PanelOutput,
-    AdminUser,
+    ClientsOutput,
     ResponseModel,
     AdminFormData,
     PanelFormData,
@@ -174,7 +174,7 @@ function generateSubId(): string {
 
 // User API
 export const userAPI = {
-    createUser: async (email: string, totalGb: number, expiryDatetime?: string | null): Promise<AdminUser> => {
+    createUser: async (email: string, totalGb: number, expiryDatetime?: string | null): Promise<ClientsOutput> => {
         const submitData = {
             email,
             id: generateUUID(),
@@ -185,7 +185,7 @@ export const userAPI = {
             flow: '',
         }
 
-        const response = await api.post<ResponseModel<AdminUser>>(`/admin/user`, submitData)
+        const response = await api.post<ResponseModel<ClientsOutput>>(`/admin/user`, submitData)
 
         if (!response.data.success) {
             throw new Error(response.data.message || 'Failed to create user')
@@ -202,7 +202,7 @@ export const userAPI = {
         subId: string,
         enable: boolean = true,
         flow: string = ''
-    ): Promise<AdminUser> => {
+    ): Promise<ClientsOutput> => {
         const submitData = {
             email,
             enable,
@@ -212,7 +212,7 @@ export const userAPI = {
             flow,
         }
 
-        const response = await api.put<ResponseModel<AdminUser>>(
+        const response = await api.put<ResponseModel<ClientsOutput>>(
             `/admin/user/${userUuid}`,
             submitData
         )
@@ -234,8 +234,8 @@ export const userAPI = {
         }
     },
 
-    toggleUserStatus: async (userUuid: string): Promise<AdminUser> => {
-        const response = await api.patch<ResponseModel<AdminUser>>(
+    toggleUserStatus: async (userUuid: string): Promise<ClientsOutput> => {
+        const response = await api.patch<ResponseModel<ClientsOutput>>(
             `/admin/user/${userUuid}/status`
         )
 

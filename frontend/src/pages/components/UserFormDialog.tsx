@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { userSchema, UserFormData, AdminUser } from '@/types'
+import { userSchema, UserFormData, ClientsOutput } from '@/types'
 import { userAPI } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,10 +20,10 @@ interface UserFormDialogProps {
     isOpen: boolean
     onClose: () => void
     onSuccess: () => void
-    user?: AdminUser | null
+    user?: ClientsOutput | null
 }
 
-export function UserFormDialog({ isOpen, onClose, onSuccess, user }: UserFormDialogProps) {
+export function UserFormDialog({ isOpen, onClose, onSuccess, user }: UserFormDialogProps): JSX.Element {
     const [serverError, setServerError] = useState<string | null>(null)
 
     const {
@@ -43,10 +43,10 @@ export function UserFormDialog({ isOpen, onClose, onSuccess, user }: UserFormDia
 
     useEffect(() => {
         if (user) {
-            setValue('email', user.email)
-            setValue('totalGb', user.total_gb)
-            if (user.expiry_time) {
-                const date = new Date(user.expiry_time)
+            setValue('email', user.username)
+            setValue('totalGb', user.data_limit / (1024 ** 3))
+            if (user.expiry_date_unix) {
+                const date = new Date(user.expiry_date_unix)
                 setValue('expiryDatetime', date.toISOString().slice(0, 10))
             }
         } else {
@@ -65,8 +65,8 @@ export function UserFormDialog({ isOpen, onClose, onSuccess, user }: UserFormDia
                     data.email,
                     data.totalGb,
                     data.expiryDatetime,
-                    user.sub_id,
-                    user.enable,
+                    user.sub_id || '',
+                    user.status,
                     user.flow || ''
                 )
             } else {

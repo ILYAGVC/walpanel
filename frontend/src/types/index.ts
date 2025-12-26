@@ -151,26 +151,18 @@ export const userSchema = z.object({
 
 export type UserFormData = z.infer<typeof userSchema>
 
-export interface AdminUser {
-    email: string
-    enable: boolean
+export interface ClientsOutput {
     id: number
-    password: string
-    inbound_id: number
-    up: number
-    down: number
-    expiry_time: number
-    total: number
-    reset: number
-    flow: string
-    method: string
-    limit_ip: number
-    sub_id: string
-    comment: string
-    tg_id: string
-    total_gb: number
     uuid: string
+    username: string
+    status: boolean
     is_online: boolean
+    data_limit: number
+    used_data: number
+    expiry_date: string | null
+    expiry_date_unix: number | null
+    sub_id?: string
+    flow?: string
 }
 
 // API Response Types
@@ -189,7 +181,7 @@ export interface DashboardData {
     remaining_traffic?: number
     expiry_time?: string
     sub_url?: string
-    users?: AdminUser[]
+    users?: ClientsOutput[]
     admins?: AdminOutput[]
     panels?: PanelOutput[]
     system?: {

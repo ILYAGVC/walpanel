@@ -16,7 +16,6 @@ import {
     Clock,
     Wifi,
     Copy,
-    Link,
     QrCode,
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
@@ -24,7 +23,7 @@ import { dashboardAPI, userAPI } from '@/lib/api'
 import { bytesToGB, formatTraffic } from '@/lib/traffic-converter'
 import { formatDate, formatExpiryWithDays, cn } from '@/lib/utils'
 import { getUserRole } from '@/lib/auth'
-import { DashboardData, AdminUser } from '@/types'
+import { DashboardData, ClientsOutput } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -63,11 +62,11 @@ export function DashboardPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [expandedRows, setExpandedRows] = useState<ExpandedRow>({})
-    const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null)
+    const [selectedUser, setSelectedUser] = useState<ClientsOutput | null>(null)
     const [showUserDialog, setShowUserDialog] = useState(false)
     const [userToDelete, setUserToDelete] = useState<string | null>(null)
     const [showQrDialog, setShowQrDialog] = useState(false)
-    const [qrUser, setQrUser] = useState<AdminUser | null>(null)
+    const [qrUser, setQrUser] = useState<ClientsOutput | null>(null)
     const [currentPage, setCurrentPage] = useState(1)
     const usersPerPage = 5
 
@@ -386,7 +385,7 @@ export function DashboardPage() {
                                                     setShowUserDialog(true)
                                                 }}
                                                 onDelete={() => setUserToDelete(user.uuid)}
-                                                onResetUsage={() => handleResetUsage(user.email)}
+                                                onResetUsage={() => handleResetUsage(user.username)}
                                                 onShowQr={(user) => {
                                                     setQrUser(user)
                                                     setShowQrDialog(true)
@@ -429,7 +428,7 @@ export function DashboardPage() {
                                                             setShowUserDialog(true)
                                                         }}
                                                         onDelete={() => setUserToDelete(user.uuid)}
-                                                        onResetUsage={() => handleResetUsage(user.email)}
+                                                        onResetUsage={() => handleResetUsage(user.username)}
                                                         onShowQr={(user) => {
                                                             setQrUser(user)
                                                             setShowQrDialog(true)
@@ -530,7 +529,7 @@ export function DashboardPage() {
                             </div>
                         )}
                         <div className="text-sm text-muted-foreground text-center">
-                            <p><strong>User:</strong> {qrUser?.email}</p>
+                            <p><strong>User:</strong> {qrUser?.username}</p>
                         </div>
                     </div>
                 </DialogContent>
@@ -540,14 +539,14 @@ export function DashboardPage() {
 }
 
 interface DetailsRowProps {
-    user: AdminUser
+    user: ClientsOutput
     isExpanded: boolean
     subUrl?: string
     onToggle: () => void
     onEdit: () => void
     onDelete: () => void
     onResetUsage: () => void
-    onShowQr: (user: AdminUser) => void
+    onShowQr: (user: ClientsOutput) => void
 }
 
 function DetailsRow({
@@ -560,8 +559,8 @@ function DetailsRow({
     onResetUsage,
     onShowQr,
 }: DetailsRowProps) {
-    const trafficUsed = user.up + user.down
-    const trafficPercent = (trafficUsed / user.total) * 100
+    const trafficUsed = user.used_data
+    const trafficPercent = (trafficUsed / user.data_limit) * 100
 
     return (
         <>
@@ -579,11 +578,11 @@ function DetailsRow({
                         />
                     </button>
                 </TableCell>
-                <TableCell className="font-mono text-sm">{user.email}</TableCell>
+                <TableCell className="font-mono text-sm">{user.username}</TableCell>
                 <TableCell>
                     <div className="space-y-1">
                         <div className="text-sm font-medium">
-                            {bytesToGB(trafficUsed).toFixed(2)} / {bytesToGB(user.total).toFixed(2)} GB
+                            {bytesToGB(trafficUsed).toFixed(2)} / {bytesToGB(user.data_limit).toFixed(2)} GB
                         </div>
                         <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
                             <div
@@ -598,18 +597,18 @@ function DetailsRow({
                     </div>
                 </TableCell>
                 <TableCell>
-                    {user.expiry_time ? (
+                    {user.expiry_date_unix ? (
                         <div className="space-y-1">
-                            <div className="text-sm">{formatDate(user.expiry_time)}</div>
+                            <div className="text-sm">{formatDate(user.expiry_date_unix)}</div>
                             <div className={cn(
                                 'text-xs',
-                                formatExpiryWithDays(user.expiry_time).isExpired
+                                formatExpiryWithDays(user.expiry_date_unix).isExpired
                                     ? 'text-destructive'
-                                    : formatExpiryWithDays(user.expiry_time).daysLeft <= 7
+                                    : formatExpiryWithDays(user.expiry_date_unix).daysLeft <= 7
                                         ? 'text-yellow-500'
                                         : 'text-muted-foreground'
                             )}>
-                                {formatExpiryWithDays(user.expiry_time).text}
+                                {formatExpiryWithDays(user.expiry_date_unix).text}
                             </div>
                         </div>
                     ) : (
@@ -617,8 +616,8 @@ function DetailsRow({
                     )}
                 </TableCell>
                 <TableCell>
-                    <Badge variant={user.enable ? 'default' : 'destructive'}>
-                        {user.enable ? 'Active' : 'Inactive'}
+                    <Badge variant={user.status ? 'default' : 'destructive'}>
+                        {user.status ? 'Active' : 'Inactive'}
                     </Badge>
                 </TableCell>
                 <TableCell className="text-right space-x-2">
@@ -635,47 +634,6 @@ function DetailsRow({
                 <TableRow className="bg-muted/30">
                     <TableCell colSpan={6}>
                         <div className="py-4 space-y-3">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                <div>
-                                    <p className="text-muted-foreground">Upload</p>
-                                    <p className="font-mono font-semibold">{formatTraffic(user.up)}</p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">Download</p>
-                                    <p className="font-mono font-semibold">{formatTraffic(user.down)}</p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">Inbound ID</p>
-                                    <p className="font-mono font-semibold">{user.inbound_id}</p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">Flow</p>
-                                    <p className="font-mono font-semibold">{user.flow || '-'}</p>
-                                </div>
-                            </div>
-
-                            {/* Subscription URL */}
-                            {subUrl && user.sub_id && (
-                                <div className="space-y-2">
-                                    <p className="text-sm text-muted-foreground">Subscription URL</p>
-                                    <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md">
-                                        <Link className="h-4 w-4 text-muted-foreground shrink-0" />
-                                        <code className="text-xs font-mono flex-1 truncate">
-                                            {`${subUrl}/${user.sub_id}`}
-                                        </code>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(`${subUrl}/${user.sub_id}`)
-                                            }}
-                                        >
-                                            <Copy className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            )}
-
                             <div className="flex flex-wrap gap-2 pt-2">
                                 <Button size="sm" variant="outline" onClick={onResetUsage}>
                                     <RotateCcw className="h-4 w-4 mr-2" />
@@ -722,14 +680,14 @@ function DetailsRow({
 
 // Mobile User Card Component
 interface MobileUserCardProps {
-    user: AdminUser
+    user: ClientsOutput
     isExpanded: boolean
     subUrl?: string
     onToggle: () => void
     onEdit: () => void
     onDelete: () => void
     onResetUsage: () => void
-    onShowQr: (user: AdminUser) => void
+    onShowQr: (user: ClientsOutput) => void
 }
 
 function MobileUserCard({
@@ -742,8 +700,8 @@ function MobileUserCard({
     onResetUsage,
     onShowQr,
 }: MobileUserCardProps) {
-    const trafficUsed = user.up + user.down
-    const trafficPercent = (trafficUsed / user.total) * 100
+    const trafficUsed = user.used_data
+    const trafficPercent = (trafficUsed / user.data_limit) * 100
 
     return (
         <div className="border rounded-lg overflow-hidden">
@@ -754,10 +712,10 @@ function MobileUserCard({
             >
                 {/* Left: Name & Traffic */}
                 <div className="flex-1 min-w-0">
-                    <span className="font-medium text-sm truncate block">{user.email}</span>
+                    <span className="font-medium text-sm truncate block">{user.username}</span>
                     <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-muted-foreground">
-                            {bytesToGB(trafficUsed).toFixed(1)} / {bytesToGB(user.total).toFixed(1)} GB
+                            {bytesToGB(trafficUsed).toFixed(1)} / {bytesToGB(user.data_limit).toFixed(1)} GB
                         </span>
                         <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
                             <div
@@ -773,8 +731,8 @@ function MobileUserCard({
 
                 {/* Right: Status & Chevron */}
                 <div className="flex flex-col items-end gap-1 shrink-0">
-                    <Badge variant={user.enable ? 'default' : 'destructive'} className="text-xs">
-                        {user.enable ? 'Active' : 'Inactive'}
+                    <Badge variant={user.status ? 'default' : 'destructive'} className="text-xs">
+                        {user.status ? 'Active' : 'Inactive'}
                     </Badge>
                     <ChevronDown
                         className={cn(
@@ -788,63 +746,27 @@ function MobileUserCard({
             {/* Expanded View */}
             {isExpanded && (
                 <div className="border-t p-3 space-y-3 bg-muted/30">
-                    {/* Traffic Details */}
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                            <p className="text-xs text-muted-foreground">Upload</p>
-                            <p className="font-mono font-medium">{formatTraffic(user.up)}</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-muted-foreground">Download</p>
-                            <p className="font-mono font-medium">{formatTraffic(user.down)}</p>
-                        </div>
-                    </div>
-
                     {/* Expiry */}
                     <div className="text-sm">
                         <p className="text-xs text-muted-foreground">Expiry Date</p>
-                        {user.expiry_time ? (
+                        {user.expiry_date_unix ? (
                             <div className="flex items-center gap-2">
-                                <span className="font-medium">{formatDate(user.expiry_time)}</span>
+                                <span className="font-medium">{formatDate(user.expiry_date_unix)}</span>
                                 <span className={cn(
                                     'text-xs',
-                                    formatExpiryWithDays(user.expiry_time).isExpired
+                                    formatExpiryWithDays(user.expiry_date_unix).isExpired
                                         ? 'text-destructive'
-                                        : formatExpiryWithDays(user.expiry_time).daysLeft <= 7
+                                        : formatExpiryWithDays(user.expiry_date_unix).daysLeft <= 7
                                             ? 'text-yellow-500'
                                             : 'text-muted-foreground'
                                 )}>
-                                    ({formatExpiryWithDays(user.expiry_time).text})
+                                    ({formatExpiryWithDays(user.expiry_date_unix).text})
                                 </span>
                             </div>
                         ) : (
                             <span className="text-muted-foreground">No expiry</span>
                         )}
                     </div>
-
-                    {/* Subscription URL */}
-                    {subUrl && user.sub_id && (
-                        <div className="space-y-1">
-                            <p className="text-xs text-muted-foreground">Subscription URL</p>
-                            <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-md">
-                                <Link className="h-3 w-3 text-muted-foreground shrink-0" />
-                                <code className="text-xs font-mono flex-1 truncate">
-                                    {`${subUrl}/${user.sub_id}`}
-                                </code>
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-7 w-7 p-0"
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        navigator.clipboard.writeText(`${subUrl}/${user.sub_id}`)
-                                    }}
-                                >
-                                    <Copy className="h-3 w-3" />
-                                </Button>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Action Buttons */}
                     <div className="flex flex-wrap gap-2 pt-1">
@@ -860,6 +782,20 @@ function MobileUserCard({
                             <RotateCcw className="h-3 w-3 mr-1" />
                             Reset
                         </Button>
+                        {subUrl && user.sub_id && (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1 min-w-[80px]"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    navigator.clipboard.writeText(`${subUrl}/${user.sub_id}`)
+                                }}
+                            >
+                                <Copy className="h-3 w-3 mr-1" />
+                                Copy Sub
+                            </Button>
+                        )}
                         {subUrl && user.sub_id && (
                             <Button
                                 size="sm"
