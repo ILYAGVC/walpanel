@@ -11,6 +11,7 @@ class Admins(Base):
     is_active = Column(Boolean, default=True)
     panel = Column(String, nullable=False)
     inbound_id = Column(Integer, nullable=True)
+    marzban_inbunds = Column(String, nullable=True)
     traffic = Column(BigInteger, default=0)
     return_traffic = Column(Boolean, default=False)
     expiry_date = Column(DateTime, nullable=True)
