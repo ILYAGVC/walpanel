@@ -12,7 +12,7 @@ class APIService:
     _token_ttl = 300
 
     def __init__(
-        self, url: str, username: str, password: str, inbounds: dict | None = None
+        self, url: str, username: str, password: str, inbounds: dict | str | None = None
     ):
         self.url = url if url.endswith("/") else url + "/"
         self.username = username
@@ -20,15 +20,14 @@ class APIService:
         self.token: str | None = None
         self.session = requests.Session()
         self.headers: dict[str, str] | None = None
-        self.inbounds = inbounds or {}
-
-    @classmethod
-    async def create(
-        cls, url: str, username: str, password: str, inbounds: dict | None = None
-    ):
-        self = cls(url, username, password, inbounds=inbounds)
-        await self._login()
-        return self
+        
+        if isinstance(inbounds, str):
+            try:
+                self.inbounds = json.loads(inbounds)
+            except (json.JSONDecodeError, TypeError):
+                self.inbounds = {}
+        else:
+            self.inbounds = inbounds or {}
 
     async def _login(self):
         now = time.time()
@@ -124,6 +123,8 @@ class APIService:
         expire_ts = user.expiry_time // 1000 if user.expiry_time else 0
         data_limit = int(user.total) if user.total is not None else 0
 
+        print(self.inbounds)
+        print(proxies)
         data = {
             "username": user.email,
             "status": "active",
@@ -148,6 +149,7 @@ class APIService:
             headers=self.headers,
             json=data,
         )
+        print(response.text)
         return response.status_code
 
     async def update_user(self, username: str, user_data: ClientUpdateInput) -> int:
