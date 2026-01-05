@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel, Field
 
 
@@ -7,7 +8,9 @@ class AdminInput(BaseModel):
     password: str
     is_active: bool = True
     panel: str
-    inbound_id: int = None
+    inbound_id: Optional[int] = None
+    marzban_inbounds: Optional[str] = None
+    marzban_password: Optional[str] = None
     traffic: float = 0.0
     return_traffic: bool = False
     expiry_date: datetime | None
@@ -18,7 +21,9 @@ class AdminUpdateInput(BaseModel):
     password: str
     is_active: bool
     panel: str
-    inbound_id: int
+    inbound_id: Optional[int] = None
+    marzban_inbounds: Optional[str] = None
+    marzban_password: Optional[str] = None
     traffic: float
     return_traffic: bool
     expiry_date: datetime | None

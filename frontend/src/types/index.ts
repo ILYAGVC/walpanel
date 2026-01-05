@@ -47,6 +47,16 @@ export const adminSchema = z.object({
         .optional()
         .nullable(),
 
+    marzban_inbounds: z
+        .string()
+        .optional()
+        .nullable(),
+
+    marzban_password: z
+        .string()
+        .optional()
+        .nullable(),
+
     traffic: z
         .number()
         .min(0, 'Traffic cannot be negative')
@@ -74,6 +84,8 @@ export interface AdminOutput {
     is_active: boolean
     panel: string
     inbound_id: number | null
+    marzban_inbounds: string | null
+    marzban_password: string | null
     traffic: number
     return_traffic: boolean
     expiry_date: string | null

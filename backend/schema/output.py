@@ -36,12 +36,12 @@ class PanelOutput(BaseModel):
 
 
 class ClientsOutput(BaseModel):
-    id: int
-    uuid: str
+    id: int = 0
+    uuid: str = 0
     username: str
     email: Optional[str] = None
-    status: bool
-    is_online: bool
+    status: bool = True
+    is_online: bool = False
     data_limit: int
     used_data: int
     expiry_date: Optional[datetime] = None

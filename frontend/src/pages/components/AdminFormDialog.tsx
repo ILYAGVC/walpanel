@@ -38,8 +38,11 @@ export function AdminFormDialog({
     admin,
 }: AdminFormDialogProps) {
     const [serverError, setServerError] = useState<string | null>(null)
-    const [panels, setPanels] = useState<string[]>([])
+    const [panels, setPanels] = useState<{ name: string; panel_type: string }[]>([])
     const [loadingPanels, setLoadingPanels] = useState(false)
+    const [marzbanInbounds, setMarzbanInbounds] = useState<Record<string, string[]> | null>(null)
+    const [loadingInbounds, setLoadingInbounds] = useState(false)
+    const [selectedInbounds, setSelectedInbounds] = useState<Record<string, string[]>>({})
 
     const {
         register,
@@ -55,6 +58,7 @@ export function AdminFormDialog({
             password: '',
             panel: '',
             inbound_id: null,
+            marzban_inbounds: null,
             traffic: 0,
             return_traffic: false,
             is_active: true,
@@ -74,12 +78,24 @@ export function AdminFormDialog({
             setValue('password', '') // Don't pre-fill password
             setValue('panel', admin.panel)
             setValue('inbound_id', admin.inbound_id)
+            setValue('marzban_inbounds', admin.marzban_inbounds)
             setValue('traffic', bytesToGB(admin.traffic))
             setValue('return_traffic', admin.return_traffic)
             setValue('is_active', admin.is_active)
             setValue('expiry_date', admin.expiry_date)
+
+            // Parse marzban_inbounds if available
+            if (admin.marzban_inbounds) {
+                try {
+                    setSelectedInbounds(JSON.parse(admin.marzban_inbounds))
+                } catch (e) {
+                    console.error('Failed to parse marzban_inbounds:', e)
+                }
+            }
         } else {
             reset()
+            setSelectedInbounds({})
+            setMarzbanInbounds(null)
         }
     }, [admin, isOpen, setValue, reset])
 
@@ -88,7 +104,7 @@ export function AdminFormDialog({
             setLoadingPanels(true)
             const data = await dashboardAPI.getDashboardData()
             if (data.panels) {
-                setPanels(data.panels.map((p) => p.name))
+                setPanels(data.panels.map((p) => ({ name: p.name, panel_type: p.panel_type })))
             }
         } catch (err) {
             console.error('Failed to load panels:', err)
@@ -97,16 +113,76 @@ export function AdminFormDialog({
         }
     }
 
+    const loadMarzbanInbounds = async (panelName: string) => {
+        try {
+            setLoadingInbounds(true)
+            const inbounds = await adminAPI.getPanelInbounds(panelName)
+            setMarzbanInbounds(inbounds)
+        } catch (err) {
+            console.error('Failed to load inbounds:', err)
+            setMarzbanInbounds(null)
+        } finally {
+            setLoadingInbounds(false)
+        }
+    }
+
+    const handlePanelChange = (panelName: string) => {
+        setValue('panel', panelName)
+        const selectedPanel = panels.find(p => p.name === panelName)
+
+        // Reset inbound selections
+        setSelectedInbounds({})
+        setMarzbanInbounds(null)
+
+        // Load inbounds if it's a Marzban panel
+        if (selectedPanel?.panel_type === 'marzban') {
+            loadMarzbanInbounds(panelName)
+        }
+    }
+
+    const toggleInbound = (protocol: string, tag: string) => {
+        setSelectedInbounds(prev => {
+            const updated = { ...prev }
+            if (!updated[protocol]) {
+                updated[protocol] = []
+            }
+
+            if (updated[protocol].includes(tag)) {
+                updated[protocol] = updated[protocol].filter(t => t !== tag)
+                if (updated[protocol].length === 0) {
+                    delete updated[protocol]
+                }
+            } else {
+                updated[protocol] = [...updated[protocol], tag]
+            }
+
+            return updated
+        })
+    }
+
     const onSubmit = async (data: AdminFormData) => {
         setServerError(null)
 
         try {
+            // Get selected panel type
+            const selectedPanel = panels.find(p => p.name === data.panel)
+
+            // Add marzban_inbounds to data if available
+            const submitData = {
+                ...data,
+                marzban_inbounds: Object.keys(selectedInbounds).length > 0
+                    ? JSON.stringify(selectedInbounds)
+                    : null,
+                // Set marzban_password to admin password for Marzban panels
+                marzban_password: selectedPanel?.panel_type === 'marzban' ? data.password : null
+            }
+
             if (admin?.id) {
                 // Update
-                await adminAPI.updateAdmin(admin.id, data)
+                await adminAPI.updateAdmin(admin.id, submitData)
             } else {
                 // Create
-                await adminAPI.createAdmin(data)
+                await adminAPI.createAdmin(submitData)
             }
 
             onSuccess()
@@ -168,7 +244,7 @@ export function AdminFormDialog({
                         <Label htmlFor="panel">Panel *</Label>
                         <Select
                             value={watch('panel')}
-                            onValueChange={(value) => setValue('panel', value)}
+                            onValueChange={handlePanelChange}
                             disabled={isSubmitting || loadingPanels}
                         >
                             <SelectTrigger>
@@ -176,8 +252,8 @@ export function AdminFormDialog({
                             </SelectTrigger>
                             <SelectContent>
                                 {panels.map((panel) => (
-                                    <SelectItem key={panel} value={panel}>
-                                        {panel}
+                                    <SelectItem key={panel.name} value={panel.name}>
+                                        {panel.name} ({panel.panel_type})
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -187,20 +263,61 @@ export function AdminFormDialog({
                         )}
                     </div>
 
-                    {/* Inbound ID */}
-                    <div className="space-y-2">
-                        <Label htmlFor="inbound_id">Inbound ID</Label>
-                        <Input
-                            id="inbound_id"
-                            type="number"
-                            placeholder="Optional"
-                            disabled={isSubmitting}
-                            {...register('inbound_id', { valueAsNumber: true })}
-                        />
-                        {errors.inbound_id && (
-                            <p className="text-sm text-destructive">{errors.inbound_id.message}</p>
-                        )}
-                    </div>
+                    {/* Marzban Inbounds Selection */}
+                    {watch('panel') && panels.find(p => p.name === watch('panel'))?.panel_type === 'marzban' && (
+                        <div className="space-y-2">
+                            <Label>Marzban Inbounds *</Label>
+                            {loadingInbounds ? (
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Loading inbounds...
+                                </div>
+                            ) : marzbanInbounds ? (
+                                <div className="space-y-3 p-3 border rounded-md">
+                                    {Object.entries(marzbanInbounds).map(([protocol, tags]) => (
+                                        <div key={protocol} className="space-y-2">
+                                            <div className="font-medium text-sm capitalize">{protocol}</div>
+                                            <div className="space-y-1 pl-4">
+                                                {tags.map((tag) => (
+                                                    <label key={tag} className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedInbounds[protocol]?.includes(tag) || false}
+                                                            onChange={() => toggleInbound(protocol, tag)}
+                                                            disabled={isSubmitting}
+                                                            className="rounded border border-input"
+                                                        />
+                                                        <span className="text-sm">{tag}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-sm text-muted-foreground">
+                                    No inbounds available or failed to load
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Inbound ID - Only for 3x-ui panels */}
+                    {watch('panel') && panels.find(p => p.name === watch('panel'))?.panel_type === '3x-ui' && (
+                        <div className="space-y-2">
+                            <Label htmlFor="inbound_id">Inbound ID</Label>
+                            <Input
+                                id="inbound_id"
+                                type="number"
+                                placeholder="Optional"
+                                disabled={isSubmitting}
+                                {...register('inbound_id', { valueAsNumber: true })}
+                            />
+                            {errors.inbound_id && (
+                                <p className="text-sm text-destructive">{errors.inbound_id.message}</p>
+                            )}
+                        </div>
+                    )}
 
                     {/* Traffic */}
                     <div className="space-y-2">
