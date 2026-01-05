@@ -1,12 +1,15 @@
 from sqlalchemy.orm import Session
 from fastapi import status
 from fastapi.responses import JSONResponse
+from opexcore.marzban import MarzbanUserStatus
 
 from .limit_handler import AdminLimiter
-from .sanaei import AdminTaskService
+from .sanaei import AdminTaskService as SanaeiAdminTaskService
+from .marzban import AdminTaskService as MarzbanAdminTaskService
 from backend.schema.output import ResponseModel, ClientsOutput
 from backend.schema._input import PanelInput, ClientInput, ClientUpdateInput
-from backend.services.sanaei import APIService
+from backend.services.sanaei import APIService as sanaei_APIService
+from backend.services.marzban import APIService as marzban_APIService
 from backend.db import crud
 from backend.utils.logger import logger
 
@@ -14,7 +17,7 @@ from backend.utils.logger import logger
 async def create_new_panel(db: Session, panel_input: PanelInput) -> bool:
     if panel_input.panel_type == "3x-ui":
         try:
-            connection = await APIService(
+            connection = await sanaei_APIService(
                 panel_input.url, panel_input.username, panel_input.password
             ).test_connection()
 
@@ -30,11 +33,29 @@ async def create_new_panel(db: Session, panel_input: PanelInput) -> bool:
             logger.error(f"Error connecting to panel {panel_input.url}: {str(e)}")
             return False
 
+    if panel_input.panel_type == "marzban":
+        try:
+            connection = await marzban_APIService(
+                panel_input.url, panel_input.username, panel_input.password
+            ).test_connection()
+
+            if not connection:
+                logger.warning(
+                    f"Panel validation failed: {panel_input.name} - unable to connect"
+                )
+                return False
+
+            logger.info(f"Panel validated successfully: {panel_input.name}")
+            return True
+        except Exception as e:
+            logger.error(f"Error connecting to panel {panel_input.url}: {str(e)}")
+            return False
+
 
 async def update_a_panel(db: Session, panel_input: PanelInput) -> bool:
     if panel_input.panel_type == "3x-ui":
         try:
-            connection = await APIService(
+            connection = await sanaei_APIService(
                 panel_input.url, panel_input.username, panel_input.password
             ).test_connection()
 
@@ -54,15 +75,39 @@ async def update_a_panel(db: Session, panel_input: PanelInput) -> bool:
             )
             return False
 
+    if panel_input.panel_type == "marzban":
+        try:
+            connection = await marzban_APIService(
+                panel_input.url, panel_input.username, panel_input.password
+            ).test_connection()
 
-async def get_all_users_from_panel(admin_username: str, db: Session) -> JSONResponse:
+            if not connection:
+                logger.warning(
+                    f"Panel validation failed during update: {panel_input.name} - unable to connect"
+                )
+                return False
+
+            logger.info(
+                f"Panel validated successfully during update: {panel_input.name}"
+            )
+            return True
+        except Exception as e:
+            logger.error(
+                f"Error connecting to panel {panel_input.url} during update: {str(e)}"
+            )
+            return False
+
+
+async def get_all_users_from_panel(
+    admin_username: str, db: Session
+) -> tuple[ResponseModel, list[ClientsOutput]]:
     """This function retrieves all users from the panel associated with the given admin."""
 
     _admin = crud.get_admin_by_username(db, admin_username)
     panel = crud.get_panel_by_name(db, _admin.panel)
 
     if panel.panel_type == "3x-ui":
-        admin_task = AdminTaskService(admin_username=admin_username, db=db)
+        admin_task = SanaeiAdminTaskService(admin_username=admin_username, db=db)
         _clients = await admin_task.get_all_users()
 
         if _clients is None:
@@ -99,6 +144,42 @@ async def get_all_users_from_panel(admin_username: str, db: Session) -> JSONResp
             clients,
         )
 
+    elif panel.panel_type == "marzban":
+        admin_task = MarzbanAdminTaskService(admin_username=admin_username, db=db)
+        _users = await admin_task.get_all_users()
+
+        if _users is None:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "success": False,
+                    "message": "No users found",
+                },
+            )
+
+        users = []
+        for user in _users:
+            expire_val = user.get("expire")
+            users.append(
+                ClientsOutput(
+                    username=user.get("username"),
+                    status=True if user.get("status") == "active" else False,
+                    is_online=False,
+                    data_limit=user.get("data_limit") or 0,
+                    used_data=user.get("used_traffic") or 0,
+                    expiry_date_unix=expire_val * 1000 if expire_val else None,
+                    sub_id=user.get("subscription_url"),
+                )
+            )
+        return (
+            ResponseModel(
+                success=True,
+                message="Users retrieved successfully",
+                data=users,
+            ),
+            users,
+        )
+
 
 async def add_new_user(
     admin_username: str, user_input: ClientInput, db: Session
@@ -107,9 +188,9 @@ async def add_new_user(
 
     _admin = crud.get_admin_by_username(db, admin_username)
     panel = crud.get_panel_by_name(db, _admin.panel)
+    admin_check = AdminLimiter(admin_username=admin_username, db=db)
 
     if panel.panel_type == "3x-ui":
-        admin_check = AdminLimiter(admin_username=admin_username, db=db)
         if not admin_check.admin_is_active():
             logger.warning(f"Inactive admin attempted to add user: {admin_username}")
             return JSONResponse(
@@ -131,7 +212,7 @@ async def add_new_user(
                 },
             )
 
-        admin_task = AdminTaskService(admin_username=admin_username, db=db)
+        admin_task = SanaeiAdminTaskService(admin_username=admin_username, db=db)
         check_duplicate = await admin_task.get_client_by_email(user_input.email)
 
         if check_duplicate:
@@ -162,6 +243,45 @@ async def add_new_user(
             message="User added successfully",
         )
 
+    if panel.panel_type == "marzban":
+        if not admin_check.admin_is_active():
+            logger.warning(f"Inactive admin attempted to add user: {admin_username}")
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": "Your admin account is inactive. Contact support.",
+                },
+            )
+        elif not admin_check.check_traffic_limit(user_input.total):
+            logger.warning(
+                f"Admin {admin_username} exceeded traffic limit when adding user: {user_input.email}"
+            )
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": f"Insufficient traffic to add this user, your limit: {round((_admin.traffic) / (1024 ** 3), 1)} GB",
+                },
+            )
+
+        admin_task = MarzbanAdminTaskService(admin_username=admin_username, db=db)
+        success = await admin_task.add_user_to_panel(user_input)
+
+        if not success:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": f"{success}",
+                },
+            )
+        admin_check.reduce_usage(user_input.total, user_input.total)
+        return ResponseModel(
+            success=True,
+            message="User added successfully",
+        )
+
 
 async def update_a_user(
     admin_username: str, uuid: str, user_input: ClientUpdateInput, db: Session
@@ -170,9 +290,9 @@ async def update_a_user(
 
     _admin = crud.get_admin_by_username(db, admin_username)
     panel = crud.get_panel_by_name(db, _admin.panel)
+    admin_check = AdminLimiter(admin_username=admin_username, db=db)
 
     if panel.panel_type == "3x-ui":
-        admin_check = AdminLimiter(admin_username=admin_username, db=db)
         if not admin_check.admin_is_active():
             logger.warning(f"Inactive admin attempted to update user: {admin_username}")
             return JSONResponse(
@@ -194,7 +314,7 @@ async def update_a_user(
                 },
             )
 
-        admin_task = AdminTaskService(admin_username=admin_username, db=db)
+        admin_task = SanaeiAdminTaskService(admin_username=admin_username, db=db)
         user_info = await admin_task.get_client_by_email(user_input.email)
         new_usage = user_info.total - (user_info.up + user_info.down)
 
@@ -221,6 +341,65 @@ async def update_a_user(
             message="User updated successfully",
         )
 
+    if panel.panel_type == "marzban":
+        if not admin_check.admin_is_active():
+            logger.warning(f"Inactive admin attempted to update user: {admin_username}")
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": "Your admin account is inactive. Contact support.",
+                },
+            )
+        elif not admin_check.check_traffic_limit(user_input.total):
+            logger.warning(
+                f"Admin {admin_username} exceeded traffic limit when updating user: {user_input.email}"
+            )
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": f"Insufficient traffic to update this user, your limit: {round((_admin.traffic) / (1024 ** 3), 1)} GB",
+                },
+            )
+        admin_task = MarzbanAdminTaskService(admin_username=admin_username, db=db)
+        user_info = await admin_task.get_user_by_username(user_input.email)
+
+        if not user_info:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "success": False,
+                    "message": "User not found",
+                },
+            )
+
+        # Calculate extra traffic if increasing data limit
+        extra_traffic = (
+            user_input.total - user_info.get("data_limit", 0)
+            if user_input.total > user_info.get("data_limit", 0)
+            else 0
+        )
+
+        update_user = await admin_task.update_user_in_panel(
+            user_input.email, user_input
+        )
+
+        if not update_user:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "Failed to update user",
+                },
+            )
+
+        admin_check.reduce_usage(extra_traffic, extra_traffic)
+        return ResponseModel(
+            success=True,
+            message="User updated successfully",
+        )
+
 
 async def reset_a_user_usage(
     admin_username: str, email: str, db: Session
@@ -229,9 +408,9 @@ async def reset_a_user_usage(
 
     _admin = crud.get_admin_by_username(db, admin_username)
     panel = crud.get_panel_by_name(db, _admin.panel)
+    admin_check = AdminLimiter(admin_username=admin_username, db=db)
 
     if panel.panel_type == "3x-ui":
-        admin_check = AdminLimiter(admin_username=admin_username, db=db)
         if not admin_check.admin_is_active():
             logger.warning(
                 f"Inactive admin attempted to reset user usage: {admin_username}"
@@ -244,7 +423,7 @@ async def reset_a_user_usage(
                 },
             )
 
-        admin_task = AdminTaskService(admin_username=admin_username, db=db)
+        admin_task = SanaeiAdminTaskService(admin_username=admin_username, db=db)
         user_info = await admin_task.get_client_by_email(email)
         if not admin_check.check_traffic_limit(user_info.total):
             return JSONResponse(
@@ -270,6 +449,54 @@ async def reset_a_user_usage(
             success=True,
             message="User usage reset successfully",
         )
+    
+    if panel.panel_type == "marzban":
+        if not admin_check.admin_is_active():
+            logger.warning(
+                f"Inactive admin attempted to reset user usage: {admin_username}"
+            )
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": "Your admin account is inactive. Contact support.",
+                },
+            )
+
+        admin_task = MarzbanAdminTaskService(admin_username=admin_username, db=db)
+        user_info = await admin_task.get_user_by_username(email)
+        if not user_info:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "success": False,
+                    "message": "User not found",
+                },
+            )
+        if not admin_check.check_traffic_limit(user_info.get("data_limit", 0)):
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": f"Insufficient traffic to reset usage for this user, your limit: {round((_admin.traffic) / (1024 ** 3), 1)} GB",
+                },
+            )
+        usage_user_traffic = user_info.get("used_traffic", 0)
+        reset_usage = await admin_task.reset_user_usage_in_panel(email)
+
+        if not reset_usage:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "Failed to reset user usage",
+                },
+            )
+        admin_check.reduce_usage(user_info.get("data_limit", 0), usage_user_traffic)
+        return ResponseModel(
+            success=True,
+            message="User usage reset successfully",
+        )
 
 
 async def delete_a_user(admin_username: str, uuid: str, db: Session) -> bool:
@@ -277,9 +504,9 @@ async def delete_a_user(admin_username: str, uuid: str, db: Session) -> bool:
 
     _admin = crud.get_admin_by_username(db, admin_username)
     panel = crud.get_panel_by_name(db, _admin.panel)
+    admin_check = AdminLimiter(admin_username=admin_username, db=db)
 
     if panel.panel_type == "3x-ui":
-        admin_check = AdminLimiter(admin_username=admin_username, db=db)
         if not admin_check.admin_is_active():
             logger.warning(f"Inactive admin attempted to delete user: {admin_username}")
             return JSONResponse(
@@ -290,7 +517,7 @@ async def delete_a_user(admin_username: str, uuid: str, db: Session) -> bool:
                 },
             )
 
-        admin_task = AdminTaskService(admin_username=admin_username, db=db)
+        admin_task = SanaeiAdminTaskService(admin_username=admin_username, db=db)
         users = await admin_task.get_all_users()
 
         # Find user
@@ -329,6 +556,57 @@ async def delete_a_user(admin_username: str, uuid: str, db: Session) -> bool:
         admin_check.increase_usage(traffic)
         logger.info(
             f"User {user_info['email']} deleted by admin {admin_username}, traffic returned: {round(traffic / (1024 ** 3), 2)} GB"
+        )
+
+        return ResponseModel(
+            success=True,
+            message="User deleted successfully",
+        )
+    
+    if panel.panel_type == "marzban":
+        username = uuid  # Marzban uses username as identifier
+        if not admin_check.admin_is_active():
+            logger.warning(f"Inactive admin attempted to delete user: {admin_username}")
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={
+                    "success": False,
+                    "message": "Your admin account is inactive. Contact support.",
+                },
+            )
+
+        admin_task = MarzbanAdminTaskService(admin_username=admin_username, db=db)
+        user_info = await admin_task.get_user_by_username(username)
+
+        if not user_info:
+            logger.warning(
+                f"User with username {username} not found for deletion by admin {admin_username}"
+            )
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "success": False,
+                    "message": "User not found",
+                },
+            )
+
+        traffic = user_info.get("data_limit", 0) - user_info.get("used_traffic", 0)
+
+        delete_user = await admin_task.delete_user_from_panel(username)
+
+        if not delete_user:
+            logger.error(f"Failed to delete user {username} by admin {admin_username}")
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={
+                    "success": False,
+                    "message": "Failed to delete user",
+                },
+            )
+
+        admin_check.increase_usage(traffic)
+        logger.info(
+            f"User {user_info['username']} deleted by admin {admin_username}, traffic returned: {round(traffic / (1024 ** 3), 2)} GB"
         )
 
         return ResponseModel(
