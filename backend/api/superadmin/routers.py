@@ -7,6 +7,7 @@ from backend.schema._input import AdminInput, AdminUpdateInput, PanelInput
 from backend.db import crud
 from backend.db.engin import get_db
 from backend.services import create_new_panel, update_a_panel
+from backend.services.marzban.api import APIService as MarzbanAPI
 from backend.utils.logger import logger
 
 router = APIRouter(prefix="/superadmin", tags=["superadmin"])
@@ -193,3 +194,48 @@ async def toggle_panel_status(panel_id: int, db: Session = Depends(get_db)):
         success=True,
         message="Panel status changed successfully",
     )
+
+
+@router.get("/panel/{panel_name}/inbounds")
+async def get_panel_inbounds(panel_name: str, db: Session = Depends(get_db)):
+    """Get available inbounds for a Marzban panel"""
+    panel = crud.get_panel_by_name(db, panel_name)
+    if not panel:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "success": False,
+                "message": "Panel not found",
+            },
+        )
+
+    if panel.panel_type != "marzban":
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "success": False,
+                "message": "Only Marzban panels support inbound selection",
+            },
+        )
+
+    try:
+        api_service = MarzbanAPI(
+            url=panel.url,
+            username=panel.username,
+            password=panel.password,
+        )
+        inbounds = await api_service.get_inbounds()
+        return ResponseModel(
+            success=True,
+            message="Inbounds retrieved successfully",
+            data=inbounds
+        )
+    except Exception as e:
+        logger.error(f"Failed to fetch inbounds from panel {panel_name}: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": f"Failed to fetch inbounds: {str(e)}",
+            },
+        )
