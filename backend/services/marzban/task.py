@@ -16,6 +16,7 @@ class AdminTaskService:
             url=self.panel.url,
             username=self.admin_username,
             password=self.admin.marzban_password,
+            inbounds=self.admin.marzban_inbounds,
         )
         self.api_service_for_main_tasks = APIService(
             url=self.panel.url,

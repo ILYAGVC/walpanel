@@ -103,6 +103,18 @@ export const adminAPI = {
 
         return response.data.data!
     },
+
+    getPanelInbounds: async (panelName: string): Promise<Record<string, string[]>> => {
+        const response = await api.get<ResponseModel<Record<string, string[]>>>(
+            `/superadmin/panel/${panelName}/inbounds`
+        )
+
+        if (!response.data.success) {
+            throw new Error(response.data.message || 'Failed to fetch panel inbounds')
+        }
+
+        return response.data.data || {}
+    },
 }
 
 // Panel API

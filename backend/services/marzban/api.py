@@ -20,7 +20,7 @@ class APIService:
         self.token: str | None = None
         self.session = requests.Session()
         self.headers: dict[str, str] | None = None
-        
+
         if isinstance(inbounds, str):
             try:
                 self.inbounds = json.loads(inbounds)
@@ -85,7 +85,6 @@ class APIService:
         return response
 
     async def get_user(self, username: str) -> dict | bool:
-
         token = (
             requests.post(
                 f"{self.url}api/admin/token",
@@ -105,10 +104,20 @@ class APIService:
         return user
 
     async def get_inbounds(self) -> dict:
-        await self._login()
+        token = (
+            requests.post(
+                f"{self.url}api/admin/token",
+                data={
+                    "username": self.username,
+                    "password": self.password,
+                },
+            )
+            .json()
+            .get("access_token")
+        )
         url = f"{self.url}api/inbounds"
 
-        response = self.session.get(url, headers=self.headers)
+        response = self.session.get(url, headers={"Authorization": f"Bearer {token}"})
 
         # Transform to list of tags for each protocol
         inbounds = response.json()
@@ -123,8 +132,6 @@ class APIService:
         expire_ts = user.expiry_time // 1000 if user.expiry_time else 0
         data_limit = int(user.total) if user.total is not None else 0
 
-        print(self.inbounds)
-        print(proxies)
         data = {
             "username": user.email,
             "status": "active",
@@ -149,7 +156,6 @@ class APIService:
             headers=self.headers,
             json=data,
         )
-        print(response.text)
         return response.status_code
 
     async def update_user(self, username: str, user_data: ClientUpdateInput) -> int:

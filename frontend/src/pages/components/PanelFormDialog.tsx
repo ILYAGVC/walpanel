@@ -172,17 +172,36 @@ export function PanelFormDialog({
 
                     {/* Subscription URL */}
                     <div className="space-y-2">
-                        <Label htmlFor="sub_url">Subscription URL *</Label>
+                        <div className="flex items-center gap-2">
+                            <Label htmlFor="sub_url">Subscription URL *</Label>
+                            <div className="group relative">
+                                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                                <div className="invisible group-hover:visible absolute left-0 top-6 z-50 w-64 p-2 text-xs bg-popover text-popover-foreground border rounded-md shadow-md">
+                                    {watch('panel_type') === 'marzban'
+                                        ? 'For Marzban: Enter URL without prefix (e.g., https://sub.example.com)'
+                                        : 'For 3x-ui/Sanaei: Enter URL with prefix (e.g., https://panel.example.com/sub)'}
+                                </div>
+                            </div>
+                        </div>
                         <Input
                             id="sub_url"
                             type="url"
-                            placeholder="https://sub.example.com"
+                            placeholder={
+                                watch('panel_type') === 'marzban'
+                                    ? 'https://sub.example.com'
+                                    : 'https://panel.example.com/sub'
+                            }
                             disabled={isSubmitting}
                             {...register('sub_url')}
                         />
                         {errors.sub_url && (
                             <p className="text-sm text-destructive">{errors.sub_url.message}</p>
                         )}
+                        <p className="text-xs text-muted-foreground">
+                            {watch('panel_type') === 'marzban'
+                                ? 'Example: https://sub.example.com (without any path)'
+                                : 'Example: https://panel.example.com/sub (with /sub prefix)'}
+                        </p>
                     </div>
 
                     {/* Panel Username */}

@@ -18,6 +18,7 @@ import {
     Copy,
     QrCode,
     Search,
+    Power,
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { dashboardAPI, userAPI } from '@/lib/api'
@@ -115,6 +116,26 @@ export function DashboardPage() {
         } catch (err: any) {
             console.error('Failed to reset usage:', err)
             alert(err?.message || 'Failed to reset usage')
+        }
+    }
+
+    const handleToggleStatus = async (user: ClientsOutput) => {
+        try {
+            // Toggle status and update user
+            await userAPI.updateUser(
+                user.uuid || '0',
+                user.username,
+                user.data_limit / (1024 ** 3), // Convert back to GB
+                user.expiry_date_unix ? new Date(user.expiry_date_unix).toISOString().slice(0, 10) : null,
+                user.sub_id || '',
+                !user.status, // Toggle status
+                user.flow || '',
+                user.id?.toString()
+            )
+            fetchDashboardData()
+        } catch (err: any) {
+            console.error('Failed to toggle status:', err)
+            alert(err?.message || 'Failed to toggle user status')
         }
     }
 
@@ -430,6 +451,7 @@ export function DashboardPage() {
                                                         setQrUser(user)
                                                         setShowQrDialog(true)
                                                     }}
+                                                    onToggleStatus={() => handleToggleStatus(user)}
                                                 />
                                             )
                                         })}
@@ -473,6 +495,7 @@ export function DashboardPage() {
                                                                 setQrUser(user)
                                                                 setShowQrDialog(true)
                                                             }}
+                                                            onToggleStatus={() => handleToggleStatus(user)}
                                                         />
                                                     )
                                                 })}
@@ -563,17 +586,24 @@ export function DashboardPage() {
                     </DialogHeader>
                     <div className="flex flex-col items-center space-y-4">
                         {qrUser && dashboardData?.sub_url && (
-                            <div className="p-4 bg-white rounded-lg border">
-                                <QRCodeSVG
-                                    value={`${dashboardData.sub_url}/${qrUser.sub_id?.replace('/', '')}`}
-                                    size={200}
-                                    level="M"
-                                />
-                            </div>
+                            <>
+                                <div className="p-4 bg-white rounded-lg border">
+                                    <QRCodeSVG
+                                        value={`${dashboardData.sub_url}/${qrUser.sub_id?.replace('/', '')}`}
+                                        size={200}
+                                        level="M"
+                                    />
+                                </div>
+                                <div className="w-full space-y-2">
+                                    <div className="text-sm text-muted-foreground text-center">
+                                        <p><strong>User:</strong> {qrUser?.username}</p>
+                                    </div>
+                                    <div className="p-3 bg-muted rounded-md break-all text-xs font-mono">
+                                        {`${dashboardData.sub_url}/${qrUser.sub_id?.replace('/', '')}`}
+                                    </div>
+                                </div>
+                            </>
                         )}
-                        <div className="text-sm text-muted-foreground text-center">
-                            <p><strong>User:</strong> {qrUser?.username}</p>
-                        </div>
                     </div>
                 </DialogContent>
             </Dialog>
@@ -590,6 +620,7 @@ interface DetailsRowProps {
     onDelete: () => void
     onResetUsage: () => void
     onShowQr: (user: ClientsOutput) => void
+    onToggleStatus: () => void
 }
 
 function DetailsRow({
@@ -601,6 +632,7 @@ function DetailsRow({
     onDelete,
     onResetUsage,
     onShowQr,
+    onToggleStatus,
 }: DetailsRowProps) {
     const trafficUsed = user.used_data
     const trafficPercent = (trafficUsed / user.data_limit) * 100
@@ -664,6 +696,14 @@ function DetailsRow({
                     </Badge>
                 </TableCell>
                 <TableCell className="text-right space-x-2">
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={onToggleStatus}
+                        title={user.status ? 'Disable user' : 'Enable user'}
+                    >
+                        <Power className={cn("h-4 w-4", user.status ? "text-green-500" : "text-gray-400")} />
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={onEdit}>
                         <Edit2 className="h-4 w-4" />
                     </Button>
@@ -677,7 +717,17 @@ function DetailsRow({
                 <TableRow className="bg-muted/30">
                     <TableCell colSpan={6}>
                         <div className="py-4 space-y-3">
+                            {subUrl && user.sub_id && (
+                                <div className="p-3 bg-background rounded-md border">
+                                    <div className="text-xs text-muted-foreground mb-1">Subscription Link:</div>
+                                    <div className="text-xs font-mono break-all">{`${subUrl}/${user.sub_id?.replace('/', '')}`}</div>
+                                </div>
+                            )}
                             <div className="flex flex-wrap gap-2 pt-2">
+                                <Button size="sm" variant="outline" onClick={onToggleStatus}>
+                                    <Power className={cn("h-4 w-4 mr-2", user.status ? "text-green-500" : "text-gray-400")} />
+                                    {user.status ? 'Disable' : 'Enable'}
+                                </Button>
                                 <Button size="sm" variant="outline" onClick={onResetUsage}>
                                     <RotateCcw className="h-4 w-4 mr-2" />
                                     Reset Usage
@@ -731,6 +781,7 @@ interface MobileUserCardProps {
     onDelete: () => void
     onResetUsage: () => void
     onShowQr: (user: ClientsOutput) => void
+    onToggleStatus: () => void
 }
 
 function MobileUserCard({
@@ -742,6 +793,7 @@ function MobileUserCard({
     onDelete,
     onResetUsage,
     onShowQr,
+    onToggleStatus,
 }: MobileUserCardProps) {
     const trafficUsed = user.used_data
     const trafficPercent = (trafficUsed / user.data_limit) * 100
@@ -813,6 +865,18 @@ function MobileUserCard({
 
                     {/* Action Buttons */}
                     <div className="flex flex-wrap gap-2 pt-1">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 min-w-[80px]"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                onToggleStatus()
+                            }}
+                        >
+                            <Power className={cn("h-3 w-3 mr-1", user.status ? "text-green-500" : "text-gray-400")} />
+                            {user.status ? 'Disable' : 'Enable'}
+                        </Button>
                         <Button
                             size="sm"
                             variant="outline"
