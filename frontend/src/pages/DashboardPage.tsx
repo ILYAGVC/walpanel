@@ -17,6 +17,7 @@ import {
     Wifi,
     Copy,
     QrCode,
+    Search,
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { dashboardAPI, userAPI } from '@/lib/api'
@@ -25,6 +26,7 @@ import { formatDate, formatExpiryWithDays, cn } from '@/lib/utils'
 import { getUserRole } from '@/lib/auth'
 import { DashboardData, ClientsOutput } from '@/types'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -68,6 +70,7 @@ export function DashboardPage() {
     const [showQrDialog, setShowQrDialog] = useState(false)
     const [qrUser, setQrUser] = useState<ClientsOutput | null>(null)
     const [currentPage, setCurrentPage] = useState(1)
+    const [searchQuery, setSearchQuery] = useState('')
     const usersPerPage = 5
 
     const userRole = getUserRole()
@@ -94,7 +97,9 @@ export function DashboardPage() {
         if (!userToDelete) return
 
         try {
-            await userAPI.deleteUser(userToDelete)
+            // userToDelete format: "uuid|username|id"
+            const [uuid, username, id] = userToDelete.split('|')
+            await userAPI.deleteUser(uuid, username, id)
             setUserToDelete(null)
             fetchDashboardData()
         } catch (err: any) {
@@ -340,138 +345,176 @@ export function DashboardPage() {
             {/* Users Table */}
             {dashboardData?.users && (
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <div>
-                            <CardTitle>Your Users</CardTitle>
+                    <CardHeader className="flex flex-col gap-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div>
+                                <CardTitle>Your Users</CardTitle>
+                            </div>
+                            <Button
+                                size="sm"
+                                onClick={() => {
+                                    setSelectedUser(null)
+                                    setShowUserDialog(true)
+                                }}
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add User
+                            </Button>
                         </div>
-                        <Button
-                            size="sm"
-                            onClick={() => {
-                                setSelectedUser(null)
-                                setShowUserDialog(true)
-                            }}
-                        >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add User
-                        </Button>
+
+                        {/* Search Bar */}
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                placeholder="Search users by email or username..."
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value)
+                                    setCurrentPage(1) // Reset to first page when searching
+                                }}
+                                className="pl-10"
+                            />
+                        </div>
                     </CardHeader>
 
                     <CardContent>
-                        {dashboardData.users.length === 0 ? (
-                            <div className="text-center py-8">
-                                <p className="text-muted-foreground">No users yet</p>
-                            </div>
-                        ) : (
-                            <>
-                                {/* Mobile View - Cards */}
-                                <div className="md:hidden space-y-3">
-                                    {[...dashboardData.users]
-                                        .reverse()
-                                        .slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage)
-                                        .map((user) => (
-                                            <MobileUserCard
-                                                key={user.uuid}
-                                                user={user}
-                                                isExpanded={expandedRows[user.uuid] || false}
-                                                subUrl={dashboardData.sub_url}
-                                                onToggle={() => {
-                                                    setExpandedRows(prev => ({
-                                                        ...prev,
-                                                        [user.uuid]: !prev[user.uuid],
-                                                    }))
-                                                }}
-                                                onEdit={() => {
-                                                    setSelectedUser(user)
-                                                    setShowUserDialog(true)
-                                                }}
-                                                onDelete={() => setUserToDelete(user.uuid)}
-                                                onResetUsage={() => handleResetUsage(user.username)}
-                                                onShowQr={(user) => {
-                                                    setQrUser(user)
-                                                    setShowQrDialog(true)
-                                                }}
-                                            />
-                                        ))}
-                                </div>
+                        {(() => {
+                            // Filter users based on search query
+                            const filteredUsers = dashboardData.users.filter(user =>
+                                user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                (user.uuid && user.uuid.toLowerCase().includes(searchQuery.toLowerCase()))
+                            )
 
-                                {/* Desktop View - Table */}
-                                <div className="hidden md:block overflow-x-auto">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead className="w-12"></TableHead>
-                                                <TableHead>Email</TableHead>
-                                                <TableHead>Traffic</TableHead>
-                                                <TableHead>Expiry</TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {[...dashboardData.users]
-                                                .reverse()
-                                                .slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage)
-                                                .map((user) => (
-                                                    <DetailsRow
-                                                        key={user.uuid}
-                                                        user={user}
-                                                        isExpanded={expandedRows[user.uuid] || false}
-                                                        subUrl={dashboardData.sub_url}
-                                                        onToggle={() => {
-                                                            setExpandedRows(prev => ({
-                                                                ...prev,
-                                                                [user.uuid]: !prev[user.uuid],
-                                                            }))
-                                                        }}
-                                                        onEdit={() => {
-                                                            setSelectedUser(user)
-                                                            setShowUserDialog(true)
-                                                        }}
-                                                        onDelete={() => setUserToDelete(user.uuid)}
-                                                        onResetUsage={() => handleResetUsage(user.username)}
-                                                        onShowQr={(user) => {
-                                                            setQrUser(user)
-                                                            setShowQrDialog(true)
-                                                        }}
-                                                    />
-                                                ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-
-                                {/* Pagination */}
-                                {dashboardData.users.length > usersPerPage && (
-                                    <div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t mt-4 gap-3">
-                                        <p className="text-sm text-muted-foreground text-center sm:text-left">
-                                            Showing {((currentPage - 1) * usersPerPage) + 1} to {Math.min(currentPage * usersPerPage, dashboardData.users.length)} of {dashboardData.users.length}
+                            if (filteredUsers.length === 0) {
+                                return (
+                                    <div className="text-center py-8">
+                                        <p className="text-muted-foreground">
+                                            {searchQuery ? 'No users found matching your search' : 'No users yet'}
                                         </p>
-                                        <div className="flex items-center gap-1 sm:gap-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                                disabled={currentPage === 1}
-                                            >
-                                                <ChevronLeft className="h-4 w-4" />
-                                                <span className="hidden sm:inline">Previous</span>
-                                            </Button>
-                                            <span className="text-sm text-muted-foreground px-1 sm:px-2">
-                                                {currentPage} / {Math.ceil((dashboardData.users?.length || 0) / usersPerPage)}
-                                            </span>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => setCurrentPage(p => Math.min(Math.ceil((dashboardData.users?.length || 0) / usersPerPage), p + 1))}
-                                                disabled={currentPage >= Math.ceil((dashboardData.users?.length || 0) / usersPerPage)}
-                                            >
-                                                <span className="hidden sm:inline">Next</span>
-                                                <ChevronRight className="h-4 w-4" />
-                                            </Button>
-                                        </div>
                                     </div>
-                                )}
-                            </>
-                        )}
+                                )
+                            }
+
+                            const reversedUsers = [...filteredUsers].reverse()
+                            const paginatedUsers = reversedUsers.slice(
+                                (currentPage - 1) * usersPerPage,
+                                currentPage * usersPerPage
+                            )
+
+                            return (
+                                <>
+                                    {/* Mobile View - Cards */}
+                                    <div className="md:hidden space-y-3">
+                                        {paginatedUsers.map((user) => {
+                                            const userKey = `${user.uuid || user.id}-${user.username}`
+                                            return (
+                                                <MobileUserCard
+                                                    key={`mobile-${userKey}`}
+                                                    user={user}
+                                                    isExpanded={expandedRows[userKey] || false}
+                                                    subUrl={dashboardData.sub_url}
+                                                    onToggle={() => {
+                                                        setExpandedRows(prev => ({
+                                                            ...prev,
+                                                            [userKey]: !prev[userKey],
+                                                        }))
+                                                    }}
+                                                    onEdit={() => {
+                                                        setSelectedUser(user)
+                                                        setShowUserDialog(true)
+                                                    }}
+                                                    onDelete={() => setUserToDelete(`${user.uuid || '0'}|${user.username}|${user.id}`)}
+                                                    onResetUsage={() => handleResetUsage(user.username)}
+                                                    onShowQr={(user) => {
+                                                        setQrUser(user)
+                                                        setShowQrDialog(true)
+                                                    }}
+                                                />
+                                            )
+                                        })}
+                                    </div>
+
+                                    {/* Desktop View - Table */}
+                                    <div className="hidden md:block overflow-x-auto">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-12"></TableHead>
+                                                    <TableHead>Email</TableHead>
+                                                    <TableHead>Traffic</TableHead>
+                                                    <TableHead>Expiry</TableHead>
+                                                    <TableHead>Status</TableHead>
+                                                    <TableHead className="text-right">Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {paginatedUsers.map((user) => {
+                                                    const userKey = `${user.uuid || user.id}-${user.username}`
+                                                    return (
+                                                        <DetailsRow
+                                                            key={`desktop-${userKey}`}
+                                                            user={user}
+                                                            isExpanded={expandedRows[userKey] || false}
+                                                            subUrl={dashboardData.sub_url}
+                                                            onToggle={() => {
+                                                                setExpandedRows(prev => ({
+                                                                    ...prev,
+                                                                    [userKey]: !prev[userKey],
+                                                                }))
+                                                            }}
+                                                            onEdit={() => {
+                                                                setSelectedUser(user)
+                                                                setShowUserDialog(true)
+                                                            }}
+                                                            onDelete={() => setUserToDelete(`${user.uuid || '0'}|${user.username}|${user.id}`)}
+                                                            onResetUsage={() => handleResetUsage(user.username)}
+                                                            onShowQr={(user) => {
+                                                                setQrUser(user)
+                                                                setShowQrDialog(true)
+                                                            }}
+                                                        />
+                                                    )
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+
+                                    {/* Pagination */}
+                                    {filteredUsers.length > usersPerPage && (
+                                        <div className="flex flex-col sm:flex-row items-center justify-between pt-4 border-t mt-4 gap-3">
+                                            <p className="text-sm text-muted-foreground text-center sm:text-left">
+                                                Showing {((currentPage - 1) * usersPerPage) + 1} to {Math.min(currentPage * usersPerPage, filteredUsers.length)} of {filteredUsers.length}
+                                                {searchQuery && dashboardData.users && ` (filtered from ${dashboardData.users.length} total)`}
+                                            </p>
+                                            <div className="flex items-center gap-1 sm:gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                    disabled={currentPage === 1}
+                                                >
+                                                    <ChevronLeft className="h-4 w-4" />
+                                                    <span className="hidden sm:inline">Previous</span>
+                                                </Button>
+                                                <span className="text-sm text-muted-foreground px-1 sm:px-2">
+                                                    {currentPage} / {Math.ceil(filteredUsers.length / usersPerPage)}
+                                                </span>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredUsers.length / usersPerPage), p + 1))}
+                                                    disabled={currentPage >= Math.ceil(filteredUsers.length / usersPerPage)}
+                                                >
+                                                    <span className="hidden sm:inline">Next</span>
+                                                    <ChevronRight className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )
+                        })()}
                     </CardContent>
                 </Card>
             )}
@@ -522,7 +565,7 @@ export function DashboardPage() {
                         {qrUser && dashboardData?.sub_url && (
                             <div className="p-4 bg-white rounded-lg border">
                                 <QRCodeSVG
-                                    value={`${dashboardData.sub_url}/${qrUser.sub_id}`}
+                                    value={`${dashboardData.sub_url}/${qrUser.sub_id?.replace('/', '')}`}
                                     size={200}
                                     level="M"
                                 />
@@ -534,7 +577,7 @@ export function DashboardPage() {
                     </div>
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     )
 }
 
@@ -644,7 +687,7 @@ function DetailsRow({
                                         size="sm"
                                         variant="outline"
                                         onClick={() => {
-                                            navigator.clipboard.writeText(`${subUrl}/${user.sub_id}`)
+                                            navigator.clipboard.writeText(`${subUrl}/${user.sub_id?.replace('/', '') || user.sub_id}`)
                                         }}
                                     >
                                         <Copy className="h-4 w-4 mr-2" />
@@ -789,7 +832,7 @@ function MobileUserCard({
                                 className="flex-1 min-w-[80px]"
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    navigator.clipboard.writeText(`${subUrl}/${user.sub_id}`)
+                                    navigator.clipboard.writeText(`${subUrl}/${user.sub_id?.replace('/', '') || user.sub_id}`)
                                 }}
                             >
                                 <Copy className="h-3 w-3 mr-1" />

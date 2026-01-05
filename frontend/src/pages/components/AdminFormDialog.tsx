@@ -38,7 +38,7 @@ export function AdminFormDialog({
     admin,
 }: AdminFormDialogProps) {
     const [serverError, setServerError] = useState<string | null>(null)
-    const [panels, setPanels] = useState<string[]>([])
+    const [panels, setPanels] = useState<{ name: string; panel_type: string }[]>([])
     const [loadingPanels, setLoadingPanels] = useState(false)
 
     const {
@@ -88,7 +88,7 @@ export function AdminFormDialog({
             setLoadingPanels(true)
             const data = await dashboardAPI.getDashboardData()
             if (data.panels) {
-                setPanels(data.panels.map((p) => p.name))
+                setPanels(data.panels.map((p) => ({ name: p.name, panel_type: p.panel_type })))
             }
         } catch (err) {
             console.error('Failed to load panels:', err)
@@ -176,8 +176,8 @@ export function AdminFormDialog({
                             </SelectTrigger>
                             <SelectContent>
                                 {panels.map((panel) => (
-                                    <SelectItem key={panel} value={panel}>
-                                        {panel}
+                                    <SelectItem key={panel.name} value={panel.name}>
+                                        {panel.name}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -187,20 +187,22 @@ export function AdminFormDialog({
                         )}
                     </div>
 
-                    {/* Inbound ID */}
-                    <div className="space-y-2">
-                        <Label htmlFor="inbound_id">Inbound ID</Label>
-                        <Input
-                            id="inbound_id"
-                            type="number"
-                            placeholder="Optional"
-                            disabled={isSubmitting}
-                            {...register('inbound_id', { valueAsNumber: true })}
-                        />
-                        {errors.inbound_id && (
-                            <p className="text-sm text-destructive">{errors.inbound_id.message}</p>
-                        )}
-                    </div>
+                    {/* Inbound ID - Only for 3x-ui panels */}
+                    {watch('panel') && panels.find(p => p.name === watch('panel'))?.panel_type === '3x-ui' && (
+                        <div className="space-y-2">
+                            <Label htmlFor="inbound_id">Inbound ID</Label>
+                            <Input
+                                id="inbound_id"
+                                type="number"
+                                placeholder="Optional"
+                                disabled={isSubmitting}
+                                {...register('inbound_id', { valueAsNumber: true })}
+                            />
+                            {errors.inbound_id && (
+                                <p className="text-sm text-destructive">{errors.inbound_id.message}</p>
+                            )}
+                        </div>
+                    )}
 
                     {/* Traffic */}
                     <div className="space-y-2">

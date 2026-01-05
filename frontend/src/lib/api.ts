@@ -201,7 +201,8 @@ export const userAPI = {
         expiryDatetime: string | null | undefined,
         subId: string,
         enable: boolean = true,
-        flow: string = ''
+        flow: string = '',
+        userId?: string
     ): Promise<ClientsOutput> => {
         const submitData = {
             email,
@@ -212,8 +213,10 @@ export const userAPI = {
             flow,
         }
 
+        const identifier = (userUuid && userUuid !== '0') ? userUuid : (userId || '0')
+
         const response = await api.put<ResponseModel<ClientsOutput>>(
-            `/admin/user/${userUuid}`,
+            `/admin/user/${identifier}`,
             submitData
         )
 
@@ -224,9 +227,14 @@ export const userAPI = {
         return response.data.data!
     },
 
-    deleteUser: async (userUuid: string): Promise<void> => {
+    deleteUser: async (userUuid: string, username?: string, userId?: string): Promise<void> => {
+        // Use userUuid if available (could be uuid or username), otherwise use username, then userId
+        const identifier = (userUuid && userUuid !== '0')
+            ? userUuid
+            : (username || userId || '0')
+
         const response = await api.delete<ResponseModel<void>>(
-            `/admin/user/${userUuid}`
+            `/admin/user/${identifier}`
         )
 
         if (!response.data.success) {

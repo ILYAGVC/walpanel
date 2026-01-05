@@ -21,9 +21,9 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-import { AlertCircle, Loader2 } from 'lucide-react'
+import { AlertCircle, Loader2, Info } from 'lucide-react'
 
-const PANEL_TYPES = ['3x-ui']
+const PANEL_TYPES = ['3x-ui', 'marzban']
 
 interface PanelFormDialogProps {
     isOpen: boolean
@@ -149,7 +149,15 @@ export function PanelFormDialog({
 
                     {/* Panel URL */}
                     <div className="space-y-2">
-                        <Label htmlFor="url">Panel URL *</Label>
+                        <div className="flex items-center gap-2">
+                            <Label htmlFor="url">Panel URL *</Label>
+                            <div className="group relative">
+                                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                                <div className="invisible group-hover:visible absolute left-0 top-6 z-50 w-64 p-2 text-xs bg-popover text-popover-foreground border rounded-md shadow-md">
+                                    If your panel is Marzban, do not include the /urlpath.
+                                </div>
+                            </div>
+                        </div>
                         <Input
                             id="url"
                             type="url"
@@ -164,7 +172,7 @@ export function PanelFormDialog({
 
                     {/* Subscription URL */}
                     <div className="space-y-2">
-                        <Label htmlFor="sub_url">Subscription URL (Optional)</Label>
+                        <Label htmlFor="sub_url">Subscription URL *</Label>
                         <Input
                             id="sub_url"
                             type="url"

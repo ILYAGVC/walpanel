@@ -58,16 +58,16 @@ export function UserFormDialog({ isOpen, onClose, onSuccess, user }: UserFormDia
         setServerError(null)
 
         try {
-            if (user?.uuid) {
-                // Update
+            if (user?.uuid || user?.username || user?.id) {
                 await userAPI.updateUser(
-                    user.uuid,
+                    user.uuid || user.username || '0',
                     data.email,
                     data.totalGb,
                     data.expiryDatetime,
                     user.sub_id || '',
                     user.status,
-                    user.flow || ''
+                    user.flow || '',
+                    user.id?.toString()
                 )
             } else {
                 // Create
