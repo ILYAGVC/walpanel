@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import status
 from fastapi.responses import JSONResponse
-from opexcore.marzban import MarzbanUserStatus
 
 from .limit_handler import AdminLimiter
 from .sanaei import AdminTaskService as SanaeiAdminTaskService
