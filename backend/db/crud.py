@@ -76,8 +76,9 @@ def reduce_admin_traffic(db: Session, admin: Admins, used_traffic) -> None:
 
 
 def increase_admin_traffic(db: Session, admin: Admins, added_traffic) -> None:
-    admin.traffic += added_traffic
-    db.commit()
+    if admin.return_traffic:
+        admin.traffic += added_traffic
+        db.commit()
 
 
 def get_all_panels(db: Session):
