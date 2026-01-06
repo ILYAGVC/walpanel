@@ -181,7 +181,8 @@ function generateSubId(): string {
     for (let i = 0; i < 8; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length))
     }
-    return result
+    // Ensure no leading or trailing slashes
+    return result.replace(/^\/+|\/+$/g, '')
 }
 
 // User API
@@ -216,12 +217,15 @@ export const userAPI = {
         flow: string = '',
         userId?: string
     ): Promise<ClientsOutput> => {
+        // Sanitize sub_id to remove leading and trailing slashes to prevent double slashes in subscription URL
+        const sanitizedSubId = subId?.replace(/^\/+|\/+$/g, '') || '';
+        
         const submitData = {
             email,
             enable,
             expiry_time: expiryDatetime ? new Date(expiryDatetime + 'T00:00:00').getTime() : 0,
             total: Math.floor(totalGb * 1024 * 1024 * 1024),
-            sub_id: subId,
+            sub_id: sanitizedSubId,
             flow,
         }
 
