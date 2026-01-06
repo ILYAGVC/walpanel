@@ -589,7 +589,7 @@ export function DashboardPage() {
                             <>
                                 <div className="p-4 bg-white rounded-lg border">
                                     <QRCodeSVG
-                                        value={`${dashboardData.sub_url}/${qrUser.sub_id?.replace('/', '')}`}
+                                        value={`${dashboardData.sub_url}/${qrUser.sub_id?.replace(/^\/+|\/+$/g, '')}`}
                                         size={200}
                                         level="M"
                                     />
@@ -599,7 +599,7 @@ export function DashboardPage() {
                                         <p><strong>User:</strong> {qrUser?.username}</p>
                                     </div>
                                     <div className="p-3 bg-muted rounded-md break-all text-xs font-mono">
-                                        {`${dashboardData.sub_url}/${qrUser.sub_id?.replace('/', '')}`}
+                                        {`${dashboardData.sub_url}/${qrUser.sub_id?.replace(new RegExp(`^${dashboardData.sub_url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), '').replace(/^\/+/, '')}`}
                                     </div>
                                 </div>
                             </>
@@ -720,7 +720,7 @@ function DetailsRow({
                             {subUrl && user.sub_id && (
                                 <div className="p-3 bg-background rounded-md border">
                                     <div className="text-xs text-muted-foreground mb-1">Subscription Link:</div>
-                                    <div className="text-xs font-mono break-all">{`${subUrl}/${user.sub_id?.replace('/', '')}`}</div>
+                                    <div className="text-xs font-mono break-all">{`${subUrl}/${user.sub_id?.replace(new RegExp(`^${subUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), '').replace(/^\/+/, '')}`}</div>
                                 </div>
                             )}
                             <div className="flex flex-wrap gap-2 pt-2">
@@ -737,7 +737,7 @@ function DetailsRow({
                                         size="sm"
                                         variant="outline"
                                         onClick={() => {
-                                            navigator.clipboard.writeText(`${subUrl}/${user.sub_id?.replace('/', '') || user.sub_id}`)
+                                            navigator.clipboard.writeText(`${subUrl}/${user.sub_id?.replace(new RegExp(`^${subUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), '').replace(/^\/+/, '') || user.sub_id}`)
                                         }}
                                     >
                                         <Copy className="h-4 w-4 mr-2" />
@@ -896,7 +896,7 @@ function MobileUserCard({
                                 className="flex-1 min-w-[80px]"
                                 onClick={(e) => {
                                     e.stopPropagation()
-                                    navigator.clipboard.writeText(`${subUrl}/${user.sub_id?.replace('/', '') || user.sub_id}`)
+                                    navigator.clipboard.writeText(`${subUrl}/${user.sub_id?.replace(new RegExp(`^${subUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`), '').replace(/^\/+/, '') || user.sub_id}`)
                                 }}
                             >
                                 <Copy className="h-3 w-3 mr-1" />
