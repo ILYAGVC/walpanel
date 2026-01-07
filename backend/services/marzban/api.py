@@ -84,7 +84,6 @@ class APIService:
         await self._login()
         url = f"{self.url}api/users"
         response = self.session.get(url, headers=self.headers).json()
-        response2 = self.session.get(url, headers=self.headers)
         return response
 
     async def get_user(self, username: str) -> dict | bool:

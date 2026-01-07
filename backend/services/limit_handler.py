@@ -11,6 +11,9 @@ class AdminLimiter:
         self.admin = crud.get_admin_by_username(db, username=admin_username)
 
     def admin_is_active(self) -> bool:
+        if self.admin.expiry_date is None:
+            return self.admin.is_active
+        
         is_expired = self.admin.expiry_date < datetime.utcnow()
 
         if is_expired and self.admin.is_active:
