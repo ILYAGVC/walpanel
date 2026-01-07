@@ -6,6 +6,7 @@ from backend.schema._input import ClientInput, ClientUpdateInput
 
 
 class APIService:
+    _username: str | None = None
     _cached_token: str | None = None
     _cached_url: str | None = None
     _token_time: float | None = None
@@ -33,6 +34,8 @@ class APIService:
         now = time.time()
 
         if (
+            APIService._username == self.username
+            and
             APIService._cached_token
             and APIService._cached_url == self.url
             and APIService._token_time
@@ -80,8 +83,8 @@ class APIService:
     async def get_users(self):
         await self._login()
         url = f"{self.url}api/users"
-
         response = self.session.get(url, headers=self.headers).json()
+        response2 = self.session.get(url, headers=self.headers)
         return response
 
     async def get_user(self, username: str) -> dict | bool:
