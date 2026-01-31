@@ -6,7 +6,7 @@ from backend.db.engin import get_db
 from backend.auth import get_current_admin
 from backend.schema.output import AdminOutput, ResponseModel, PanelOutput
 from backend.services import get_all_users_from_panel
-from backend.utils import get_system_info, get_ads_from_github
+from backend.utils import get_system_info, get_ads_from_github, get_10_logs
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
@@ -20,6 +20,7 @@ async def read_dashboard_data(
         all_panels = crud.get_all_panels(db)
         system = get_system_info()
         ads = get_ads_from_github()
+        logs = get_10_logs()
         return ResponseModel(
             success=True,
             message="Data retrieved successfully",
@@ -27,6 +28,7 @@ async def read_dashboard_data(
                 "admins": [AdminOutput.from_orm(admin) for admin in all_admins],
                 "panels": [PanelOutput.from_orm(panel) for panel in all_panels],
                 "system": system,
+                "logs": logs,
                 "ads": ads,
             },
         )
@@ -35,8 +37,8 @@ async def read_dashboard_data(
         admin_data = crud.get_admin_by_username(db, current_admin["username"])
         panel_data = crud.get_panel_by_name(db, admin_data.panel)
         _, users = await get_all_users_from_panel(
-        admin_username=current_admin["username"], db=db
-    )
+            admin_username=current_admin["username"], db=db
+        )
 
         return ResponseModel(
             success=True,
