@@ -41,7 +41,7 @@ class AdminTaskService:
             logger.error(
                 f"Error retrieving users for admin {self.admin_username}: {str(e)}"
             )
-            raise e
+            return []
 
     async def get_client_by_email(self, email: str) -> Client | bool:
         try:

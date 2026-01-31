@@ -448,7 +448,7 @@ async def reset_a_user_usage(
             success=True,
             message="User usage reset successfully",
         )
-    
+
     if panel.panel_type == "marzban":
         if not admin_check.admin_is_active():
             logger.warning(
@@ -561,7 +561,7 @@ async def delete_a_user(admin_username: str, uuid: str, db: Session) -> bool:
             success=True,
             message="User deleted successfully",
         )
-    
+
     if panel.panel_type == "marzban":
         username = uuid  # Marzban uses username as identifier
         if not admin_check.admin_is_active():
