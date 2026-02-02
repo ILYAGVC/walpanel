@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, status, UploadFile, File
+from fastapi.responses import JSONResponse, FileResponse
 from sqlalchemy.orm import Session
+import os
 
 from backend.schema.output import ResponseModel
 from backend.schema._input import AdminInput, AdminUpdateInput, PanelInput
@@ -8,7 +9,8 @@ from backend.db import crud
 from backend.db.engin import get_db
 from backend.services import create_new_panel, update_a_panel
 from backend.services.marzban.api import APIService as MarzbanAPI
-from backend.utils.logger import logger
+from backend.utils.logger import logger, get_10_logs
+from backend.utils.backup import create_backup, restore_database
 
 router = APIRouter(prefix="/superadmin", tags=["superadmin"])
 
@@ -226,9 +228,7 @@ async def get_panel_inbounds(panel_name: str, db: Session = Depends(get_db)):
         )
         inbounds = await api_service.get_inbounds()
         return ResponseModel(
-            success=True,
-            message="Inbounds retrieved successfully",
-            data=inbounds
+            success=True, message="Inbounds retrieved successfully", data=inbounds
         )
     except Exception as e:
         logger.error(f"Failed to fetch inbounds from panel {panel_name}: {str(e)}")
@@ -237,5 +237,81 @@ async def get_panel_inbounds(panel_name: str, db: Session = Depends(get_db)):
             content={
                 "success": False,
                 "message": f"Failed to fetch inbounds: {str(e)}",
+            },
+        )
+
+
+@router.get("/backup", description="Download database backup")
+async def download_backup():
+    """Download the current database as a backup file"""
+    db_path = "/app/data/whale-panel.db"
+    if not os.path.exists(db_path):
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "success": False,
+                "message": "Database file not found",
+            },
+        )
+
+    return FileResponse(
+        path=db_path,
+        filename="whale-panel.db",
+        media_type="application/octet-stream",
+    )
+
+
+@router.post(
+    "/restore",
+    description="Restore database from uploaded file",
+    response_model=ResponseModel,
+)
+async def restore_backup(file: UploadFile = File(...)):
+    """Restore database from an uploaded backup file"""
+    if not file.filename.endswith(".db"):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "success": False,
+                "message": "Only .db files are allowed",
+            },
+        )
+
+    db_path = "/app/data/whale-panel.db"
+    try:
+        restore_database(db_path, file)
+        return ResponseModel(
+            success=True,
+            message="Database restored successfully. Please restart the container to apply changes.",
+        )
+
+    except Exception as e:
+        logger.error(f"Restore failed: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": f"Failed to restore database: {str(e)}",
+            },
+        )
+
+
+@router.get("/logs", description="Get application logs")
+async def get_logs():
+    """Get the last 10 application logs"""
+    try:
+        logs = get_10_logs()
+        return ResponseModel(
+            success=True,
+            message="Logs retrieved successfully",
+            data=logs,
+        )
+    except Exception as e:
+        logger.error(f"Failed to retrieve logs: {str(e)}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "success": False,
+                "message": f"Failed to retrieve logs: {str(e)}",
             },
         )
