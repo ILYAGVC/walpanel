@@ -7,6 +7,7 @@ import {
     Github,
     Sun,
     Moon,
+    Server,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { logout, getUserRole } from '@/lib/auth'
@@ -33,6 +34,12 @@ const navigationItems = [
     {
         label: 'Panels',
         href: '/panels',
+        icon: Server,
+        roles: ['superadmin'],
+    },
+    {
+        label: 'Settings',
+        href: '/settings',
         icon: Settings,
         roles: ['superadmin'],
     },

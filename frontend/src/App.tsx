@@ -6,6 +6,7 @@ import { LoginPage } from '@/pages/LoginPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { AdminsPage } from '@/pages/AdminsPage'
 import { PanelsPage } from '@/pages/PanelsPage'
+import { SettingsPage } from '@/pages/SettingsPage'
 import { Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -45,6 +46,17 @@ function App() {
                         <ProtectedRoute>
                             <Layout>
                                 <PanelsPage />
+                            </Layout>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/settings"
+                    element={
+                        <ProtectedRoute>
+                            <Layout>
+                                <SettingsPage />
                             </Layout>
                         </ProtectedRoute>
                     }

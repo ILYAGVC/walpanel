@@ -165,7 +165,42 @@ export const panelAPI = {
     },
 }
 
-// Helper function to generate random UUID
+// SuperAdmin API
+export const superadminAPI = {
+    downloadBackup: async (): Promise<Blob> => {
+        const response = await api.get(`/superadmin/backup`, {
+            responseType: 'blob',
+        })
+        return response.data
+    },
+
+    restoreBackup: async (file: File): Promise<string> => {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await api.post<ResponseModel<void>>(`/superadmin/restore`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        })
+
+        if (!response.data.success) {
+            throw new Error(response.data.message || 'Failed to restore backup')
+        }
+
+        return response.data.message || 'Database restored successfully'
+    },
+
+    getLogs: async (): Promise<string[]> => {
+        const response = await api.get<ResponseModel<string[]>>(`/superadmin/logs`)
+
+        if (!response.data.success) {
+            throw new Error(response.data.message || 'Failed to fetch logs')
+        }
+
+        return response.data.data || []
+    },
+}
 function generateUUID(): string {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
         const r = Math.random() * 16 | 0
@@ -219,7 +254,7 @@ export const userAPI = {
     ): Promise<ClientsOutput> => {
         // Sanitize sub_id to remove leading and trailing slashes to prevent double slashes in subscription URL
         const sanitizedSubId = subId?.replace(/^\/+|\/+$/g, '') || '';
-        
+
         const submitData = {
             email,
             enable,
