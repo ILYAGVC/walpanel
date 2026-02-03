@@ -8,26 +8,33 @@ from backend.schema._input import ClientInput, ClientUpdateInput
 
 
 class APIService:
-    _last_login_time = None
-    _last_url = None
-    _api_instance = None
+    _api_instances = {}
+    _last_login_times = {}
 
     def __init__(self, url: str, username: str, password: str):
-        if APIService._api_instance is None or APIService._last_url != url:
-            APIService._api_instance = AsyncApi(url, username, password)
-            APIService._last_url = url
-        self.api = APIService._api_instance
+        self.url = url
         self.username = username
         self.password = password
-        self.url = url
+        
+        if url not in APIService._api_instances:
+            APIService._api_instances[url] = AsyncApi(url, username, password)
+        
+        self.api = APIService._api_instances[url]
 
     async def ensure_login(self):
-        if (
-            APIService._last_login_time is None
-            or (datetime.now() - APIService._last_login_time).total_seconds() > 3500
-        ):
-            await self.api.login()
-            APIService._last_login_time = datetime.now()
+        last_login = APIService._last_login_times.get(self.url)
+        
+        if last_login is None or (datetime.now() - last_login).total_seconds() > 3500:
+            try:
+                await self.api.login()
+                APIService._last_login_times[self.url] = datetime.now()
+            except Exception as e:
+                APIService._api_instances[self.url] = AsyncApi(
+                    self.url, self.username, self.password
+                )
+                self.api = APIService._api_instances[self.url]
+                await self.api.login()
+                APIService._last_login_times[self.url] = datetime.now()
 
     async def test_connection(self) -> Server:
         try:
@@ -35,7 +42,6 @@ class APIService:
             await api.login()
             info = await api.server.get_status()
             return info
-
         except Exception as e:
             return None
 
