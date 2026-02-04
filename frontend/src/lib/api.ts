@@ -202,7 +202,7 @@ export const superadminAPI = {
     },
 }
 
-// Helper function to generate random sub_id (8 random characters)
+// Helper function to generate random sub_id (16 random characters)
 function generateSubId(): string {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
     const bytes = crypto.getRandomValues(new Uint8Array(16))
