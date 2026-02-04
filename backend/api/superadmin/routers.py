@@ -244,7 +244,7 @@ async def get_panel_inbounds(panel_name: str, db: Session = Depends(get_db)):
 @router.get("/backup", description="Download database backup")
 async def download_backup():
     """Download the current database as a backup file"""
-    db_path = "/app/data/whlpanel.db"
+    db_path = "/app/data/walpanel.db"
     if not os.path.exists(db_path):
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -256,7 +256,7 @@ async def download_backup():
 
     return FileResponse(
         path=db_path,
-        filename="whlpanel.db",
+        filename="walpanel.db",
         media_type="application/octet-stream",
     )
 
@@ -277,7 +277,7 @@ async def restore_backup(file: UploadFile = File(...)):
             },
         )
 
-    db_path = "/app/data/whlpanel.db"
+    db_path = "/app/data/walpanel.db"
     try:
         restore_database(db_path, file)
         return ResponseModel(
